@@ -1,0 +1,9 @@
+fvextra - extensions and patches for fancyvrb
+
+Author:  Geoffrey Poore
+License:  LPPL v1.3 or later
+Development:  https://github.com/gpoore/fvextra
+
+
+fvextra provides several extensions to fancyvrb, including automatic line 
+breaking and improved math mode.  It also patches some fancyvrb internals.

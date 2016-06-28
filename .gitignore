@@ -1,3 +1,13 @@
+*.bat
+*.out
+*.log
+*.pytxcode
+*.synctex.gz
+*.toc
+reference/
+*.aux
+
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
