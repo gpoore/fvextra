@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/06/28 v1.0 fvextra - extensions and patches for fancyvrb]
+    [2016/07/09 v1.1dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -186,7 +186,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{1562}
+% \CheckSum{1583}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -203,6 +203,11 @@
 %   Right bracket \]     Circumflex    \^     Underscore    \_
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
+%
+%
+% \begin{changelog}{v1.1}{2016/07/??}
+% \item Added \texttt{curlyquotes} option, which essentially disables the \texttt{uquote} package.
+% \end{changelog}
 %
 %
 % \begin{changelog}{v1.0}{2016/06/28}
@@ -246,7 +251,7 @@
 %
 % \fvextra\ is an add-on package that gives \fancyvrb\ several additional features, including automatic line breaking.  Because \fvextra\ patches and overwrites some of the \fancyvrb\ internals, it may not be suitable for documents that rely on the details of the original \fancyvrb\ implementation.  \fvextra\ tries to maintain the default \fancyvrb\ behavior in most cases.  All patches (\cref{sec:patch}) and modifications to \fancyvrb\ defaults (\cref{sec:modifications}) are documented.
 %
-% Some features of \fvextra\ were originally created as part of the \pkg{pythontex} and \pkg{minted} packages.  \fancyvrb-related patches and extensions that currently exist in those packages will gradually be migrated into \fvextra, and both packages will eventually require \fvextra.
+% Some features of \fvextra\ were originally created as part of the \pkg{pythontex} and \pkg{minted} packages.  \fancyvrb-related patches and extensions that currently exist in those packages will gradually be migrated into \fvextra, and both packages will require \fvextra\ in the future.
 %
 %
 % 
@@ -259,8 +264,6 @@
 %
 % While \fvextra\ attempts to minimize changes to the \fancyvrb\ internals, in some cases it completely overwrites \fancyvrb\ macros with new definitions.  New definitions typically follow the original definitions as much as possible, but code that depends on the details of the original \fancyvrb\ implementation may be incompatible with \fvextra.
 %
-% \fvextra\ must be loaded before \pkg{pythontex} and \pkg{minted}, so that it will not clash with the \fancyvrb\ patches that currently exist in those packages.  Those patches will eventually be migrated to \fvextra.
-%
 %
 %
 %
@@ -270,6 +273,22 @@
 % \fvextra\ adds several general options to \fancyvrb.  All options related to automatic line breaking are described separately in \cref{sec:breaklines}.
 %
 % \begin{optionlist}
+%
+% \item[curlyquotes (boolean) (false)]
+% Unlike \fancyvrb, \pkg{fvextra} requires the \pkg{upquote} package, so the backtick \texttt{\textasciigrave} and single quotation mark \texttt{\textquotesingle} always appear literally by default, instead of becoming the left and right curly single quotation marks \texttt{`'}.  This option allows these characters to be replaced by the curly quotation marks when that is desirable.
+%
+% \begin{example}
+%   \begin{Verbatim}
+%   `quoted text'
+%   \end{Verbatim}
+% \end{example}
+%
+% \begin{example}
+%   \begin{Verbatim}[curlyquotes]
+%   `quoted text'
+%   \end{Verbatim}
+% \end{example}
+%
 %
 % \item[linenos (boolean) (false)]
 % \fancyvrb\ allows line numbers via the options |numbers=|\meta{position}.  This is essentially an alias for |numbers=left|.  It primarily exists for better compatibility with the \pkg{minted} package.
@@ -801,6 +820,12 @@
 %
 % \fvextra\ modifies some \fancyvrb\ behavior with the intention of improving logical consistency or providing better defaults.
 %
+%
+% \subsection{Backtick and single quotation mark}
+%
+% With \fancyvrb, the backtick \texttt{\textasciigrave} and single quotation mark \texttt{\textquotesingle} are typeset as the left and right curly single quotation marks \texttt{`'}.  \pkg{fvextra} loads the \pkg{upquote} package so that these characters will appear literally by default.  The original \fancyvrb\ behavior can be restored with the \fvextra\ option |curlyquotes| (\cref{sec:general-options}). 
+%
+%
 % \subsection{Line numbering}
 % \label{sec:modifications:line-numbering}
 %
@@ -881,14 +906,6 @@
 \@ifpackageloaded{csquotes}%
  {\PackageWarning{fvextra}{csquotes should be loaded after fvextra, %
   to avoid a warning from the lineno package}}{}
-\@ifpackageloaded{minted}%
- {\PackageError{fvextra}%
-   {fvextra must be loaded before minted}%
-   {fvextra must be loaded before minted}}
-\@ifpackageloaded{pythontex}%
- {\PackageError{fvextra}%
-   {fvextra must be loaded before pythontex}%
-   {fvextra must be loaded before pythontex}}
 %    \end{macrocode}
 %
 %
@@ -1108,11 +1125,30 @@
 \define@booleankey{FV}{mathescape}%
  {\let\FancyVerbMathEscape\FV@MathEscape}%
  {\let\FancyVerbMathEscape\relax}
-\FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \def\FV@MathEscape{\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}
+\FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \fvset{mathescape=false}
 %    \end{macrocode}
 % \end{macro}
+%
+%
+% \begin{macro}{curlyquotes}
+% Let \texttt{\textasciigrave} and \texttt{\textquotesingle} produce curly quotation marks \texttt{`} and \texttt{'} rather than the backtick and single typewriter quotation mark produced by default via \pkg{upquote}.
+%    \begin{macrocode}
+\newbool{FV@CurlyQuotes}
+\define@booleankey{FV}{curlyquotes}%
+ {\booltrue{FV@CurlyQuotes}}%
+ {\boolfalse{FV@CurlyQuotes}}
+\def\FancyVerbCurlyQuotes{%
+  \ifbool{FV@CurlyQuotes}%
+   {\begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
+    \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{'}}%
+   {}}
+\g@addto@macro\@noligs{\FancyVerbCurlyQuotes}
+\fvset{curlyquotes=false}
+%    \end{macrocode}
+% \end{macro}
+% 
 %
 %
 % \subsubsection{\texttt{\textbackslash FancyVerbFormatLine} and \texttt{\textbackslash FancyVerbFormatText}}

@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2016/06/28 v1.0 fvextra - extensions and patches for fancyvrb]
+    [2016/07/09 v1.1dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -35,14 +35,6 @@
 \@ifpackageloaded{csquotes}%
  {\PackageWarning{fvextra}{csquotes should be loaded after fvextra, %
   to avoid a warning from the lineno package}}{}
-\@ifpackageloaded{minted}%
- {\PackageError{fvextra}%
-   {fvextra must be loaded before minted}%
-   {fvextra must be loaded before minted}}
-\@ifpackageloaded{pythontex}%
- {\PackageError{fvextra}%
-   {fvextra must be loaded before pythontex}%
-   {fvextra must be loaded before pythontex}}
 \let\FV@FormattingPrepHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
   \expandafter\FV@FormattingPrepHook\FV@FormattingPrep}
@@ -129,9 +121,20 @@
 \define@booleankey{FV}{mathescape}%
  {\let\FancyVerbMathEscape\FV@MathEscape}%
  {\let\FancyVerbMathEscape\relax}
-\FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \def\FV@MathEscape{\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}
+\FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \fvset{mathescape=false}
+\newbool{FV@CurlyQuotes}
+\define@booleankey{FV}{curlyquotes}%
+ {\booltrue{FV@CurlyQuotes}}%
+ {\boolfalse{FV@CurlyQuotes}}
+\def\FancyVerbCurlyQuotes{%
+  \ifbool{FV@CurlyQuotes}%
+   {\begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
+    \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{'}}%
+   {}}
+\g@addto@macro\@noligs{\FancyVerbCurlyQuotes}
+\fvset{curlyquotes=false}
 \def\FancyVerbFormatLine#1{#1}
 \def\FancyVerbFormatText#1{#1}
 \def\FV@ListProcessLine@NoBreak#1{%
