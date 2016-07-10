@@ -538,6 +538,19 @@
 \def\FV@Break{%
   \def\FV@TmpLine{}%
   \let\FV@LastToken=\FV@Undefined
+  \ifcsname pdfmatch\endcsname
+  \ifx\pdfmatch\relax\else
+    \ifcsname UTFviii@two@octets\endcsname
+    \ifx\UTFviii@two@octets\relax\else
+      \ifx\FV@Break@Token\FV@Break@AnyToken
+        \let\FV@Break@Token\FV@Break@AnyToken@UTFviii
+      \else
+        \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
+          \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTFviii
+        \fi
+      \fi
+    \fi\fi
+  \fi\fi
   \FV@Break@Scan
 }
 \def\FV@EndBreak{\FV@TmpLine}
@@ -654,6 +667,53 @@
    {\FV@Break@Scan}%
    {\g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
     \FV@Break@Scan}}
+\def\FV@UTFviii@two@octets@AnyToken#1{%
+  \g@addto@macro{\FV@TmpLine}{#1}%
+  \FV@Break@Scan}
+\def\FV@UTFviii@three@octets@AnyToken#1#2{%
+  \g@addto@macro{\FV@TmpLine}{#1#2}%
+  \FV@Break@Scan}
+\def\FV@UTFviii@four@octets@AnyToken#1#2#3{%
+  \g@addto@macro{\FV@TmpLine}{#1#2#3}%
+  \FV@Break@Scan}
+\ifcsname pdfmatch\endcsname
+\ifx\pdfmatch\relax\else
+\begingroup
+\catcode`\~=13
+\catcode`\"=12
+\def\UTFviii@loop{%
+  \uccode`\~\count@
+  \uppercase\expandafter{\UTFviii@tmp}%
+  \advance\count@\@ne
+  \ifnum\count@<\@tempcnta
+  \expandafter\UTFviii@loop
+  \fi}
+\count@"C2
+\@tempcnta"E0
+\def\UTFviii@tmp{\expandafter\gdef\csname FV@U8:ANY:\string~\endcsname{%
+  \FV@UTFviii@two@octets@AnyToken}}
+\UTFviii@loop
+\count@"E0
+\@tempcnta"F0
+\def\UTFviii@tmp{\expandafter\gdef\csname FV@u8:any:\string~\endcsname{%
+  \FV@UTFviii@three@octets@AnyToken}}
+\UTFviii@loop
+\count@"F0
+\@tempcnta"F4
+\def\UTFviii@tmp{\expandafter\gdef\csname FV@u8:any:\string~\endcsname{%
+  \FV@UTFviii@four@octets@AnyToken}}
+\UTFviii@loop
+\endgroup
+\fi\fi
+\def\FV@Break@AnyToken@UTFviii#1{%
+  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \ifcsname FV@U8:ANY:\string#1\endcsname
+    \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:ANY:\string#1\endcsname
+  \else
+    \let\FV@Break@Next\FV@Break@Scan
+  \fi
+  \FV@Break@Next}
+\let\FV@Break@BeforeAfterToken@UTFviii\FV@Break@BeforeAfterToken
 \def\FV@makeLineNumber{%
   \hss
   \FancyVerbBreakSymbolLeftLogic{\FancyVerbBreakSymbolLeft}%

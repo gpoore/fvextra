@@ -186,7 +186,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{1583}
+% \CheckSum{1717}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -1924,10 +1924,25 @@
 %
 % \begin{macro}{\FV@Break}
 % The entry macro for breaking lines, either anywhere or before/after specified characters.  The current line (or argument) will be scanned token by token/group by group, and accumulated (with added potential breaks) in |\FV@TmpLine|.  After scanning is complete, |\FV@TmpLine| will be inserted.  It would be possible to insert each token/group into the document immediately after it is scanned, instead of accumulating them in a ``buffer.''  But that would interfere with macros.  Even in the current approach, macros that take optional arguments are problematic.\footnote{Through a suitable definition that tracks the current state and looks for square brackets, this might be circumvented.  Then again, in verbatim contexts, macro use should be minimal, so the restriction to macros without optional arguments should generally not be an issue.}  The last token is tracked with |\FV@LastToken|, to allow lookbehind when breaking by groups of identical characters.  |\FV@LastToken| is |\let| to |\FV@Undefined| any time the last token was something that shouldn't be compared against (for example, a non-empty group), and it is not reset whenever the last token may be ignored (for example, |{}|).  When setting |\FV@LastToken|, it is vital always to use |\let\FV@LastToken=...| so that |\let\FV@LastToken==| will work (so that the equals sign |=| won't break things).
+%
+% The current definition of |\FV@Break@Token| is swapped for a UTF-8 compatible one under pdfTeX when necessary.  The standard macros are defined next, since they make the algorithms simpler to understand.  The more complex |UTFviii| variants are defined later.
 %    \begin{macrocode}
 \def\FV@Break{%
   \def\FV@TmpLine{}%
   \let\FV@LastToken=\FV@Undefined
+  \ifcsname pdfmatch\endcsname
+  \ifx\pdfmatch\relax\else
+    \ifcsname UTFviii@two@octets\endcsname
+    \ifx\UTFviii@two@octets\relax\else
+      \ifx\FV@Break@Token\FV@Break@AnyToken
+        \let\FV@Break@Token\FV@Break@AnyToken@UTFviii
+      \else
+        \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
+          \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTFviii
+        \fi
+      \fi
+    \fi\fi
+  \fi\fi
   \FV@Break@Scan
 }
 %    \end{macrocode}
@@ -2104,6 +2119,95 @@
     \FV@Break@Scan}}
 %    \end{macrocode}
 % \end{macro}
+%
+%
+% \paragraph{Line scanning and break insertion macros for pdfTeX with UTF-8}\hfill\\
+% The macros above work with the XeTeX and LuaTeX engines and are also fine for pdfTeX with 8-bit character encodings.  Unfortunately, pdfTeX works with multi-byte UTF-8 code points at the byte level, making things significantly trickier.  The code below re-implements the macros in a manner compatible with the \pkg{inputenc} package with option |utf8|.  Note that there is no attempt for compatibility with |utf8x|; |utf8| has been significantly improved in recent years and should be sufficient in the vast majority of cases.
+%
+%
+% \begin{macro}{\FV@UTFviii@two@octets@AnyToken}%
+% \begin{macro}{\FV@UTFviii@three@octets@AnyToken}%
+% \begin{macro}{\FV@UTFviii@four@octets@AnyToken}
+% These capture the $2$nd through $n$th bytes of an $n$-byte code point and add them, without any breaks, to |\FV@TmpLine|.  The $1$st byte is handled by |\FV@Break@AnyToken@UTFviii|, defined below.
+%    \begin{macrocode}
+\def\FV@UTFviii@two@octets@AnyToken#1{%
+  \g@addto@macro{\FV@TmpLine}{#1}%
+  \FV@Break@Scan}
+\def\FV@UTFviii@three@octets@AnyToken#1#2{%
+  \g@addto@macro{\FV@TmpLine}{#1#2}%
+  \FV@Break@Scan}
+\def\FV@UTFviii@four@octets@AnyToken#1#2#3{%
+  \g@addto@macro{\FV@TmpLine}{#1#2#3}%
+  \FV@Break@Scan}
+%    \end{macrocode}
+% \end{macro}\end{macro}\end{macro}
+%
+% \begin{macro}{\FV@U8:ANY:<byte>}
+% Define macros for each active byte.  These are used for determining whether the current token is the first byte in a multi-byte sequence, and if so, invoking the necessary macro to capture the remaining bytes.  The code is adapted from the beginning of |utf8.def|.  Completely capitalized macro names are used to avoid having to worry about |\uppercase|.
+%    \begin{macrocode}
+\ifcsname pdfmatch\endcsname
+\ifx\pdfmatch\relax\else
+\begingroup
+\catcode`\~=13
+\catcode`\"=12
+\def\UTFviii@loop{%
+  \uccode`\~\count@
+  \uppercase\expandafter{\UTFviii@tmp}%
+  \advance\count@\@ne
+  \ifnum\count@<\@tempcnta
+  \expandafter\UTFviii@loop
+  \fi}
+%    \end{macrocode}
+% Setting up 2-byte UTF-8:
+%    \begin{macrocode}
+\count@"C2
+\@tempcnta"E0
+\def\UTFviii@tmp{\expandafter\gdef\csname FV@U8:ANY:\string~\endcsname{%
+  \FV@UTFviii@two@octets@AnyToken}}
+\UTFviii@loop
+%    \end{macrocode}
+% Setting up 3-byte UTF-8:
+%    \begin{macrocode}
+\count@"E0
+\@tempcnta"F0
+\def\UTFviii@tmp{\expandafter\gdef\csname FV@u8:any:\string~\endcsname{%
+  \FV@UTFviii@three@octets@AnyToken}}
+\UTFviii@loop
+%    \end{macrocode}
+% Setting up 4-byte UTF-8:
+%    \begin{macrocode}
+\count@"F0
+\@tempcnta"F4
+\def\UTFviii@tmp{\expandafter\gdef\csname FV@u8:any:\string~\endcsname{%
+  \FV@UTFviii@four@octets@AnyToken}}
+\UTFviii@loop
+\endgroup
+\fi\fi
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@Break@AnyToken@UTFviii}
+% Instead of just adding each token to |\FV@TmpLine| with a preceding break, also check for multi-byte code points and capture the remaining bytes when they are encountered.
+%    \begin{macrocode}
+\def\FV@Break@AnyToken@UTFviii#1{%
+  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \ifcsname FV@U8:ANY:\string#1\endcsname
+    \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:ANY:\string#1\endcsname
+  \else
+    \let\FV@Break@Next\FV@Break@Scan
+  \fi
+  \FV@Break@Next}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@Break@BeforeAfterToken@UTFviii}
+% 
+%    \begin{macrocode}
+\let\FV@Break@BeforeAfterToken@UTFviii\FV@Break@BeforeAfterToken
+%    \end{macrocode}
+% \end{macro}
+%
 %
 %
 % \paragraph{Line processing before scanning}
