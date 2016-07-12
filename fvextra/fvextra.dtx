@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/07/10 v1.1dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/12 v1.1dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -186,7 +186,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2135}
+% \CheckSum{2268}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -206,6 +206,8 @@
 %
 %
 % \begin{changelog}{v1.1}{2016/07/??}
+% \item \texttt{obeytabs} no longer causes lines to vanish when tabs are inside macro arguments.  Tabs and spaces inside a macro argument but otherwise at the beginning of a line are expanded correctly.  Tabs inside a macro argument that are preceded by non-whitespace characters (not spaces or tabs) are expanded based on the starting position of the run of whitespace in which they occur.
+% \item The line breaking options \texttt{breakanywhere}, \texttt{breakbefore}, and \texttt{breakafter} now work with multi-byte UTF-8 code points under pdfTeX with \texttt{inputenc}.  They were already fully functional under XeTeX and LuaTeX.
 % \item Added \texttt{curlyquotes} option, which essentially disables the \texttt{uquote} package.
 % \end{changelog}
 %
@@ -758,9 +760,47 @@
 % The command |\FancyVerbSpace| defines the visible space when |showspaces=true|.  The default \fancyvrb\ definition allows a font command to escape, so that all following text is forced to be teletype font.  The command is redefined to use |\textvisiblespace|.
 %
 %
-% \subsection{Visible tabs}
+% \subsection{\texttt{obeytabs} with visible tabs and with tabs inside macro arguments}
 %
-% The default treatment of visible tabs when |showtabs=true| does not allow variable-width tab symbols such as |\rightarrowfill| to function correctly.  This is fixed through a redefinition of |\FV@TrueTab|.
+% The original treatment of visible tabs when |showtabs=true| and |obeytabs=true| did not allow variable-width tab symbols such as |\rightarrowfill| to function correctly.  This is fixed through a redefinition of |\FV@TrueTab|.
+%
+% Various macros associated with |obeytabs=true| are also redefined so that tabs may be expanded regardless of whether they are within a group (within |{...}| with the normal \LaTeX\ meaning due to |commandchars|, etc.).  In the \fancyvrb\ implementation, using |obeytabs=true| when a tab is inside a group typically causes the entire line to vanish.  \fvextra\ patches this so that the tab is expanded and will be visible if |showtabs=true|.  Note, though, that the tab expansion in these cases is only guaranteed to be correct for leading whitespace that is inside a group.  The start of each run of whitespace that is inside a group is treated as a tab stop, whether or not it actually is, due to limitations of the tab expansion algorithm.  A more detailed discussion is provided in the implementation.
+%
+% The example below shows correct tab expansion of leading whitespace within a macro argument.  With \fancyvrb, the line of text would simply vanish in this case.
+% 
+% \begingroup
+% \fvset{frame=single, rulecolor=\color{DarkGreen}, gobble=4}
+% \begin{VerbatimVerbatim}[showtabs]
+%   \begin{Verbatim}[obeytabs, showtabs, showspaces, tabsize=4,
+%      commandchars=\\\{\}, tab=\textcolor{orange}{\rightarrowfill}]
+%   \textcolor{blue}{ 		Text after 1 space + 2 tabs}
+%   \end{Verbatim}
+% \end{VerbatimVerbatim}
+%
+%   \begin{Verbatim}[obeytabs, showtabs, showspaces, tabsize=4,
+%      commandchars=\\\{\}, tab=\textcolor{orange}{\rightarrowfill}]
+%   \textcolor{blue}{ 		Text after 1 space + 2 tabs}
+%   \end{Verbatim}
+% \endgroup
+%
+% The next example shows that tab expansion inside macros in the midst of text typically does not match up with the correct tab stops, since in such circumstances the beginning of the run of whitespace must be treated as a tab stop.
+%
+% \begingroup
+% \fvset{frame=single, rulecolor=\color{DarkGreen}, gobble=4, obeytabs}
+% \begin{VerbatimVerbatim}[showtabs]
+%   \begin{Verbatim}[obeytabs, showtabs, commandchars=\\\{\},
+%                    tab=\textcolor{orange}{\rightarrowfill}]
+%   \textcolor{blue}{		2 leading tabs}
+%   \textcolor{blue}{Text		then 2 tabs}
+%   \end{Verbatim}
+% \end{VerbatimVerbatim}
+%
+%   \begin{Verbatim}[obeytabs, showtabs, commandchars=\\\{\},
+%                    tab=\textcolor{orange}{\rightarrowfill}]
+%   \textcolor{blue}{		2 leading tabs}
+%   \textcolor{blue}{Text		then 2 tabs}
+%   \end{Verbatim}
+% \endgroup
 %
 %
 % \subsection{Math mode}
@@ -911,6 +951,26 @@
 %
 %
 %
+% \subsection{Utility macros}
+%
+% \begin{macro}{\FV@Space@ifx}
+% Macro for testing if a |\let| token is |\FV@Space| with |\ifx|.  The space will be active and defined as |\FV@Space|.
+%    \begin{macrocode}
+\def\FV@Space@ifx{\FV@Space}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@Tab@ifx}
+% Macro for testing if a |\let| token is |\FV@Tab| with |\ifx|.  The tab will be active and defined as |\FV@Tab|.
+%    \begin{macrocode}
+\def\FV@Tab@ifx{\FV@Tab}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
 % \subsection{Hooks}
 %
 %
@@ -971,12 +1031,78 @@
 % \end{macro}
 %
 %
-% \subsubsection{Visible tabs}
+% \subsubsection{\texttt{obeytabs} with visible tabs and with tabs inside macro arguments}
+% \label{sec:patch:obeytabs}
+%
+% |\FV@TrueTab| governs tab appearance when |obeytabs=true| and |showtabs=true|. It is redefined so that symbols with flexible width, such as |\rightarrowfill|, will work as expected.  In the original \fancyvrb\ definition, |\kern\@tempdima\hbox to\z@{...}|.  The |\kern| is removed and instead the |\hbox| is given the width |\@tempdima|.
+%
+% |\FV@TrueTab| and related macros are also modified so that they function for tabs inside macro arguments when |obeytabs=true| (inside curly braces |{}| with their normal meaning, when using |commandchars|, etc.).  The \fancyvrb\ implementation of tab expansion assumes that tabs are never inside a group; when a group that contains a tab is present, the entire line typically vanishes.  The new implementation keeps the \fancyvrb\ behavior exactly for tabs outside groups; they are perfectly expanded to tab stops.  Tabs inside groups cannot be perfectly expanded to tab stops, at least not using the \fancyvrb\ approach.  Instead, when \fvextra\ encounters a run of whitespace characters (tabs and possibly spaces), it makes the assumption that the nearest tab stop was at the beginning of the run.  This gives the correct behavior if the whitespace characters are leading indentation that happens to be within a macro.  Otherwise, it will typically not give correct tab expansion---but at least the entire line will not be discarded, and the run of whitespace will be represented, even if imperfectly.
+%
+% A general solution to tab expansion may be possible, but will almost certainly require multiple compiles, perhaps even one compile (or more) per tab.  The \pkg{zref} package provides a |\zsaveposx| macro that stores the current $x$ position on the page for subsequent compiles.  This macro, or a similar macro from another package, could be used to establish a reference point at the beginning of each line.  Then each run of whitespace that contains a tab could have a reference point established at its start, and tabs could be expanded based on the distance between the start of the run and the start of the line.  Such an approach would allow the first run of whitespace to measure its distance from the start of the line on the 2nd compile (once both reference points were established), so it would be able expand the first run of whitespace correctly on the 3rd compile.  That would allow a second run of whitespace to definitely establish its starting point on the 3rd compile, which would allow it to expand correctly on the 4th compile.  And so on.  Thus, while it should be possible to perform completely correct tab expansion with such an approach, it will in general require at least 4 compiles to do better than the current approach.  Furthermore, the sketch of the algorithm provided so far does not include any complications introduced by line breaking.  In the current approach, it is necessary to determine how each tab would be expanded in the absence of line breaking, save all tab widths, and then expand using saved widths during the actual typesetting with line breaking.
+%
+%
+% \begin{macro}{FV@TrueTabGroupLevel}
+% Counter for keeping track of the group level (|\currentgrouplevel|) at the very beginning of a line, inside |\FancyVerbFormatLine| but outside |\FancyVerbFormatText|, which is where the tab expansion macro is invoked.  This allows us to determine whether we are in a group, and expand tabs accordingly.
+%    \begin{macrocode}
+\newcounter{FV@TrueTabGroupLevel}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@@ObeyTabs}
+% The \fancyvrb\ macro responsible for tab expansion is modified so that it can handle tabs inside groups, even if imperfectly.  We need to use a special version of the space, |\FV@Space@ObeyTabs|, that within a group will capture all following spaces or tabs and then insert them with tab expansion based on the beginning of the run of whitespace.  We need to record the current group level, but then increment it by $1$ because all comparisons will be performed within the |\hbox{...}|.
+%    \begin{macrocode}
+\def\FV@@ObeyTabs#1{%
+  \let\FV@Space@Orig\FV@Space
+  \let\FV@Space\FV@Space@ObeyTabs
+  \setcounter{FV@TrueTabGroupLevel}{\the\currentgrouplevel}%
+  \addtocounter{FV@TrueTabGroupLevel}{1}%
+  \setbox\FV@TabBox=\hbox{#1}\box\FV@TabBox
+  \let\FV@Space\FV@Space@Orig}
+%    \end{macrocode}
+% \end{macro}
+%
 %
 % \begin{macro}{\FV@TrueTab}
-% Redefine |\FV@TrueTab| so that symbols with flexible width, such as |\rightarrowfill|, will work as expected.  In the original \fancyvrb\ definition, |\kern\@tempdima\hbox to\z@{...}|.  The |\kern| is removed and instead the |\hbox| is given the width |\@tempdima|.
+% Version that follows \fancyvrb\ if not in a group and takes another approach otherwise.
 %    \begin{macrocode}
 \def\FV@TrueTab{%
+  \ifnum\value{FV@TrueTabGroupLevel}=\the\currentgrouplevel\relax
+    \expandafter\FV@TrueTab@NoGroup
+  \else
+    \expandafter\FV@TrueTab@Group
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@TrueTabSaveWidth}
+% When linebreaking is in use, the \fancyvrb\ tab expansion algorithm cannot be used directly, since it involves |\hbox|, which doesn't allow for line breaks.  In those cases, tab widths will be calculated for the case without breaks and saved, and then saved widths will be used in the actual typesetting.  This macro is |\let| to width-saving code in those cases.
+%    \begin{macrocode}
+\let\FV@TrueTabSaveWidth\relax
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{FV@TrueTabCounter}
+% Counter for tracking saved tabs.
+%    \begin{macrocode}
+\newcounter{FV@TrueTabCounter}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@TrueTabSaveWidth@Save}
+% Save the current tab width, then increment the tab counter.  |\@tempdima| will hold the current tab width.
+%    \begin{macrocode}
+\def\FV@TrueTabSaveWidth@Save{%
+  \expandafter\xdef\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname{%
+    \number\@tempdima}%
+  \stepcounter{FV@TrueTabCounter}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@TrueTab@NoGroup}
+% This follows the \fancyvrb\ approach exactly, except for the |\hbox to\@tempdima| adjustment and the addition of |\FV@TrueTabSaveWidth|.
+%    \begin{macrocode}
+\def\FV@TrueTab@NoGroup{%
   \egroup
   \@tempdima=\FV@ObeyTabSize sp\relax
   \@tempcnta=\wd\FV@TabBox
@@ -984,8 +1110,113 @@
   \divide\@tempcnta\@tempdima
   \multiply\@tempdima\@tempcnta
   \advance\@tempdima-\wd\FV@TabBox
+  \FV@TrueTabSaveWidth
   \setbox\FV@TabBox=\hbox\bgroup
     \unhbox\FV@TabBox\hbox to\@tempdima{\hss\FV@TabChar}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{FV@ObeyTabs@Whitespace@Tab}
+% In a group where runs of whitespace characters are collected, we need to keep track of whether a tab has been found, so we can avoid expansion and the associated |\hbox| for spaces without tabs.
+%    \begin{macrocode}
+\newboolean{FV@ObeyTabs@Whitespace@Tab}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@TrueTab@Group}
+% If in a group, a tab should start collecting whitespace characters for later tab expansion, beginning with itself.  The collected whitespace will use |\FV@Tab@ifx| and |\FV@Space@ifx| so that any |\ifx| comparisons performed later will behave as expected.  This shouldn't be strictly necessary, because |\FancyVerbBreakStart| operates with saved tab widths rather than using the tab expansion code directly.  But it is safer in case any other unanticipated scanning is going on.
+%    \begin{macrocode}
+\def\FV@TrueTab@Group{%
+  \booltrue{FV@ObeyTabs@Whitespace@Tab}%
+  \gdef\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@Space@ObeyTabs}
+% Space treatment, like tab treatment, now depends on whether we are in a group, because in a group we want to collect all runs of whitespace and then expand any tabs.
+%    \begin{macrocode}
+\def\FV@Space@ObeyTabs{%
+  \ifnum\value{FV@TrueTabGroupLevel}=\the\currentgrouplevel\relax
+    \expandafter\FV@Space@ObeyTabs@NoGroup
+  \else
+    \expandafter\FV@Space@ObeyTabs@Group
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@Space@ObeyTabs@NoGroup}
+% Fall back to normal space.
+%    \begin{macrocode}
+\def\FV@Space@ObeyTabs@NoGroup{\FV@Space@Orig}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@Space@ObeyTabs@Group}
+% Make a note that no tabs have yet been encountered, store the current space, then scan for following whitespace.
+%    \begin{macrocode}
+\def\FV@Space@ObeyTabs@Group{%
+  \boolfalse{FV@ObeyTabs@Whitespace@Tab}%
+  \gdef\FV@TmpWhitespace{\FV@Space@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@ObeyTabs@ScanWhitespace}
+% Collect whitespace until the end of the run, then process it.  Proper lookahead comparison requires |\FV@Space@ifx| and |\FV@Tab@ifx|.
+%    \begin{macrocode}
+\def\FV@ObeyTabs@ScanWhitespace{%
+  \@ifnextchar\FV@Space@ifx%
+   {\FV@TrueTab@CaptureWhitespace@Space}%
+   {\ifx\@let@token\FV@Tab@ifx
+      \expandafter\FV@TrueTab@CaptureWhitespace@Tab
+    \else
+      \expandafter\FV@ObeyTabs@ResolveWhitespace
+    \fi}}
+\def\FV@TrueTab@CaptureWhitespace@Space#1{%
+  \g@addto@macro\FV@TmpWhitespace{\FV@Space@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@TrueTab@CaptureWhitespace@Tab#1{%
+  \booltrue{FV@ObeyTabs@Whitespace@Tab}%
+  \g@addto@macro\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@TrueTab@Group@Expand}
+% Yet another tab definition, this one for use in the actual expansion of tabs in whitespace.  This uses the \fancyvrb\ algorithm, but only over a restricted region known to contain no groups.
+%    \begin{macrocode}
+\newbox\FV@TabBox@Group
+\def\FV@TrueTab@Group@Expand{%
+  \egroup
+  \@tempdima=\FV@ObeyTabSize sp\relax
+  \@tempcnta=\wd\FV@TabBox@Group
+  \advance\@tempcnta\FV@@ObeyTabSize\relax
+  \divide\@tempcnta\@tempdima
+  \multiply\@tempdima\@tempcnta
+  \advance\@tempdima-\wd\FV@TabBox@Group
+  \FV@TrueTabSaveWidth
+  \setbox\FV@TabBox@Group=\hbox\bgroup
+    \unhbox\FV@TabBox@Group\hbox to\@tempdima{\hss\FV@TabChar}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@ObeyTabs@ResolveWhitespace}
+% Need to make sure the right definitions of the space and tab are in play here.  Only do tab expansion, with the associated |\hbox|, if a tab is indeed present.
+%    \begin{macrocode}
+\def\FV@ObeyTabs@ResolveWhitespace{%
+  \let\FV@Space\FV@Space@Orig
+  \let\FV@Tab\FV@TrueTab@Group@Expand
+  \expandafter\FV@ObeyTabs@ResolveWhitespace@i\expandafter{\FV@TmpWhitespace}%
+  \let\FV@Space\FV@Space@ObeyTabs
+  \let\FV@Tab\FV@TrueTab}
+\def\FV@ObeyTabs@ResolveWhitespace@i#1{%
+  \ifbool{FV@ObeyTabs@Whitespace@Tab}%
+   {\setbox\FV@TabBox@Group=\hbox{#1}\box\FV@TabBox@Group}%
+   {#1}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1888,46 +2119,18 @@
 %
 % \paragraph{Tab expansion}\hfill\\
 %
-% \noindent The \fancyvrb\ option |obeytabs| uses a clever algorithm involving boxing and unboxing to expand tabs based on tab stops rather than a fixed number of equivalent space characters.  (See the definitions of |\FV@@ObeyTabs| and |\FV@TrueTab|.)  Unfortunately, since this involves |\hbox|, it interferes with the line breaking algorithm, and an alternative is required.
+% \noindent The \fancyvrb\ option |obeytabs| uses a clever algorithm involving boxing and unboxing to expand tabs based on tab stops rather than a fixed number of equivalent space characters.  (See the definitions of |\FV@@ObeyTabs| and |\FV@TrueTab| in \cref{sec:patch:obeytabs}.)  Unfortunately, since this involves |\hbox|, it interferes with the line breaking algorithm, and an alternative is required.
 %
-% There are probably many ways tab expansion could be performed while still allowing line breaks.  The current approach has been chosen because it is relatively straightforward and yields identical results to the case without line breaks.  Line breaking involves saving a line in a box, and determining whether the box is too wide.  During this process, if |obeytabs=true|, |\FV@TrueTab| is |\let| to a version that saves the width of every tab in a macro.  When a line is broken, all tabs within it will then use another variant of |\FV@TrueTab| that sequentially retrieves the saved widths.  This maintains the exact behavior of the case without line breaks.
+% There are probably many ways tab expansion could be performed while still allowing line breaks.  The current approach has been chosen because it is relatively straightforward and yields identical results to the case without line breaks.  Line breaking involves saving a line in a box, and determining whether the box is too wide.  During this process, if |obeytabs=true|, |\FV@TrueTabSaveWidth|, which is inside |\FV@TrueTab|, is |\let| to a version that saves the width of every tab in a macro.  When a line is broken, all tabs within it will then use a variant of |\FV@TrueTab| that sequentially retrieves the saved widths.  This maintains the exact behavior of the case without line breaks.
 %
-% Note that the variants of |\FV@TrueTab| are based on the \fvextra\ patched version of |\FV@TrueTab|, not on the original |\FV@TrueTab| defined in \fancyvrb.
-%
-%
-% \begin{macro}{FV@TrueTabCounter}
-% Counter for tabs, for creating uniquely named macros containing tab widths.
-%    \begin{macrocode}
-\newcounter{FV@TrueTabCounter}
-%    \end{macrocode}
-% \end{macro}
+% Note that the special version of |\FV@TrueTab| is based on the \fvextra\ patched version of |\FV@TrueTab|, not on the original |\FV@TrueTab| defined in \fancyvrb.
 %
 %
-% \begin{macro}{\FV@TrueTab@SaveWidths}
-% Version of |\FV@TrueTab| that also saves the width of each tab in sequentially numbered macros.
-%    \begin{macrocode}
-\def\FV@TrueTab@SaveWidths{%
-  \egroup
-  \@tempdima=\FV@ObeyTabSize sp\relax
-  \@tempcnta=\wd\FV@TabBox
-  \advance\@tempcnta\FV@@ObeyTabSize\relax
-  \divide\@tempcnta\@tempdima
-  \multiply\@tempdima\@tempcnta
-  \advance\@tempdima-\wd\FV@TabBox
-  \expandafter\xdef\csname FV@TrueTab@Width\arabic{FV@TrueTabCounter}\endcsname{%
-    \number\@tempdima}%
-  \stepcounter{FV@TrueTabCounter}%
-  \setbox\FV@TabBox=\hbox\bgroup
-    \unhbox\FV@TabBox\hbox to\@tempdima{\hss\FV@TabChar}}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\FV@TrueTab@UseWidths}
+% \begin{macro}{\FV@TrueTab@UseWidth}
 % Version of |\FV@TrueTab| that uses pre-computed tab widths.
 %    \begin{macrocode}
-\def\FV@TrueTab@UseWidths{%
-  \@tempdima=\csname FV@TrueTab@Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
+\def\FV@TrueTab@UseWidth{%
+  \@tempdima=\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
   \stepcounter{FV@TrueTabCounter}%
   \hbox to\@tempdima{\hss\FV@TabChar}}
 %    \end{macrocode}
@@ -2537,17 +2740,17 @@
     \advance\linewidth by -\FV@FrameRule
   \fi
   \ifx\FV@Tab\FV@TrueTab
-    \let\FV@Tab\FV@TrueTab@SaveWidths
+    \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
     \setcounter{FV@TrueTabCounter}{0}%
   \fi
   \sbox{\FV@LineBox}{\FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}%
-  \ifx\FV@Tab\FV@TrueTab@SaveWidths
-     \let\FV@Tab\FV@TrueTab
+  \ifx\FV@Tab\FV@TrueTab
+    \let\FV@TrueTabSaveWidth\relax
   \fi
   \ifdim\wd\FV@LineBox>\linewidth
     \setcounter{FancyVerbLineBreakLast}{0}%
     \ifx\FV@Tab\FV@TrueTab
-      \let\FV@Tab\FV@TrueTab@UseWidths
+      \let\FV@Tab\FV@TrueTab@UseWidth
       \setcounter{FV@TrueTabCounter}{0}%
     \fi
     \FV@SaveLineBox{#1}%
@@ -2560,7 +2763,7 @@
     \FancyVerbFormatLine{\usebox{\FV@LineBox}}%
     \FV@RightListFrame
     \FV@RightListNumber
-    \ifx\FV@Tab\FV@TrueTab@UseWidths
+    \ifx\FV@Tab\FV@TrueTab@UseWidth
       \let\FV@Tab\FV@TrueTab
     \fi
   \else

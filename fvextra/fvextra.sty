@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2016/07/10 v1.1dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/12 v1.1dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -35,6 +35,8 @@
 \@ifpackageloaded{csquotes}%
  {\PackageWarning{fvextra}{csquotes should be loaded after fvextra, %
   to avoid a warning from the lineno package}}{}
+\def\FV@Space@ifx{\FV@Space}
+\def\FV@Tab@ifx{\FV@Tab}
 \let\FV@FormattingPrepHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
   \expandafter\FV@FormattingPrepHook\FV@FormattingPrep}
@@ -60,7 +62,27 @@
   \let\]\FV@rightsquarebracket
 } %$ <- highlighting
 \def\FancyVerbSpace{\textvisiblespace}
+\newcounter{FV@TrueTabGroupLevel}
+\def\FV@@ObeyTabs#1{%
+  \let\FV@Space@Orig\FV@Space
+  \let\FV@Space\FV@Space@ObeyTabs
+  \setcounter{FV@TrueTabGroupLevel}{\the\currentgrouplevel}%
+  \addtocounter{FV@TrueTabGroupLevel}{1}%
+  \setbox\FV@TabBox=\hbox{#1}\box\FV@TabBox
+  \let\FV@Space\FV@Space@Orig}
 \def\FV@TrueTab{%
+  \ifnum\value{FV@TrueTabGroupLevel}=\the\currentgrouplevel\relax
+    \expandafter\FV@TrueTab@NoGroup
+  \else
+    \expandafter\FV@TrueTab@Group
+  \fi}
+\let\FV@TrueTabSaveWidth\relax
+\newcounter{FV@TrueTabCounter}
+\def\FV@TrueTabSaveWidth@Save{%
+  \expandafter\xdef\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname{%
+    \number\@tempdima}%
+  \stepcounter{FV@TrueTabCounter}}
+\def\FV@TrueTab@NoGroup{%
   \egroup
   \@tempdima=\FV@ObeyTabSize sp\relax
   \@tempcnta=\wd\FV@TabBox
@@ -68,8 +90,62 @@
   \divide\@tempcnta\@tempdima
   \multiply\@tempdima\@tempcnta
   \advance\@tempdima-\wd\FV@TabBox
+  \FV@TrueTabSaveWidth
   \setbox\FV@TabBox=\hbox\bgroup
     \unhbox\FV@TabBox\hbox to\@tempdima{\hss\FV@TabChar}}
+\newboolean{FV@ObeyTabs@Whitespace@Tab}
+\def\FV@TrueTab@Group{%
+  \booltrue{FV@ObeyTabs@Whitespace@Tab}%
+  \gdef\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@Space@ObeyTabs{%
+  \ifnum\value{FV@TrueTabGroupLevel}=\the\currentgrouplevel\relax
+    \expandafter\FV@Space@ObeyTabs@NoGroup
+  \else
+    \expandafter\FV@Space@ObeyTabs@Group
+  \fi}
+\def\FV@Space@ObeyTabs@NoGroup{\FV@Space@Orig}
+\def\FV@Space@ObeyTabs@Group{%
+  \boolfalse{FV@ObeyTabs@Whitespace@Tab}%
+  \gdef\FV@TmpWhitespace{\FV@Space@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@ObeyTabs@ScanWhitespace{%
+  \@ifnextchar\FV@Space@ifx%
+   {\FV@TrueTab@CaptureWhitespace@Space}%
+   {\ifx\@let@token\FV@Tab@ifx
+      \expandafter\FV@TrueTab@CaptureWhitespace@Tab
+    \else
+      \expandafter\FV@ObeyTabs@ResolveWhitespace
+    \fi}}
+\def\FV@TrueTab@CaptureWhitespace@Space#1{%
+  \g@addto@macro\FV@TmpWhitespace{\FV@Space@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@TrueTab@CaptureWhitespace@Tab#1{%
+  \booltrue{FV@ObeyTabs@Whitespace@Tab}%
+  \g@addto@macro\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\newbox\FV@TabBox@Group
+\def\FV@TrueTab@Group@Expand{%
+  \egroup
+  \@tempdima=\FV@ObeyTabSize sp\relax
+  \@tempcnta=\wd\FV@TabBox@Group
+  \advance\@tempcnta\FV@@ObeyTabSize\relax
+  \divide\@tempcnta\@tempdima
+  \multiply\@tempdima\@tempcnta
+  \advance\@tempdima-\wd\FV@TabBox@Group
+  \FV@TrueTabSaveWidth
+  \setbox\FV@TabBox@Group=\hbox\bgroup
+    \unhbox\FV@TabBox@Group\hbox to\@tempdima{\hss\FV@TabChar}}
+\def\FV@ObeyTabs@ResolveWhitespace{%
+  \let\FV@Space\FV@Space@Orig
+  \let\FV@Tab\FV@TrueTab@Group@Expand
+  \expandafter\FV@ObeyTabs@ResolveWhitespace@i\expandafter{\FV@TmpWhitespace}%
+  \let\FV@Space\FV@Space@ObeyTabs
+  \let\FV@Tab\FV@TrueTab}
+\def\FV@ObeyTabs@ResolveWhitespace@i#1{%
+  \ifbool{FV@ObeyTabs@Whitespace@Tab}%
+   {\setbox\FV@TabBox@Group=\hbox{#1}\box\FV@TabBox@Group}%
+   {#1}}
 \def\FancyVerbMathSpace{ }
 \def\FV@SetupMathSpace{%
   \everymath\expandafter{\the\everymath\let\FV@Space\FancyVerbMathSpace}}
@@ -530,22 +606,8 @@
   \fi
   \FV@Next
 }
-\newcounter{FV@TrueTabCounter}
-\def\FV@TrueTab@SaveWidths{%
-  \egroup
-  \@tempdima=\FV@ObeyTabSize sp\relax
-  \@tempcnta=\wd\FV@TabBox
-  \advance\@tempcnta\FV@@ObeyTabSize\relax
-  \divide\@tempcnta\@tempdima
-  \multiply\@tempdima\@tempcnta
-  \advance\@tempdima-\wd\FV@TabBox
-  \expandafter\xdef\csname FV@TrueTab@Width\arabic{FV@TrueTabCounter}\endcsname{%
-    \number\@tempdima}%
-  \stepcounter{FV@TrueTabCounter}%
-  \setbox\FV@TabBox=\hbox\bgroup
-    \unhbox\FV@TabBox\hbox to\@tempdima{\hss\FV@TabChar}}
-\def\FV@TrueTab@UseWidths{%
-  \@tempdima=\csname FV@TrueTab@Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
+\def\FV@TrueTab@UseWidth{%
+  \@tempdima=\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
   \stepcounter{FV@TrueTabCounter}%
   \hbox to\@tempdima{\hss\FV@TabChar}}
 \def\FV@Break{%
@@ -989,17 +1051,17 @@
     \advance\linewidth by -\FV@FrameRule
   \fi
   \ifx\FV@Tab\FV@TrueTab
-    \let\FV@Tab\FV@TrueTab@SaveWidths
+    \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
     \setcounter{FV@TrueTabCounter}{0}%
   \fi
   \sbox{\FV@LineBox}{\FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}%
-  \ifx\FV@Tab\FV@TrueTab@SaveWidths
-     \let\FV@Tab\FV@TrueTab
+  \ifx\FV@Tab\FV@TrueTab
+    \let\FV@TrueTabSaveWidth\relax
   \fi
   \ifdim\wd\FV@LineBox>\linewidth
     \setcounter{FancyVerbLineBreakLast}{0}%
     \ifx\FV@Tab\FV@TrueTab
-      \let\FV@Tab\FV@TrueTab@UseWidths
+      \let\FV@Tab\FV@TrueTab@UseWidth
       \setcounter{FV@TrueTabCounter}{0}%
     \fi
     \FV@SaveLineBox{#1}%
@@ -1012,7 +1074,7 @@
     \FancyVerbFormatLine{\usebox{\FV@LineBox}}%
     \FV@RightListFrame
     \FV@RightListNumber
-    \ifx\FV@Tab\FV@TrueTab@UseWidths
+    \ifx\FV@Tab\FV@TrueTab@UseWidth
       \let\FV@Tab\FV@TrueTab
     \fi
   \else
