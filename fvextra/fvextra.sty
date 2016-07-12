@@ -220,11 +220,16 @@
     \hbox to \linewidth{%
       \FV@LeftListNumber
       \FV@LeftListFrame
-      \FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}\hss
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{%
+          \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}\hss
       \FV@RightListFrame
       \FV@RightListNumber}%
     \hss}}
-\def\FV@BProcessLine#1{\hbox{\FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}
+\def\FV@BProcessLine#1{%
+  \hbox{\FancyVerbFormatLine{%
+    \FancyVerbHighlightLine{%
+      \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}}
 \newbool{FV@NumberFirstLine}
 \define@booleankey{FV}{numberfirstline}%
  {\booltrue{FV@NumberFirstLine}}%
@@ -388,6 +393,93 @@
         \fi}{}%
     \fi}%
 }
+\define@key{FV}{highlightlines}{\def\FV@HighlightLinesList{#1}}%
+\fvset{highlightlines=}
+\define@key{FV}{highlightcolor}{\def\FancyVerbHighlightColor{#1}}%
+\let\FancyVerbHighlightColor\@empty
+\ifcsname definecolor\endcsname
+\ifx\definecolor\relax
+\else
+  \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+  \fvset{highlightcolor=FancyVerbHighlightColor}
+\fi\fi
+\AtBeginDocument{%
+  \ifx\FancyVerbHighlightColor\@empty
+    \ifcsname definecolor\endcsname
+    \ifx\definecolor\relax
+    \else
+    \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+    \fvset{highlightcolor=FancyVerbHighlightColor}
+    \fi\fi
+  \fi}
+\def\FancyVerbHighlightLine#1{#1}
+\def\FV@HighlightLine#1{%
+  \@tempcnta=\c@FancyVerbLine
+  \@tempcntb=\c@FancyVerbLine
+  \ifcsname FV@HighlightLine:\number\@tempcnta\endcsname
+    \advance\@tempcntb\m@ne
+    \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+      \advance\@tempcntb\tw@
+      \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineMiddle
+      \else
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineLast
+      \fi
+    \else
+      \advance\@tempcntb\tw@
+      \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineFirst
+      \else
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineSingle
+      \fi
+    \fi
+  \else
+    \let\FV@HighlightLine@Next\FancyVerbHighlightLineNormal
+  \fi
+  \FV@HighlightLine@Next{#1}%
+}
+\def\FancyVerbHighlightLineNormal#1{#1}
+\newlength{\FV@TmpLength}
+\def\FancyVerbHighlightLineFirst#1{%
+  \setlength{\FV@TmpLength}{\fboxsep}%
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{\FancyVerbHighlightColor}{%
+    \setlength{\fboxsep}{\FV@TmpLength}%
+    \rlap{\strut#1}%
+    \hspace{\linewidth}}}
+\let\FancyVerbHighlightLineMiddle\FancyVerbHighlightLineFirst
+\let\FancyVerbHighlightLineLast\FancyVerbHighlightLineFirst
+\let\FancyVerbHighlightLineSingle\FancyVerbHighlightLineFirst
+\def\FV@HighlightLinesPrep{%
+  \ifx\FV@HighlightLinesList\@empty
+  \else
+    \let\FancyVerbHighlightLine\FV@HighlightLine
+    \expandafter\FV@HighlightLinesPrep@i
+  \fi}
+\def\FV@HighlightLinesPrep@i{%
+  \renewcommand{\do}[1]{%
+    \ifstrempty{##1}{}{\FV@HighlightLinesParse##1-\FV@Undefined}}%
+  \expandafter\docsvlist\expandafter{\FV@HighlightLinesList}}
+\def\FV@HighlightLinesParse#1-#2\FV@Undefined{%
+  \ifstrempty{#2}%
+   {\FV@HighlightLinesParse@Single{#1}}%
+   {\FV@HighlightLinesParse@Range{#1}#2\relax}}
+\def\FV@HighlightLinesParse@Single#1{%
+  \expandafter\let\csname FV@HighlightLine:\detokenize{#1}\endcsname\relax}
+\newcounter{FV@HighlightLinesStart}
+\newcounter{FV@HighlightLinesStop}
+\def\FV@HighlightLinesParse@Range#1#2-{%
+  \setcounter{FV@HighlightLinesStart}{#1}%
+  \setcounter{FV@HighlightLinesStop}{#2}%
+  \stepcounter{FV@HighlightLinesStop}%
+  \FV@HighlightLinesParse@Range@Loop}
+\def\FV@HighlightLinesParse@Range@Loop{%
+  \ifnum\value{FV@HighlightLinesStart}<\value{FV@HighlightLinesStop}\relax
+    \expandafter\let\csname FV@HighlightLine:\arabic{FV@HighlightLinesStart}\endcsname\relax
+    \stepcounter{FV@HighlightLinesStart}%
+    \expandafter\FV@HighlightLinesParse@Range@Loop
+  \fi}
+\g@addto@macro\FV@FormattingPrepHook{\FV@HighlightLinesPrep}
 \newboolean{FV@BreakLines}
 \define@booleankey{FV}{breaklines}%
   {\FV@BreakLinestrue
@@ -1054,7 +1146,10 @@
     \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
     \setcounter{FV@TrueTabCounter}{0}%
   \fi
-  \sbox{\FV@LineBox}{\FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}%
+  \sbox{\FV@LineBox}{%
+    \FancyVerbFormatLine{%
+      %\FancyVerbHighlightLine  %<-- Default definition using \rlap breaks breaking
+       {\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}%
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\relax
   \fi
@@ -1071,7 +1166,8 @@
       \FV@SaveLineBox{#1}}%
     \FV@LeftListNumber
     \FV@LeftListFrame
-    \FancyVerbFormatLine{\usebox{\FV@LineBox}}%
+    \FancyVerbFormatLine{%
+      \FancyVerbHighlightLine{\usebox{\FV@LineBox}}}%
     \FV@RightListFrame
     \FV@RightListNumber
     \ifx\FV@Tab\FV@TrueTab@UseWidth
@@ -1081,7 +1177,9 @@
     \FV@LeftListNumber
     \FV@LeftListFrame
     \FancyVerbFormatLine{%
-      \parbox[t]{\linewidth}{\noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}%
+      \FancyVerbHighlightLine{%
+        \parbox[t]{\linewidth}{%
+          \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
     \FV@RightListFrame
     \FV@RightListNumber
   \fi}%

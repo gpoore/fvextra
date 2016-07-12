@@ -186,7 +186,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2268}
+% \CheckSum{2460}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -206,6 +206,7 @@
 %
 %
 % \begin{changelog}{v1.1}{2016/07/??}
+% \item Added \texttt{highlightlines} option that takes a line number or range of line numbers and highlights the corresponding lines.  Added \texttt{highlightcolor} option that controls hightlighting color.
 % \item \texttt{obeytabs} no longer causes lines to vanish when tabs are inside macro arguments.  Tabs and spaces inside a macro argument but otherwise at the beginning of a line are expanded correctly.  Tabs inside a macro argument that are preceded by non-whitespace characters (not spaces or tabs) are expanded based on the starting position of the run of whitespace in which they occur.
 % \item The line breaking options \texttt{breakanywhere}, \texttt{breakbefore}, and \texttt{breakafter} now work with multi-byte UTF-8 code points under pdfTeX with \texttt{inputenc}.  They were already fully functional under XeTeX and LuaTeX.
 % \item Added \texttt{curlyquotes} option, which essentially disables the \texttt{uquote} package.
@@ -290,6 +291,43 @@
 %   `quoted text'
 %   \end{Verbatim}
 % \end{example}
+%
+%
+% \item[highlightlines (string) (\meta{none})]
+% This highlights a single line or a range of lines based on line numbers.  The line numbers refer to the line numbers that \fancyvrb\ would show if |numbers=left|, etc.  It does not refer to original or actual line numbers before adjustment by |firstnumber|.
+%
+% The highlighting color can be customized with |highlightcolor|.
+%
+% \begingroup
+% \fvset{xleftmargin=2em}
+% \begin{longexample}
+%   \begin{Verbatim}[numbers=left, highlightlines={1, 3-4}]
+%   First line
+%   Second line
+%   Third line
+%   Fourth line
+%   Fifth line
+%   \end{Verbatim}
+% \end{longexample}
+% \endgroup
+%
+% The actual highlighting is performed by a set of commands.  These may be customized for additional fine-tuning of highlighting.  See the default definition of |\FancyVerbHighlightLineFirst| as a starting point.
+%
+% \vspace{0.1in}
+% $\bullet$ |\FancyVerbHighlightLineFirst|:  First line in a range. \\
+% \indent $\bullet$ |\FancyVerbHighlightLineMiddle|:  Inner lines in a range. \\
+% \indent $\bullet$ |\FancyVerbHighlightLineLast|:  Last line in a range. \\
+% \indent $\bullet$ |\FancyVerbHighlightLineSingle|:  Single highlighted lines. \\
+% \indent $\bullet$ |\FancyVerbHighlightLineNormal|:  Normal lines without highlighting. \\
+%
+% \vspace{-0.1in}
+% \noindent If these are customized in such a way that indentation or inter-line spacing is changed, then |\FancyVerbHighlightLineNormal| may be modified as well to make all lines uniform.  When working with the |First|, |Last|, and |Single| commands, keep in mind that \fvextra\ merges all numbers ranges, so that |{1, 2-3, 3-5}| is treated the same as |{1-5}|.
+%
+% Highlighting is applied after |\FancyVerbFormatText|, so any text formatting defined via that command will work with highlighting.  Highlighting is applied before |\FancyVerbFormatLine|, so if |\FancyVerbFormatLine| puts a line in a box, the box will be behind whatever is created by highlighting.  This prevents highlighting from vanishing due to user-defined customization.
+%
+%
+% \item[highlightcolor (string) (aqua)]
+% Set the color used for |highlightlines|, using a predefined color name from \pkg{color} or \pkg{xcolor}, or a color defined via |\definecolor|.
 %
 %
 % \item[linenos (boolean) (false)]
@@ -1383,11 +1421,13 @@
 % 
 %
 %
-% \subsubsection{\texttt{\textbackslash FancyVerbFormatLine} and \texttt{\textbackslash FancyVerbFormatText}}
+% \subsubsection{Formatting with \texttt{\textbackslash FancyVerbFormatLine}, \texttt{\textbackslash FancyVerbFormatText}, and \texttt{\textbackslash FancyVerbHighlightLine}}
 % 
 % \fancyvrb\ defines |\FancyVerbFormatLine|, which defines the formatting for each line. The introduction of line breaks introduces an issue for |\FancyVerbFormatLine|.  Does it format the entire line, including any whitespace in the margins or behind line break symbols (that is, is it outside the |\parbox| in which the entire line is wrapped when breaking is active)?  Or does it only format the text part of the line, only affecting the actual characters (inside the |\parbox|)?  Since both might be desirable, |\FancyVerbFormatLine| is assigned to the entire line, and a new macro |\FancyVerbFormatText| is assigned to the text, within the |\parbox|.
 %
 % An additional complication is that the \fancyvrb\ documentation says that the default value is |\def\FancyVerbFormatLine#1{#1}|.  But the actual default is |\def\FancyVerbFormatLine#1{\FV@ObeyTabs{#1}}|.  That is, |\FV@ObeyTabs| needs to operate directly on the line to handle tabs.  As a result, \emph{all} \fancyvrb\ commands that involve |\FancyVerbFormatLine| are patched, so that |\def\FancyVerbFormatLine#1{#1}|.
+%
+% An additional macro |\FancyVerbHighlightLine| is added between |\FancyVerbFormatLine| and |\FancyVerbFormatText|.  This is used to highlight selected lines (\cref{sec:impl:extensions:highlighting}).  It is inside |\FancyVerbHighlightLine| so that if |\FancyVerbHighlightLine| is used to provide a background color, |\FancyVerbHighlightLine| can override it.
 %
 % \begin{macro}{\FancyVerbFormatLine}
 % Format the entire line, following the definition given in the \fancyvrb\ documentation.  Because this is formatting the entire line, using boxes works with line breaking.
@@ -1414,7 +1454,9 @@
     \hbox to \linewidth{%
       \FV@LeftListNumber
       \FV@LeftListFrame
-      \FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}\hss
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{%
+          \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}\hss
       \FV@RightListFrame
       \FV@RightListNumber}%
     \hss}}
@@ -1425,7 +1467,10 @@
 % \begin{macro}{\FV@BProcessLine}
 % Redefined |\FV@BProcessLine| in which |\FancyVerbFormatText| is added and tab handling is explicit.
 %    \begin{macrocode}
-\def\FV@BProcessLine#1{\hbox{\FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}
+\def\FV@BProcessLine#1{%
+  \hbox{\FancyVerbFormatLine{%
+    \FancyVerbHighlightLine{%
+      \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1646,6 +1691,171 @@
         \fi}{}%
     \fi}%
 }
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+% \subsubsection{Line highlighting or emphasis}
+% \label{sec:impl:extensions:highlighting}
+%
+% This adds an option |highlightlines| that allows specific lines, or lines within a range, to be highlighted or otherwise emphasized.
+%
+% \begin{macro}{highlightlines}\begin{macro}{\FV@HighlightLinesList}
+%    \begin{macrocode}
+\define@key{FV}{highlightlines}{\def\FV@HighlightLinesList{#1}}%
+\fvset{highlightlines=}
+%    \end{macrocode}
+% \end{macro}\end{macro}
+%
+% \begin{macro}{highlightcolor}\begin{macro}{\FV@HighlightColor}
+% Define color for highlighting.  The default is aqua, RGB $(0,1,1)$.
+%    \begin{macrocode}
+\define@key{FV}{highlightcolor}{\def\FancyVerbHighlightColor{#1}}%
+\let\FancyVerbHighlightColor\@empty
+\ifcsname definecolor\endcsname
+\ifx\definecolor\relax
+\else
+  \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+  \fvset{highlightcolor=FancyVerbHighlightColor}
+\fi\fi
+\AtBeginDocument{%
+  \ifx\FancyVerbHighlightColor\@empty
+    \ifcsname definecolor\endcsname
+    \ifx\definecolor\relax
+    \else
+    \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+    \fvset{highlightcolor=FancyVerbHighlightColor}
+    \fi\fi
+  \fi}
+%    \end{macrocode}
+% \end{macro}\end{macro}
+%
+%
+% \begin{macro}{\FancyVerbHighlightLine}
+% This is the entry macro into line highlighting.  By default it should do nothing.  It is always invoked between |\FancyVerbFormatLine| and |\FancyVerbFormatText|, so that it can provide a background color (won't interfere with line breaking) and can override any formatting provided by |\FancyVerbFormatLine|.  It is |\let| to |\FV@HighlightLine| when highlighting is active.
+%    \begin{macrocode}
+\def\FancyVerbHighlightLine#1{#1}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@HighlightLine}
+% This determines whether highlighting should be performed, and if so, which macro should be invoked.
+%    \begin{macrocode}
+\def\FV@HighlightLine#1{%
+  \@tempcnta=\c@FancyVerbLine
+  \@tempcntb=\c@FancyVerbLine
+  \ifcsname FV@HighlightLine:\number\@tempcnta\endcsname
+    \advance\@tempcntb\m@ne
+    \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+      \advance\@tempcntb\tw@
+      \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineMiddle
+      \else
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineLast
+      \fi
+    \else
+      \advance\@tempcntb\tw@
+      \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineFirst
+      \else
+        \let\FV@HighlightLine@Next\FancyVerbHighlightLineSingle
+      \fi
+    \fi
+  \else
+    \let\FV@HighlightLine@Next\FancyVerbHighlightLineNormal
+  \fi
+  \FV@HighlightLine@Next{#1}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FancyVerbHighlightLineNormal}
+% A normal line that is not highlighted or otherwise emphasized.  This could be redefined to de-emphasize the line.
+%    \begin{macrocode}
+\def\FancyVerbHighlightLineNormal#1{#1}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@TmpLength}
+%    \begin{macrocode}
+\newlength{\FV@TmpLength}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FancyVerbHighlightLineFirst}
+% The first line in a multi-line range.
+%
+% |\fboxsep| is set to zero so as to avoid indenting the line or changing inter-line spacing.  It is restored to its original value inside to prevent any undesired effects.  The |\strut| is needed to get the highlighting to be the appropriate height.  The |\rlap| and |\hspace| make the |\colorbox| expand to the full |\linewidth|.  Note that if |\fboxsep| $\ne0$, then we would want to use |\dimexpr\linewidth-2\fboxsep| or add |\hspace{-2\fboxsep}| at the end.
+%
+% If this macro is customized so that the text cannot take up the full |\linewidth|, then adjustments may need to be made here or in the line breaking code to make sure that line breaking takes place at the appropriate location.
+%    \begin{macrocode}
+\def\FancyVerbHighlightLineFirst#1{%
+  \setlength{\FV@TmpLength}{\fboxsep}%
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{\FancyVerbHighlightColor}{%
+    \setlength{\fboxsep}{\FV@TmpLength}%
+    \rlap{\strut#1}%
+    \hspace{\linewidth}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FancyVerbHighlightLineMiddle}
+% A middle line in a multi-line range.
+%    \begin{macrocode}
+\let\FancyVerbHighlightLineMiddle\FancyVerbHighlightLineFirst
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FancyVerbHighlightLineLast}
+% The last line in a multi-line range.
+%    \begin{macrocode}
+\let\FancyVerbHighlightLineLast\FancyVerbHighlightLineFirst
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FancyVerbHighlightLineSingle}
+% A single line not in a multi-line range.
+%    \begin{macrocode}
+\let\FancyVerbHighlightLineSingle\FancyVerbHighlightLineFirst
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@HighlightLinesPrep}
+% Process the list of lines to highlight (if any).  A macro is created for each line to be highlighted.  During highlighting, a line is highlighted if the corresponding macro exists.  All of the macro creating is ultimately within the current environment group so it stays local.  |\FancyVerbHighlightLine| is |\let| to a version that will invoke the necessary logic.
+%    \begin{macrocode}
+\def\FV@HighlightLinesPrep{%
+  \ifx\FV@HighlightLinesList\@empty
+  \else
+    \let\FancyVerbHighlightLine\FV@HighlightLine
+    \expandafter\FV@HighlightLinesPrep@i
+  \fi}
+\def\FV@HighlightLinesPrep@i{%
+  \renewcommand{\do}[1]{%
+    \ifstrempty{##1}{}{\FV@HighlightLinesParse##1-\FV@Undefined}}%
+  \expandafter\docsvlist\expandafter{\FV@HighlightLinesList}}
+\def\FV@HighlightLinesParse#1-#2\FV@Undefined{%
+  \ifstrempty{#2}%
+   {\FV@HighlightLinesParse@Single{#1}}%
+   {\FV@HighlightLinesParse@Range{#1}#2\relax}}
+\def\FV@HighlightLinesParse@Single#1{%
+  \expandafter\let\csname FV@HighlightLine:\detokenize{#1}\endcsname\relax}
+\newcounter{FV@HighlightLinesStart}
+\newcounter{FV@HighlightLinesStop}
+\def\FV@HighlightLinesParse@Range#1#2-{%
+  \setcounter{FV@HighlightLinesStart}{#1}%
+  \setcounter{FV@HighlightLinesStop}{#2}%
+  \stepcounter{FV@HighlightLinesStop}%
+  \FV@HighlightLinesParse@Range@Loop}
+\def\FV@HighlightLinesParse@Range@Loop{%
+  \ifnum\value{FV@HighlightLinesStart}<\value{FV@HighlightLinesStop}\relax
+    \expandafter\let\csname FV@HighlightLine:\arabic{FV@HighlightLinesStart}\endcsname\relax
+    \stepcounter{FV@HighlightLinesStart}%
+    \expandafter\FV@HighlightLinesParse@Range@Loop
+  \fi}
+\g@addto@macro\FV@FormattingPrepHook{\FV@HighlightLinesPrep}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2743,7 +2953,10 @@
     \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
     \setcounter{FV@TrueTabCounter}{0}%
   \fi
-  \sbox{\FV@LineBox}{\FancyVerbFormatLine{\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}%
+  \sbox{\FV@LineBox}{%
+    \FancyVerbFormatLine{%
+      %\FancyVerbHighlightLine  %<-- Default definition using \rlap breaks breaking
+       {\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}%
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\relax
   \fi
@@ -2760,7 +2973,8 @@
       \FV@SaveLineBox{#1}}%
     \FV@LeftListNumber
     \FV@LeftListFrame
-    \FancyVerbFormatLine{\usebox{\FV@LineBox}}%
+    \FancyVerbFormatLine{%
+      \FancyVerbHighlightLine{\usebox{\FV@LineBox}}}%
     \FV@RightListFrame
     \FV@RightListNumber
     \ifx\FV@Tab\FV@TrueTab@UseWidth
@@ -2770,7 +2984,9 @@
     \FV@LeftListNumber
     \FV@LeftListFrame
     \FancyVerbFormatLine{%
-      \parbox[t]{\linewidth}{\noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}%
+      \FancyVerbHighlightLine{%
+        \parbox[t]{\linewidth}{%
+          \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
     \FV@RightListFrame
     \FV@RightListNumber
   \fi}%
