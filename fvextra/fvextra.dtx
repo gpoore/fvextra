@@ -324,7 +324,7 @@
 % \end{example}
 %
 %
-% \item[highlightcolor (string) (aqua)]
+% \item[highlightcolor (string) (LightCyan)]
 % Set the color used for |highlightlines|, using a predefined color name from \pkg{color} or \pkg{xcolor}, or a color defined via |\definecolor|.
 %
 %
@@ -333,7 +333,7 @@
 %
 % The highlighting color can be customized with |highlightcolor|.
 %
-% \begingroup
+% \begingroup 
 % \fvset{xleftmargin=2em}
 % \begin{longexample}
 %   \begin{Verbatim}[numbers=left, highlightlines={1, 3-4}]
@@ -410,7 +410,7 @@
 % Redefine the visible space character.  Note that this is only used if |showspaces=true|.  The color of the character may be set with |spacecolor|.
 %
 %
-% \item[spacecolor (\meta{color} \| none) (none)]
+% \item[spacecolor (string) (none)]
 % Set the color of visible spaces.  By default (|none|), they take the color of their surroundings.
 %
 % \begin{longexample}
@@ -481,7 +481,7 @@
 % \endgroup
 %
 %
-% \item[tabcolor (\meta{color} \| none) (none)]
+% \item[tabcolor (string) (none)]
 % Set the color of visible tabs.  By default (|none|), they take the color of their surroundings.
 %
 %
@@ -1791,14 +1791,14 @@
 % \end{macro}\end{macro}
 %
 % \begin{macro}{highlightcolor}\begin{macro}{\FV@HighlightColor}
-% Define color for highlighting.  The default is aqua, RGB $(0,1,1)$.
+% Define color for highlighting.  The default is LightCyan, RGB $(0.878, 1, 1)$.  A good alternative for a brighter color would be LemonChiffon.
 %    \begin{macrocode}
 \define@key{FV}{highlightcolor}{\def\FancyVerbHighlightColor{#1}}%
 \let\FancyVerbHighlightColor\@empty
 \ifcsname definecolor\endcsname
 \ifx\definecolor\relax
 \else
-  \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+  \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
   \fvset{highlightcolor=FancyVerbHighlightColor}
 \fi\fi
 \AtBeginDocument{%
