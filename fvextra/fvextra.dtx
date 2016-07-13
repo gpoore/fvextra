@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/07/12 v1.1dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/13 v1.1dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -59,6 +59,36 @@
   allcolors=ForestGreen,
 }
 \usepackage{cleveref}
+
+% Create a short verbatim pipe that handles quotation marks properly
+\begingroup
+\catcode`\|=\active
+\gdef\pipe@active@verbatim{%
+  \begingroup
+  \let\do\@makeother\dospecials
+  \catcode`\|=\active
+  \catcode`\`=\active
+  \catcode`\'=\active
+  \catcode`\<=\active
+  \catcode`\>=\active
+  \catcode`\-=\active
+  \catcode`\,=\active
+  \catcode`\ =\active
+  \pipe@active@verbatim@i}
+\gdef\pipe@active@verbatim@i#1|{%
+  \endgroup
+  \begingroup
+  \def\FV@SV@pipe@active@verbatim{%
+    \FV@Gobble
+    \expandafter\FV@ProcessLine\expandafter{#1}}%
+  %\let\FV@BeginVBox\relax
+  %\let\FV@EndVBox\relax
+  %\def\FV@BProcessLine##1{\FancyVerbFormatLine{##1}}%
+  \BUseVerbatim{pipe@active@verbatim}%
+  \endgroup}
+\AtBeginDocument{\let|\pipe@active@verbatim}
+\endgroup
+
 
 \newcommand{\todo}[1]{}
 %\newcommand{\todo}[1]{\textcolor{red}{TO~DO: \scantokens{#1}}}
@@ -186,7 +216,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2460}
+% \CheckSum{2502}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -206,6 +236,7 @@
 %
 %
 % \begin{changelog}{v1.1}{2016/07/??}
+% \item Added \texttt{tabcolor} and \texttt{spacecolor} options for use with \texttt{showtabs} and \texttt{showspaces}.
 % \item Added \texttt{highlightlines} option that takes a line number or range of line numbers and highlights the corresponding lines.  Added \texttt{highlightcolor} option that controls hightlighting color.
 % \item \texttt{obeytabs} no longer causes lines to vanish when tabs are inside macro arguments.  Tabs and spaces inside a macro argument but otherwise at the beginning of a line are expanded correctly.  Tabs inside a macro argument that are preceded by non-whitespace characters (not spaces or tabs) are expanded based on the starting position of the run of whitespace in which they occur.
 % \item The line breaking options \texttt{breakanywhere}, \texttt{breakbefore}, and \texttt{breakafter} now work with multi-byte UTF-8 code points under pdfTeX with \texttt{inputenc}.  They were already fully functional under XeTeX and LuaTeX.
@@ -293,8 +324,12 @@
 % \end{example}
 %
 %
+% \item[highlightcolor (string) (aqua)]
+% Set the color used for |highlightlines|, using a predefined color name from \pkg{color} or \pkg{xcolor}, or a color defined via |\definecolor|.
+%
+%
 % \item[highlightlines (string) (\meta{none})]
-% This highlights a single line or a range of lines based on line numbers.  The line numbers refer to the line numbers that \fancyvrb\ would show if |numbers=left|, etc.  It does not refer to original or actual line numbers before adjustment by |firstnumber|.
+% This highlights a single line or a range of lines based on line numbers.  The line numbers refer to the line numbers that \fancyvrb\ would show if |numbers=left|, etc.  They do not refer to original or actual line numbers before adjustment by |firstnumber|.
 %
 % The highlighting color can be customized with |highlightcolor|.
 %
@@ -326,10 +361,6 @@
 % Highlighting is applied after |\FancyVerbFormatText|, so any text formatting defined via that command will work with highlighting.  Highlighting is applied before |\FancyVerbFormatLine|, so if |\FancyVerbFormatLine| puts a line in a box, the box will be behind whatever is created by highlighting.  This prevents highlighting from vanishing due to user-defined customization.
 %
 %
-% \item[highlightcolor (string) (aqua)]
-% Set the color used for |highlightlines|, using a predefined color name from \pkg{color} or \pkg{xcolor}, or a color defined via |\definecolor|.
-%
-%
 % \item[linenos (boolean) (false)]
 % \fancyvrb\ allows line numbers via the options |numbers=|\meta{position}.  This is essentially an alias for |numbers=left|.  It primarily exists for better compatibility with the \pkg{minted} package.
 %
@@ -359,7 +390,7 @@
 % \endgroup
 %
 %
-% \item[numbers (none\|left\|right\|both) (none)]
+% \item[numbers (none \| left \| right \| both) (none)]
 % \fvextra\ adds the |both| option for line numbering.
 %
 % \begingroup
@@ -376,7 +407,18 @@
 %
 %
 % \item[space (macro) (\string\textvisiblespace, \textvisiblespace)]
-% Redefine the visible space character.  Note that this is only used if |showspaces=true|.
+% Redefine the visible space character.  Note that this is only used if |showspaces=true|.  The color of the character may be set with |spacecolor|.
+%
+%
+% \item[spacecolor (\meta{color} \| none) (none)]
+% Set the color of visible spaces.  By default (|none|), they take the color of their surroundings.
+%
+% \begin{longexample}
+%   \color{gray}
+%   \begin{Verbatim}[showspaces, spacecolor=red]
+%   One  two  three
+%   \end{Verbatim}
+% \end{longexample}
 %
 %
 % \item[stepnumberfromfirst (boolean) (false)]
@@ -416,7 +458,9 @@
 %
 %
 % \item[tab (macro) ({\rmfamily\fancyvrb's} \string\FancyVerbTab, \FancyVerbTab)]
-% Redefine the visible tab character.  Note that this is only used if |showtabs=true|.
+% Redefine the visible tab character.  Note that this is only used if |showtabs=true|.  The color of the character may be set with |tabcolor|.
+%
+% When redefining the tab, you should include the font family, font shape, and text color in the definition.  Otherwise these may be inherited from the surrounding text.  This is particularly important when using the tab with syntax highlighting, such as with the \pkg{minted} or \pkg{pythontex} packages.
 %
 % \fvextra\ patches \fancyvrb\ tab expansion so that variable-width symbols such as |\rightarrowfill| may be used as tabs.  For example,
 %
@@ -424,17 +468,21 @@
 % \fvset{frame=single, rulecolor=\color{DarkGreen}, gobble=4}
 % \begin{VerbatimVerbatim}[breaklines, obeytabs, showtabs]
 %   \begin{Verbatim}[obeytabs, showtabs, breaklines, 
-%                    tab=\textcolor{orange}{\rightarrowfill}]
+%                    tab=\rightarrowfill, tabcolor=orange]
 %   	First	Second	Third	And more text that goes on for a while until wrapping is needed
 %   	First	Second	Third	Forth
 %   \end{Verbatim}
 % \end{VerbatimVerbatim}
-%   \begin{Verbatim}[obeytabs, showtabs, breaklines,
-%                    tab=\textcolor{orange}{\rightarrowfill}]
+%   \begin{Verbatim}[obeytabs, showtabs, breaklines, 
+%                    tab=\rightarrowfill, tabcolor=orange]
 %   	First	Second	Third	And more text that goes on for a while until wrapping is needed
 %   	First	Second	Third	Forth
 %   \end{Verbatim}
 % \endgroup
+%
+%
+% \item[tabcolor (\meta{color} \| none) (none)]
+% Set the color of visible tabs.  By default (|none|), they take the color of their surroundings.
 %
 %
 % \end{optionlist}
@@ -795,7 +843,7 @@
 % \subsection{Visible spaces}
 % \label{sec:patch:visible-space}
 %
-% The command |\FancyVerbSpace| defines the visible space when |showspaces=true|.  The default \fancyvrb\ definition allows a font command to escape, so that all following text is forced to be teletype font.  The command is redefined to use |\textvisiblespace|.
+% The command |\FancyVerbSpace| defines the visible space when |showspaces=true|.  The default \fancyvrb\ definition allows a font command to escape under some circumstances, so that all following text is forced to be teletype font.  The command is redefined to use |\textvisiblespace|.
 %
 %
 % \subsection{\texttt{obeytabs} with visible tabs and with tabs inside macro arguments}
@@ -901,7 +949,7 @@
 %
 % \subsection{Backtick and single quotation mark}
 %
-% With \fancyvrb, the backtick \texttt{\textasciigrave} and single quotation mark \texttt{\textquotesingle} are typeset as the left and right curly single quotation marks \texttt{`'}.  \pkg{fvextra} loads the \pkg{upquote} package so that these characters will appear literally by default.  The original \fancyvrb\ behavior can be restored with the \fvextra\ option |curlyquotes| (\cref{sec:general-options}). 
+% With \fancyvrb, the backtick \texttt{\textasciigrave} and typewriter single quotation mark \texttt{\textquotesingle} are typeset as the left and right curly single quotation marks \texttt{`'}.  \pkg{fvextra} loads the \pkg{upquote} package so that these characters will appear literally by default.  The original \fancyvrb\ behavior can be restored with the \fvextra\ option |curlyquotes| (\cref{sec:general-options}). 
 %
 %
 % \subsection{Line numbering}
@@ -937,7 +985,7 @@
 %
 % \DescribeMacro{\FancyVerbTab}
 % 
-% This defines the visible tab character (\FancyVerbTab) that is used when |showtabs=true|.  The default definition in \fancyvrb\ is 
+% This defines the visible tab character (\FancyVerbTab) that is used when |showtabs=true|.  The default definition is
 %\begin{verbatim}
 %\def\FancyVerbTab{%
 %  \valign{%
@@ -1058,11 +1106,11 @@
 % \subsubsection{Visible spaces}
 %
 % \begin{macro}{\FancyVerbSpace}
-% The default definition of visible spaces (|showspaces=true|) allows font commands to escape:
+% The default definition of visible spaces (|showspaces=true|) could allow font commands to escape under some circumstances, depending on how it is used:
 %\begin{verbatim}
 %{\catcode`\ =12 \gdef\FancyVerbSpace{\tt }}
 %\end{verbatim}
-% The command is redefined in more standard \LaTeX\ form.
+% The command is redefined in more robust and standard \LaTeX\ form.
 %    \begin{macrocode}
 \def\FancyVerbSpace{\textvisiblespace}
 %    \end{macrocode}
@@ -1380,10 +1428,44 @@
 % \end{macro}
 %
 %
+% \begin{macro}{tabcolor}
+% Set tab color, or allow it to adjust to surroundings (the default \fancyvrb\ behavior).  This involves re-creating the |showtabs| option to add |\FV@TabColor|.
+%    \begin{macrocode}
+\define@key{FV}{tabcolor}%
+ {\ifstrempty{#1}%
+   {\let\FV@TabColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@TabColor\relax}%
+     {\def\FV@TabColor{\textcolor{#1}}}}}
+\define@booleankey{FV}{showtabs}%
+ {\def\FV@TabChar{\FV@TabColor{\FancyVerbTab}}}%
+ {\let\FV@TabChar\relax}
+\fvset{tabcolor=none, showtabs=false}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{space}
 % Redefine |\FancyVerbSpace|.
 %    \begin{macrocode}
 \define@key{FV}{space}{\def\FancyVerbSpace{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{spacecolor}
+% Set space color, or allow it to adjust to surroundings (the default \fancyvrb\ behavior).  This involves re-creating the |showspaces| option to add |\FV@SpaceColor|.
+%    \begin{macrocode}
+\define@key{FV}{spacecolor}%
+ {\ifstrempty{#1}%
+   {\let\FV@SpaceColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@SpaceColor\relax}%
+     {\def\FV@SpaceColor{\textcolor{#1}}}}}
+\define@booleankey{FV}{showspaces}%
+ {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}%
+ {\def\FV@Space{\ }}
+\fvset{spacecolor=none, showspaces=false}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1402,7 +1484,7 @@
 %
 %
 % \begin{macro}{curlyquotes}
-% Let \texttt{\textasciigrave} and \texttt{\textquotesingle} produce curly quotation marks \texttt{`} and \texttt{'} rather than the backtick and single typewriter quotation mark produced by default via \pkg{upquote}.
+% Let \texttt{\textasciigrave} and \texttt{\textquotesingle} produce curly quotation marks \texttt{`} and \texttt{'} rather than the backtick and typewriter single quotation mark produced by default via \pkg{upquote}.
 %    \begin{macrocode}
 \newbool{FV@CurlyQuotes}
 \define@booleankey{FV}{curlyquotes}%

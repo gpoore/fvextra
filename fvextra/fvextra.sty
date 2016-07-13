@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2016/07/12 v1.1dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/13 v1.1dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -193,7 +193,27 @@
 \define@booleankey{FV}{linenos}%
   {\@nameuse{FV@Numbers@left}}{\@nameuse{FV@Numbers@none}}
 \define@key{FV}{tab}{\def\FancyVerbTab{#1}}
+\define@key{FV}{tabcolor}%
+ {\ifstrempty{#1}%
+   {\let\FV@TabColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@TabColor\relax}%
+     {\def\FV@TabColor{\textcolor{#1}}}}}
+\define@booleankey{FV}{showtabs}%
+ {\def\FV@TabChar{\FV@TabColor{\FancyVerbTab}}}%
+ {\let\FV@TabChar\relax}
+\fvset{tabcolor=none, showtabs=false}
 \define@key{FV}{space}{\def\FancyVerbSpace{#1}}
+\define@key{FV}{spacecolor}%
+ {\ifstrempty{#1}%
+   {\let\FV@SpaceColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@SpaceColor\relax}%
+     {\def\FV@SpaceColor{\textcolor{#1}}}}}
+\define@booleankey{FV}{showspaces}%
+ {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}%
+ {\def\FV@Space{\ }}
+\fvset{spacecolor=none, showspaces=false}
 \define@booleankey{FV}{mathescape}%
  {\let\FancyVerbMathEscape\FV@MathEscape}%
  {\let\FancyVerbMathEscape\relax}
