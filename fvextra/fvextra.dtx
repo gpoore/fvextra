@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/07/13 v1.1dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/14 v1.1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -235,8 +235,8 @@
 %   Right brace   \}     Tilde         \~}
 %
 %
-% \begin{changelog}{v1.1}{2016/07/??}
-% \item The options \texttt{rulecolor} and \texttt{fillcolor} now accept color names directly; using \texttt{\string\color\{<color-name>\}} is no longer necessary, though it still works.
+% \begin{changelog}{v1.1}{2016/07/14}
+% \item The options \texttt{rulecolor} and \texttt{fillcolor} now accept color names directly; using \texttt{\string\color\{<color\_name>\}} is no longer necessary, though it still works.
 % \item Added \texttt{tabcolor} and \texttt{spacecolor} options for use with \texttt{showtabs} and \texttt{showspaces}.
 % \item Added \texttt{highlightlines} option that takes a line number or range of line numbers and highlights the corresponding lines.  Added \texttt{highlightcolor} option that controls hightlighting color.
 % \item \texttt{obeytabs} no longer causes lines to vanish when tabs are inside macro arguments.  Tabs and spaces inside a macro argument but otherwise at the beginning of a line are expanded correctly.  Tabs inside a macro argument that are preceded by non-whitespace characters (not spaces or tabs) are expanded based on the starting position of the run of whitespace in which they occur.
@@ -295,7 +295,7 @@
 %
 % \fvextra\ may be used as a drop-in replacement for \fancyvrb.  It will load \fancyvrb\ if it has not yet been loaded, and then proceeds to patch \fancyvrb\ and define additional features.
 %
-% The \pkg{upquote} package is loaded to give correct backticks (\texttt{\textasciigrave}) and single quotation marks (\texttt{\textquotesingle}).  \fvextra\ modifies the behavior of these and other symbols in typeset math within verbatim, so that they will behave as expected (\cref{sec:patch:math}).  \fvextra\ uses the \pkg{lineno} package for working with automatic line breaks.  \pkg{lineno} gives a warning when the \pkg{csquotes} package is loaded before it, so \fvextra\ should be loaded before \pkg{csquotes}.  The \pkg{ifthen} and \pkg{etoolbox} packages are required.  \pkg{color} or \pkg{xcolor} should be loaded manually to use color-dependent features.
+% The \pkg{upquote} package is loaded to give correct backticks (\texttt{\textasciigrave}) and typewriter single quotation marks (\texttt{\textquotesingle}).  When this is not desirable within a given environment, use the option |curlyquotes|.  \fvextra\ modifies the behavior of these and other symbols in typeset math within verbatim, so that they will behave as expected (\cref{sec:patch:math}).  \fvextra\ uses the \pkg{lineno} package for working with automatic line breaks.  \pkg{lineno} gives a warning when the \pkg{csquotes} package is loaded before it, so \fvextra\ should be loaded before \pkg{csquotes}.  The \pkg{ifthen} and \pkg{etoolbox} packages are required.  \pkg{color} or \pkg{xcolor} should be loaded manually to use color-dependent features.
 %
 % While \fvextra\ attempts to minimize changes to the \fancyvrb\ internals, in some cases it completely overwrites \fancyvrb\ macros with new definitions.  New definitions typically follow the original definitions as much as possible, but code that depends on the details of the original \fancyvrb\ implementation may be incompatible with \fvextra.
 %
@@ -310,7 +310,7 @@
 % \begin{optionlist}
 %
 % \item[curlyquotes (boolean) (false)]
-% Unlike \fancyvrb, \pkg{fvextra} requires the \pkg{upquote} package, so the backtick \texttt{\textasciigrave} and single quotation mark \texttt{\textquotesingle} always appear literally by default, instead of becoming the left and right curly single quotation marks \texttt{`'}.  This option allows these characters to be replaced by the curly quotation marks when that is desirable.
+% Unlike \fancyvrb, \pkg{fvextra} requires the \pkg{upquote} package, so the backtick (\texttt{\textasciigrave}) and typewriter single quotation mark (\texttt{\textquotesingle}) always appear literally by default, instead of becoming the left and right curly single quotation marks (\texttt{`'}).  This option allows these characters to be replaced by the curly quotation marks when that is desirable.
 %
 % \begin{example}
 %   \begin{Verbatim}
@@ -532,7 +532,7 @@
 % \begin{optionlist}
 %
 % \item[breakafter (string) (\meta{none})]
-% Break lines after specified characters, not just at spaces, when |breaklines=true|.  For example, |breakafter=-/| would allow breaks after any hyphens or slashes.  Special characters given to |breakafter| should be backslash-escaped (usually |#|, |{|, |}|, |%|, |[|, |]|; the backslash |\| may be obtained via |\\| and the space via |\space|).\footnote{|breakafter| expands each token it is given once, so when it is given a macro like |\%|, the macro should expand to a literal character that will appear in the text to be typeset.  \fvextra\ defines special character escapes that are activated for |breakafter| so that this will work with common escapes.  |breakafter| is not catcode-sensitive.}
+% Break lines after specified characters, not just at spaces, when |breaklines=true|.  For example, |breakafter=-/| would allow breaks after any hyphens or slashes.  Special characters given to |breakafter| should be backslash-escaped (usually |#|, |{|, |}|, |%|, |[|, |]|; the backslash |\| may be obtained via |\\| and the space via |\space|).\footnote{|breakafter| expands each token it is given once, so when it is given a macro like |\%|, the macro should expand to a literal character that will appear in the text to be typeset.  \fvextra\ defines special character escapes that are activated for |breakafter| so that this will work with common escapes.  The only exception to token expansion is non-ASCII characters under pdfTeX; these should appear literally.  |breakafter| is not catcode-sensitive.}
 %
 % For an alternative, see |breakbefore|.  When |breakbefore| and |breakafter| are used for the same character, |breakbeforegroup| and |breakaftergroup| must both have the same setting.
 %
@@ -582,7 +582,7 @@
 %
 %
 % \item[breakbefore (string) (\meta{none})]
-% Break lines before specified characters, not just at spaces, when |breaklines=true|.  For example, |breakbefore=A| would allow breaks before capital A's.  Special characters given to |breakbefore| should be backslash-escaped (usually |#|, |{|, |}|, |%|, |[|, |]|; the backslash |\| may be obtained via |\\| and the space via |\space|).\footnote{|breakbefore| expands each token it is given once, so when it is given a macro like |\%|, the macro should expand to a literal character that will appear in the text to be typeset.  \fvextra\ defines special character escapes that are activated for |breakbefore| so that this will work with common escapes.  |breakbefore| is not catcode-sensitive.}
+% Break lines before specified characters, not just at spaces, when |breaklines=true|.  For example, |breakbefore=A| would allow breaks before capital A's.  Special characters given to |breakbefore| should be backslash-escaped (usually |#|, |{|, |}|, |%|, |[|, |]|; the backslash |\| may be obtained via |\\| and the space via |\space|).\footnote{|breakbefore| expands each token it is given once, so when it is given a macro like |\%|, the macro should expand to a literal character that will appear in the text to be typeset.  \fvextra\ defines special character escapes that are activated for |breakbefore| so that this will work with common escapes.  The only exception to token expansion is non-ASCII characters under pdfTeX; these should appear literally.  |breakbefore| is not catcode-sensitive.}
 %
 % For an alternative, see |breakafter|.  When |breakbefore| and |breakafter| are used for the same character, |breakbeforegroup| and |breakaftergroup| must both have the same setting.
 %
@@ -848,7 +848,7 @@
 %
 % \subsection{\texttt{obeytabs} with visible tabs and with tabs inside macro arguments}
 %
-% The original treatment of visible tabs when |showtabs=true| and |obeytabs=true| did not allow variable-width tab symbols such as |\rightarrowfill| to function correctly.  This is fixed through a redefinition of |\FV@TrueTab|.
+% The original \fancyvrb\ treatment of visible tabs when |showtabs=true| and |obeytabs=true| did not allow variable-width tab symbols such as |\rightarrowfill| to function correctly.  This is fixed through a redefinition of |\FV@TrueTab|.
 %
 % Various macros associated with |obeytabs=true| are also redefined so that tabs may be expanded regardless of whether they are within a group (within |{...}| with the normal \LaTeX\ meaning due to |commandchars|, etc.).  In the \fancyvrb\ implementation, using |obeytabs=true| when a tab is inside a group typically causes the entire line to vanish.  \fvextra\ patches this so that the tab is expanded and will be visible if |showtabs=true|.  Note, though, that the tab expansion in these cases is only guaranteed to be correct for leading whitespace that is inside a group.  The start of each run of whitespace that is inside a group is treated as a tab stop, whether or not it actually is, due to limitations of the tab expansion algorithm.  A more detailed discussion is provided in the implementation.
 %
@@ -941,7 +941,7 @@
 %
 % \subsection{\texttt{rulecolor} and \texttt{fillcolor}}
 %
-% The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color-name}|}|.  The definitions still allow the old usage.
+% The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color\_name}|}|.  The definitions still allow the old usage.
 %
 %
 %
@@ -1413,7 +1413,7 @@
 %
 % \subsubsection{\texttt{rulecolor} and \texttt{fillcolor}}
 %
-% The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color-name}|}|.  The definitions still allow the old usage.
+% The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color\_name}|}|.  The definitions still allow the old usage.
 % 
 % \begin{macro}{rulecolor}
 %    \begin{macrocode}
