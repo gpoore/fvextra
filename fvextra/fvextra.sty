@@ -190,6 +190,36 @@
   \kern\FV@FrameSep\relax
   \penalty\@M
   \endgroup}
+\define@key{FV}{rulecolor}{%
+  \ifstrempty{#1}%
+   {\let\FancyVerbRuleColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FancyVerbRuleColor\relax}%
+     {\def\@tempa{#1}%
+      \FV@KVProcess@RuleColor#1\FV@Undefined}}}
+\def\FV@KVProcess@RuleColor#1#2\FV@Undefined{%
+  \ifx#1\color
+  \else
+    \expandafter\def\expandafter\@tempa\expandafter{%
+      \expandafter\color\expandafter{\@tempa}}%
+  \fi
+  \let\FancyVerbRuleColor\@tempa}
+\fvset{rulecolor=none}
+\define@key{FV}{fillcolor}{%
+  \ifstrempty{#1}%
+   {\let\FancyVerbFillColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FancyVerbFillColor\relax}%
+     {\def\@tempa{#1}%
+      \FV@KVProcess@FillColor#1\FV@Undefined}}}
+\def\FV@KVProcess@FillColor#1#2\FV@Undefined{%
+  \ifx#1\color
+  \else
+    \expandafter\def\expandafter\@tempa\expandafter{%
+      \expandafter\color\expandafter{\@tempa}}%
+  \fi
+  \let\FancyVerbFillColor\@tempa}
+\fvset{fillcolor=none}
 \define@booleankey{FV}{linenos}%
   {\@nameuse{FV@Numbers@left}}{\@nameuse{FV@Numbers@none}}
 \define@key{FV}{tab}{\def\FancyVerbTab{#1}}
@@ -420,7 +450,7 @@
 \ifcsname definecolor\endcsname
 \ifx\definecolor\relax
 \else
-  \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
+  \definecolor{FancyVerbHighlightColor}{HTML}{E0FFFF}
   \fvset{highlightcolor=FancyVerbHighlightColor}
 \fi\fi
 \AtBeginDocument{%
@@ -704,12 +734,12 @@
   \ifx\FV@NextChar\FV@Undefined\relax
     \let\FV@Next=\relax
   \else
-    \expandafter\ifx\FV@NextChar\FV@Space\relax
-      \g@addto@macro{\FV@LineIndentChars}{\FV@Space}%
+    \ifx\FV@NextChar\FV@Space@ifx\relax
+      \g@addto@macro{\FV@LineIndentChars}{\FV@Space@ifx}%
       \let\FV@Next=\FV@GetLineIndent
     \else
-      \expandafter\ifx\FV@NextChar\FV@Tab\relax
-        \g@addto@macro{\FV@LineIndentChars}{\FV@Tab}%
+      \ifx\FV@NextChar\FV@Tab@ifx\relax
+        \g@addto@macro{\FV@LineIndentChars}{\FV@Tab@ifx}%
         \let\FV@Next=\FV@GetLineIndent
       \else
         \let\FV@Next=\FV@CleanRemainingChars
@@ -828,7 +858,7 @@
   \expandafter\FV@Break@AfterTokenBreak\FV@RescanToken}
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
-  \@ifnextchar\FV@Space%
+  \@ifnextchar\FV@Space@ifx%
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\ifx\@let@token#1\relax
@@ -1054,7 +1084,7 @@
   \expandafter\FV@Break@AfterTokenBreak@UTF\expandafter{\FV@RescanToken}}
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
-  \@ifnextchar\FV@Space%
+  \@ifnextchar\FV@Space@ifx%
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\g@addto@macro{\FV@TmpLine}{#1}%

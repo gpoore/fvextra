@@ -216,7 +216,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2502}
+% \CheckSum{2566}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -236,6 +236,7 @@
 %
 %
 % \begin{changelog}{v1.1}{2016/07/??}
+% \item The options \texttt{rulecolor} and \texttt{fillcolor} now accept color names directly; using \texttt{\string\color\{<color-name>\}} is no longer necessary, though it still works.
 % \item Added \texttt{tabcolor} and \texttt{spacecolor} options for use with \texttt{showtabs} and \texttt{showspaces}.
 % \item Added \texttt{highlightlines} option that takes a line number or range of line numbers and highlights the corresponding lines.  Added \texttt{highlightcolor} option that controls hightlighting color.
 % \item \texttt{obeytabs} no longer causes lines to vanish when tabs are inside macro arguments.  Tabs and spaces inside a macro argument but otherwise at the beginning of a line are expanded correctly.  Tabs inside a macro argument that are preceded by non-whitespace characters (not spaces or tabs) are expanded based on the starting position of the run of whitespace in which they occur.
@@ -465,7 +466,7 @@
 % \fvextra\ patches \fancyvrb\ tab expansion so that variable-width symbols such as |\rightarrowfill| may be used as tabs.  For example,
 %
 % \begingroup
-% \fvset{frame=single, rulecolor=\color{DarkGreen}, gobble=4}
+% \fvset{frame=single, rulecolor=DarkGreen, gobble=4}
 % \begin{VerbatimVerbatim}[breaklines, obeytabs, showtabs]
 %   \begin{Verbatim}[obeytabs, showtabs, breaklines, 
 %                    tab=\rightarrowfill, tabcolor=orange]
@@ -507,8 +508,7 @@
 % \begin{longexample}
 %   \renewcommand{\FancyVerbFormatLine}[1]{%
 %     \fcolorbox{DarkBlue}{LightGray}{#1}}
-%   \renewcommand{\FancyVerbFormatText}[1]{%
-%     \textcolor{DarkViolet}{#1}}
+%   \renewcommand{\FancyVerbFormatText}[1]{\textcolor{Green}{#1}}
 %
 %   \begin{Verbatim}[breaklines]
 %   Some text that proceeds for a while and finally wraps onto another line
@@ -855,7 +855,7 @@
 % The example below shows correct tab expansion of leading whitespace within a macro argument.  With \fancyvrb, the line of text would simply vanish in this case.
 % 
 % \begingroup
-% \fvset{frame=single, rulecolor=\color{DarkGreen}, gobble=4}
+% \fvset{frame=single, rulecolor=DarkGreen, gobble=4}
 % \begin{VerbatimVerbatim}[showtabs]
 %   \begin{Verbatim}[obeytabs, showtabs, showspaces, tabsize=4,
 %      commandchars=\\\{\}, tab=\textcolor{orange}{\rightarrowfill}]
@@ -872,7 +872,7 @@
 % The next example shows that tab expansion inside macros in the midst of text typically does not match up with the correct tab stops, since in such circumstances the beginning of the run of whitespace must be treated as a tab stop.
 %
 % \begingroup
-% \fvset{frame=single, rulecolor=\color{DarkGreen}, gobble=4, obeytabs}
+% \fvset{frame=single, rulecolor=DarkGreen, gobble=4, obeytabs}
 % \begin{VerbatimVerbatim}[showtabs]
 %   \begin{Verbatim}[obeytabs, showtabs, commandchars=\\\{\},
 %                    tab=\textcolor{orange}{\rightarrowfill}]
@@ -936,6 +936,12 @@
 % \subsection{Orphaned labels}
 %
 % When |frame=lines| is used with a |label|, \fancyvrb\ does not prevent the label from being orphaned under some circumstances.  |\FV@BeginListFrame@Lines| is patched to prevent this.
+%
+%
+%
+% \subsection{\texttt{rulecolor} and \texttt{fillcolor}}
+%
+% The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color-name}|}|.  The definitions still allow the old usage.
 %
 %
 %
@@ -1405,6 +1411,53 @@
 %
 %
 %
+% \subsubsection{\texttt{rulecolor} and \texttt{fillcolor}}
+%
+% The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color-name}|}|.  The definitions still allow the old usage.
+% 
+% \begin{macro}{rulecolor}
+%    \begin{macrocode}
+\define@key{FV}{rulecolor}{%
+  \ifstrempty{#1}%
+   {\let\FancyVerbRuleColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FancyVerbRuleColor\relax}%
+     {\def\@tempa{#1}%
+      \FV@KVProcess@RuleColor#1\FV@Undefined}}}
+\def\FV@KVProcess@RuleColor#1#2\FV@Undefined{%
+  \ifx#1\color
+  \else
+    \expandafter\def\expandafter\@tempa\expandafter{%
+      \expandafter\color\expandafter{\@tempa}}%
+  \fi
+  \let\FancyVerbRuleColor\@tempa}
+\fvset{rulecolor=none}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{fillcolor}
+%    \begin{macrocode}
+\define@key{FV}{fillcolor}{%
+  \ifstrempty{#1}%
+   {\let\FancyVerbFillColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FancyVerbFillColor\relax}%
+     {\def\@tempa{#1}%
+      \FV@KVProcess@FillColor#1\FV@Undefined}}}
+\def\FV@KVProcess@FillColor#1#2\FV@Undefined{%
+  \ifx#1\color
+  \else
+    \expandafter\def\expandafter\@tempa\expandafter{%
+      \expandafter\color\expandafter{\@tempa}}%
+  \fi
+  \let\FancyVerbFillColor\@tempa}
+\fvset{fillcolor=none}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
 % \subsection{Extensions}
 %
 %
@@ -1791,14 +1844,14 @@
 % \end{macro}\end{macro}
 %
 % \begin{macro}{highlightcolor}\begin{macro}{\FV@HighlightColor}
-% Define color for highlighting.  The default is LightCyan, RGB $(0.878, 1, 1)$.  A good alternative for a brighter color would be LemonChiffon.
+% Define color for highlighting.  The default is LightCyan.  A good alternative for a brighter color would be LemonChiffon.
 %    \begin{macrocode}
 \define@key{FV}{highlightcolor}{\def\FancyVerbHighlightColor{#1}}%
 \let\FancyVerbHighlightColor\@empty
 \ifcsname definecolor\endcsname
 \ifx\definecolor\relax
 \else
-  \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
+  \definecolor{FancyVerbHighlightColor}{HTML}{E0FFFF}
   \fvset{highlightcolor=FancyVerbHighlightColor}
 \fi\fi
 \AtBeginDocument{%
@@ -2391,12 +2444,12 @@
   \ifx\FV@NextChar\FV@Undefined\relax
     \let\FV@Next=\relax
   \else
-    \expandafter\ifx\FV@NextChar\FV@Space\relax
-      \g@addto@macro{\FV@LineIndentChars}{\FV@Space}%
+    \ifx\FV@NextChar\FV@Space@ifx\relax
+      \g@addto@macro{\FV@LineIndentChars}{\FV@Space@ifx}%
       \let\FV@Next=\FV@GetLineIndent
     \else
-      \expandafter\ifx\FV@NextChar\FV@Tab\relax
-        \g@addto@macro{\FV@LineIndentChars}{\FV@Tab}%
+      \ifx\FV@NextChar\FV@Tab@ifx\relax
+        \g@addto@macro{\FV@LineIndentChars}{\FV@Tab@ifx}%
         \let\FV@Next=\FV@GetLineIndent
       \else
         \let\FV@Next=\FV@CleanRemainingChars
@@ -2603,7 +2656,7 @@
   \expandafter\FV@Break@AfterTokenBreak\FV@RescanToken}
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
-  \@ifnextchar\FV@Space%
+  \@ifnextchar\FV@Space@ifx%
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\ifx\@let@token#1\relax
@@ -2891,7 +2944,7 @@
   \expandafter\FV@Break@AfterTokenBreak@UTF\expandafter{\FV@RescanToken}}
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
-  \@ifnextchar\FV@Space%
+  \@ifnextchar\FV@Space@ifx%
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\g@addto@macro{\FV@TmpLine}{#1}%
