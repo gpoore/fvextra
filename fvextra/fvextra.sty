@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2016/07/14 v1.1 fvextra - extensions and patches for fancyvrb]
+    [2016/07/17 v1.2dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -40,6 +40,8 @@
 \let\FV@FormattingPrepHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
   \expandafter\FV@FormattingPrepHook\FV@FormattingPrep}
+\let\FV@PygmentsHook\relax
+\g@addto@macro\FV@FormattingPrepHook{\FV@PygmentsHook}
 \edef\FV@hashchar{\string#}
 \edef\FV@dollarchar{\string$}
 \edef\FV@ampchar{\string&}
@@ -450,7 +452,7 @@
 \ifcsname definecolor\endcsname
 \ifx\definecolor\relax
 \else
-  \definecolor{FancyVerbHighlightColor}{HTML}{E0FFFF}
+  \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
   \fvset{highlightcolor=FancyVerbHighlightColor}
 \fi\fi
 \AtBeginDocument{%
@@ -458,7 +460,7 @@
     \ifcsname definecolor\endcsname
     \ifx\definecolor\relax
     \else
-    \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+    \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
     \fvset{highlightcolor=FancyVerbHighlightColor}
     \fi\fi
   \fi}
@@ -619,8 +621,10 @@
     \expandafter\FV@BreakBefore@Process\FV@BreakBefore\FV@Undefined
     \endgroup
     \FV@BreakBefore@Def
+    \FV@BreakBeforePrep@PygmentsHook
   \fi
 }
+\let\FV@BreakBeforePrep@PygmentsHook\relax
 \define@key{FV}{breakafter}{%
   \ifstrempty{#1}%
    {\let\FV@BreakAfter\@empty
@@ -670,8 +674,10 @@
     \expandafter\FV@BreakAfter@Process\FV@BreakAfter\FV@Undefined
     \endgroup
     \FV@BreakAfter@Def
+    \FV@BreakAfterPrep@PygmentsHook
   \fi
 }
+\let\FV@BreakAfterPrep@PygmentsHook\relax
 \g@addto@macro\FV@FormattingPrepHook{%
   \ifcsname pdfmatch\endcsname
   \ifx\pdfmatch\relax
@@ -964,6 +970,7 @@
     \expandafter\FV@BreakBefore@Process\FV@BreakBefore\FV@Undefined
     \endgroup
     \FV@BreakBefore@Def
+    \FV@BreakBeforePrep@PygmentsHook
   \fi
 }
 \def\FV@BreakAfterPrep@UTF{%
@@ -1008,6 +1015,7 @@
     \expandafter\FV@BreakAfter@Process\FV@BreakAfter\FV@Undefined
     \endgroup
     \FV@BreakAfter@Def
+    \FV@BreakAfterPrep@PygmentsHook
   \fi
 }
 \def\FV@Break@AnyToken@UTF#1{%
@@ -1172,6 +1180,7 @@
       \ifthenelse{\boolean{FV@BreakAutoIndent}}%
        {\hspace*{-\wd\FV@LineIndentBox}}%
        {}%
+      \FV@BreakByTokenAnywhereHook
       \strut\FancyVerbFormatText{%
         \FancyVerbBreakStart #1\FancyVerbBreakStop}\nobreak\strut
       \end{internallinenumbers*}
@@ -1180,6 +1189,7 @@
      {\hbox to \FV@BreakSymbolIndentRight{\hfill}}%
   }%
 }
+\let\FV@BreakByTokenAnywhereHook\relax
 \def\FV@ListProcessLine@Break#1{%
   \hbox to \hsize{%
   \kern\leftmargin
@@ -1234,6 +1244,151 @@
     \FV@RightListNumber
   \fi}%
   \hss}\baselineskip\z@\lineskip\z@}
+\def\FV@BreakBeforePrep@Pygments#1{%
+  \ifcsname FV@BreakBefore@Token\@backslashchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zbs }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@underscorechar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zus }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@charlb\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zob }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@charrb\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zcb }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{^}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zca }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@ampchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zam }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{<}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zlt }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{>}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zgt }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@hashchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zsh }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@percentchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zpc }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@dollarchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zdl }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{-}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zhy }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{'}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zsq }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{"}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zdq }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@tildechar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zti }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{@}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zat }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{[}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zlb }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{]}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zrb }{}%
+  \fi
+}
+\def\FV@BreakAfterPrep@Pygments#1{%
+  \ifcsname FV@BreakAfter@Token\@backslashchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zbs }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@underscorechar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zus }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@charlb\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zob }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@charrb\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zcb }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{^}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zca }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@ampchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zam }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{<}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zlt }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{>}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zgt }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@hashchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zsh }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@percentchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zpc }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@dollarchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zdl }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{-}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zhy }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{'}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zsq }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{"}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zdq }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@tildechar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zti }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{@}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zat }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{[}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zlb }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{]}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zrb }{}%
+  \fi
+}
+\newbool{FV@breakbytoken}
+\define@booleankey{FV}{breakbytoken}%
+ {\booltrue{FV@breakbytoken}}%
+ {\boolfalse{FV@breakbytoken}\boolfalse{FV@breakbytokenanywhere}}
+\newbool{FV@breakbytokenanywhere}
+\define@booleankey{FV}{breakbytokenanywhere}%
+ {\booltrue{FV@breakbytokenanywhere}\booltrue{FV@breakbytoken}}%
+ {\boolfalse{FV@breakbytokenanywhere}\boolfalse{FV@breakbytoken}}
+\def\FancyVerbBreakByTokenAnywhereBreak{\allowbreak{}}
+\def\VerbatimPygments#1#2{%
+  \def\FV@PygmentsHook{\FV@VerbatimPygments{#1}{#2}}}
+\def\FV@VerbatimPygments#1#2{%
+  \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
+  \def\FV@BreakBeforePrep@PygmentsHook{%
+    \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}
+  \def\FV@BreakAfterPrep@PygmentsHook{%
+    \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}
+  \let\FV@PYG#2
+  \ifbool{FV@breakbytoken}%
+   {\ifbool{FV@breakbytokenanywhere}%
+     {\def\FV@BreakByTokenAnywhereHook{%
+        \def\FV@BreakByTokenAnywhereBreak{%
+          \let\FV@BreakByTokenAnywhereBreak\FancyVerbBreakByTokenAnywhereBreak}}%
+      \def#1##1##2{%
+        \FV@BreakByTokenAnywhereBreak
+        \leavevmode\hbox{\FV@PYG{##1}{##2}}}}%
+     {\def#1##1##2{%
+        \leavevmode\hbox{\FV@PYG{##1}{##2}}}}}%
+   {\def#1##1##2{%
+     \FV@PYG{##1}{\FancyVerbBreakStart##2\FancyVerbBreakStop}}}%
+}
+\let\FV@BreakByTokenAnywhereBreak\relax
+\def\FV@DetokMacro@StripSpace#1 {#1}
 %% \Finale
 \endinput
 %%

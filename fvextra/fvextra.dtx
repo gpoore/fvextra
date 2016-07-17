@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/07/14 v1.1 fvextra - extensions and patches for fancyvrb]
+    [2016/07/17 v1.2dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -103,9 +103,6 @@
   \small}
 
 \def\PrintMacroName#1{{\strut\MacroFont\color{DarkGreen}\footnotesize\string #1\ }}
-
-\DeclareRobustCommand\cs[1]{\texttt{\symbol{`\\}#1}}
-
 
 \def\PrintDescribeMacro#1{\strut\MacroFont\textcolor{DarkGreen}{\string #1\ }}
 \let\PrintDescribeEnv\PrintDescribeMacro
@@ -216,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2566}
+% \CheckSum{2837}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -233,6 +230,12 @@
 %   Right bracket \]     Circumflex    \^     Underscore    \_
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
+%
+%
+% \begin{changelog}{v1.2}{2016/07/??}
+% \item Added support for line breaking when working with Pygments for syntax highlighting.
+% \item The default \texttt{highlightcolor} is now defined with \texttt{rgb} for compatibility with the \texttt{color} package.  Fixed a bug in the conditional color definition when \texttt{color} and \texttt{xcolor} are not loaded before \texttt{fvextra}.
+% \end{changelog}
 %
 %
 % \begin{changelog}{v1.1}{2016/07/14}
@@ -305,7 +308,7 @@
 % \section{General options}
 % \label{sec:general-options}
 %
-% \fvextra\ adds several general options to \fancyvrb.  All options related to automatic line breaking are described separately in \cref{sec:breaklines}.
+% \fvextra\ adds several general options to \fancyvrb.  All options related to automatic line breaking are described separately in \cref{sec:breaklines}.  All options related to syntax highlighting using Pygments are described in \cref{sec:pygments}.
 %
 % \begin{optionlist}
 %
@@ -835,6 +838,46 @@
 %
 %
 %
+% \section{Pygments support}
+% \label{sec:pygments}
+%
+%
+% \subsection{Options for users}
+% \label{sec:pygments:users}
+%
+% \fvextra\ defines additional options for working code that has been highlighted with \href{pygments.org}{Pygments}.  These options work with the \pkg{minted} and \pkg{pythontex} packages, and may be enabled for other packages that work with Pygments output (\cref{sec:pygments:package-authors}).
+%
+%
+% \begin{optionlist}
+% \item[breakbytoken (boolean) (false)]
+% When |breaklines=true|, do not allow breaks within \href{http://pygments.org/docs/tokens/}{Pygments tokens}.  This would prevent, for example, line breaking within strings.
+%
+% \item[breakbytokenanywhere (boolean) (false)]
+% When |breaklines=true|, do not allow breaks within Pygments tokens, but always allow breaks between tokens even when they are immediately adjacent (not separated by spaces).  \textbf{This option should be used with care.}  Due to the details of how each Pygments lexer works, and due to the tokens defined in each lexer, this may result in breaks in locations that might not be anticipated.  Also keep in mind that this will not allow breaks between tokens if those tokens are actually ``subtokens'' within another token.
+% \end{optionlist}
+%
+% \DescribeMacro{\FancyVerbBreakByTokenAnywhereBreak}
+%
+% This defines the break inserted when |breakbytokenanywhere=true|.  By default, it is |\allowbreak|.
+%
+%
+% \subsection{For package authors}
+% \label{sec:pygments:package-authors}
+%
+% By default, line breaking will only partially work with Pygments output; |breakbefore| and |breakafter| will not work with any characters that do not appear literally in Pygments output but rather are replaced with a character macro.  Also, |breakbytoken| and |breakbytokenanywhere| will not function at all.
+%
+% \DescribeMacro{\VerbatimPygments\marg{literal\_macro}\marg{actual\_macro}}
+%
+% To enable full Pygments support, use this macro before \verb|\begin{Verbatim}|, etc.  This macro must be used within |\begingroup...\endgroup| to prevent settings from escaping into the rest of the document.  It may be used safely at the beginning of a |\newenvironment| definition.  When used with |\newcommand|, though, the |\begingroup...\endgroup| will need to be inserted explicitly.
+%
+% \meta{literal\_macro} is the Pygments macro that literally appears in Pygments output; it corresponds to the Pygments |commandprefix|.  For \pkg{minted} and \pkg{pythontex}, this is |\PYG|.  \meta{actual\_macro} is the Pygments macro that should actually be used.  For \pkg{minted} and \pkg{pythontex}, this is |\PYG|\meta{style}.  In the \pkg{minted} and \pkg{pythontex} approach, code is only highlighted once (|\PYG|), and then the style is changed by redefining the macro that literally appears (|\PYG|) to use the appropriate style macro (|\PYG|\meta{style}).
+%
+% |\VerbatimPygments| takes the two Pygments macros and redefines \meta{literal\_macro} so that it will invoke \meta{actual\_macro} while fully supporting line breaks, |breakbytoken|, and |breakbytokenanywhere|.  No further modification of either \meta{literal\_macro} or \meta{actual\_macro} is possible after |\VerbatimPygments| is used.
+%
+% In packages that do not make a distinction between \meta{literal\_macro} and \meta{actual\_macro}, simply use |\VerbatimPygments| with two identical arguments; |\VerbatimPygments| is defined to handle this case.
+%
+%
+%
 % \section{Patches}
 % \label{sec:patch}
 %
@@ -1072,6 +1115,15 @@
 \let\FV@FormattingPrepHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
   \expandafter\FV@FormattingPrepHook\FV@FormattingPrep}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@PygmentsHook}
+% This is a hook for turning on Pygments-related features for packages like \pkg{minted} and \pkg{pythontex} (\cref{sec:impl:pygments}).  It needs to be the first thing in |\FV@FormattingPrepHook|, since it will potentially affect some of the later things in the hook.  It is activated by |\VerbatimPygments|.
+%    \begin{macrocode}
+\let\FV@PygmentsHook\relax
+\g@addto@macro\FV@FormattingPrepHook{\FV@PygmentsHook}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1851,7 +1903,7 @@
 \ifcsname definecolor\endcsname
 \ifx\definecolor\relax
 \else
-  \definecolor{FancyVerbHighlightColor}{HTML}{E0FFFF}
+  \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
   \fvset{highlightcolor=FancyVerbHighlightColor}
 \fi\fi
 \AtBeginDocument{%
@@ -1859,7 +1911,7 @@
     \ifcsname definecolor\endcsname
     \ifx\definecolor\relax
     \else
-    \definecolor{FancyVerbHighlightColor}{rgb}{0,1,1}
+    \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
     \fvset{highlightcolor=FancyVerbHighlightColor}
     \fi\fi
   \fi}
@@ -2198,6 +2250,8 @@
 %
 % The procedure here is a bit roundabout.  We need to use |\FV@EscChars| to handle character escapes, but the character redefinitions need to be kept local, requiring that we work within a |\begingroup...\endgroup|.  So we loop through the breaking tokens and assemble a macro that will itself define character macros.  Only this defining macro is declared global, and it contains \emph{expanded} characters so that there is no longer any dependence on |\FV@EscChars|.
 %
+% |\FV@BreakBeforePrep@PygmentsHook| allows additional break preparation for Pygments-based packages such as \pkg{minted} and \pkg{pythontex}.  When Pygments highlights code, it converts some characters into macros; they do not appear literally.  As a result, for breaking to occur correctly, breaking macros need to be created for these character macros and not only for the literal characters themselves.
+%
 % A pdfTeX-compatible version for working with UTF-8 is defined later, and |\FV@BreakBeforePrep| is |\let| to it under pdfTeX as necessary.
 %    \begin{macrocode}
 \def\FV@BreakBeforePrep{%
@@ -2220,8 +2274,10 @@
     \expandafter\FV@BreakBefore@Process\FV@BreakBefore\FV@Undefined
     \endgroup
     \FV@BreakBefore@Def
+    \FV@BreakBeforePrep@PygmentsHook
   \fi
 }
+\let\FV@BreakBeforePrep@PygmentsHook\relax
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2291,8 +2347,10 @@
     \expandafter\FV@BreakAfter@Process\FV@BreakAfter\FV@Undefined
     \endgroup
     \FV@BreakAfter@Def
+    \FV@BreakAfterPrep@PygmentsHook
   \fi
 }
+\let\FV@BreakAfterPrep@PygmentsHook\relax
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2802,6 +2860,7 @@
     \expandafter\FV@BreakBefore@Process\FV@BreakBefore\FV@Undefined
     \endgroup
     \FV@BreakBefore@Def
+    \FV@BreakBeforePrep@PygmentsHook
   \fi
 }
 %    \end{macrocode}
@@ -2852,6 +2911,7 @@
     \expandafter\FV@BreakAfter@Process\FV@BreakAfter\FV@Undefined
     \endgroup
     \FV@BreakAfter@Def
+    \FV@BreakAfterPrep@PygmentsHook
   \fi
 }
 %    \end{macrocode}
@@ -3025,7 +3085,7 @@
 % \begin{macro}{\FV@SaveLineBox}
 % This is the macro that does most of the work.  It was inspired by Marco Daniel's code at \url{http://tex.stackexchange.com/a/112573/10742}.
 %
-% This macro is invoked when a line is too long.  We modify the |\linewidth| to take into account |breakindent| and |breakautoindent|, and insert |\hbox|es to fill the empty space.  We also account for |breaksymbolindentleft| and |breaksymbolindentright|, but \emph{only} when there are actually break symbols.  The code is placed in a |\parbox|.  Break symbols are inserted via \pkg{lineno}'s |internallinenumbers*|, which does internal line numbers without continuity between environments (the |linenumber| counter is automatically reset).  The beginning of the line has negative |\hspace| inserted to pull it out to the correct starting position.  |\strut|s are used to maintain correct line heights.  The |\parbox| is followed by an empty |\hbox| that takes up the space needed for a right-hand break symbol (if any).
+% This macro is invoked when a line is too long.  We modify the |\linewidth| to take into account |breakindent| and |breakautoindent|, and insert |\hbox|es to fill the empty space.  We also account for |breaksymbolindentleft| and |breaksymbolindentright|, but \emph{only} when there are actually break symbols.  The code is placed in a |\parbox|.  Break symbols are inserted via \pkg{lineno}'s |internallinenumbers*|, which does internal line numbers without continuity between environments (the |linenumber| counter is automatically reset).  The beginning of the line has negative |\hspace| inserted to pull it out to the correct starting position.  |\strut|s are used to maintain correct line heights.  The |\parbox| is followed by an empty |\hbox| that takes up the space needed for a right-hand break symbol (if any).  |\FV@BreakByTokenAnywhereHook| is a hook for using  |breakbytokenanywhere| when working with Pygments.  Since it is within |internallinenumbers*|, its effects do not escape.
 %    \begin{macrocode}
 \def\FV@SaveLineBox#1{%
   \savebox{\FV@LineBox}{%
@@ -3055,6 +3115,7 @@
       \ifthenelse{\boolean{FV@BreakAutoIndent}}%
        {\hspace*{-\wd\FV@LineIndentBox}}%
        {}%
+      \FV@BreakByTokenAnywhereHook
       \strut\FancyVerbFormatText{%
         \FancyVerbBreakStart #1\FancyVerbBreakStop}\nobreak\strut
       \end{internallinenumbers*}
@@ -3063,6 +3124,7 @@
      {\hbox to \FV@BreakSymbolIndentRight{\hfill}}%
   }%
 }
+\let\FV@BreakByTokenAnywhereHook\relax
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3129,6 +3191,212 @@
 %    \end{macrocode}
 % \end{macro}
 %
+%
+%
+%
+% \subsection{Pygments compatibility}
+% \label{sec:impl:pygments}
+%
+% This section makes line breaking compatible with \href{http://pygments.org/}{Pygments}, which is used by several packages including \pkg{minted} and \pkg{pythontex} for syntax highlighting.  A few additional line breaking options are also defined for working with Pygments.
+%
+% \begin{macro}{\FV@BreakBeforePrep@Pygments}
+% Pygments converts some characters into macros to ensure that they appear literally.  As a result, |breakbefore| and |breakafter| would fail for these characters.  This macro checks for the existence of breaking macros for these characters, and creates breaking macros for the corresponding Pygments character macros as necessary.
+%
+% The argument that the macro receives is the detokenized name of the main Pygments macro, with the trailing space that detokenization produces stripped.  All macro names must end with a space, because the breaking algorithm uses detokenization on each token when checking for breaking macros, and this will produce a trailing space.
+%    \begin{macrocode}
+\def\FV@BreakBeforePrep@Pygments#1{%
+  \ifcsname FV@BreakBefore@Token\@backslashchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zbs }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@underscorechar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zus }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@charlb\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zob }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@charrb\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zcb }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{^}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zca }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@ampchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zam }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{<}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zlt }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{>}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zgt }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@hashchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zsh }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@percentchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zpc }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@dollarchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zdl }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{-}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zhy }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{'}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zsq }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{"}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zdq }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@tildechar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zti }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{@}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zat }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{[}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zlb }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{]}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zrb }{}%
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@BreakAfterPrep@Pygments}
+%    \begin{macrocode}
+\def\FV@BreakAfterPrep@Pygments#1{%
+  \ifcsname FV@BreakAfter@Token\@backslashchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zbs }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@underscorechar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zus }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@charlb\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zob }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@charrb\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zcb }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{^}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zca }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@ampchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zam }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{<}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zlt }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{>}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zgt }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@hashchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zsh }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@percentchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zpc }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@dollarchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zdl }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{-}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zhy }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{'}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zsq }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{"}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zdq }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@tildechar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zti }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{@}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zat }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{[}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zlb }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{]}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zrb }{}%
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{breakbytoken}
+% When Pygments is used, do not allow breaks within \href{http://pygments.org/docs/tokens/}{Pygments tokens}.  So, for example, breaks would not be allowed within a string, but could occur before or after it.  This has no affect when Pygments is not in use, and is only intended for \pkg{minted}, \pkg{pythontex}, and similar packages.
+%    \begin{macrocode}
+\newbool{FV@breakbytoken}
+\define@booleankey{FV}{breakbytoken}%
+ {\booltrue{FV@breakbytoken}}%
+ {\boolfalse{FV@breakbytoken}\boolfalse{FV@breakbytokenanywhere}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{breakbytokenanywhere}
+% |breakbytoken| prevents breaks \emph{within} tokens.  Breaks outside of tokens may still occur at spaces.  This option also enables breaks between immediately adjacent tokens that are not separated by spaces.  Its definition is tied in with |breakbytoken| so that |breakbytoken| may be used as a check for whether either option is in use; essentially, |breakbytokenanywhere| is treated as a special case of |breakbytoken|.
+%    \begin{macrocode}
+\newbool{FV@breakbytokenanywhere}
+\define@booleankey{FV}{breakbytokenanywhere}%
+ {\booltrue{FV@breakbytokenanywhere}\booltrue{FV@breakbytoken}}%
+ {\boolfalse{FV@breakbytokenanywhere}\boolfalse{FV@breakbytoken}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FancyVerbBreakByTokenAnywhereBreak}
+% This is the break introduced when |breakbytokenanywhere=true|.  Alternatives would be |\discretionary{}{}{}| or |\linebreak[0]|.
+%    \begin{macrocode}
+\def\FancyVerbBreakByTokenAnywhereBreak{\allowbreak{}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\VerbatimPygments}
+% This is the command that activates Pygments features.  It must be invoked before \verb|\begin{Verbatim}|, etc., but inside a |\begingroup...\endgroup| so that its effects do not escape into the rest of the document (for example, within the beginning of an environment.  It takes two arguments:  The Pygments macro that literally appears (|\PYG| for \pkg{minted} and \pkg{pythontex}), and the Pygments macro that should actually be used (|\PYG|\meta{style\_name} for \pkg{minted} and \pkg{pythontex}).  The two are distinguished because it can be convenient to highlight everything using the same literal macro name, and then |\let| it to appropriate values to change styles, rather than redoing all highlighting to change styles.  It modifies |\FV@PygmentsHook|, which is at the beginning of |\FV@FormattingPrepHook|, to make the actual changes at the appropriate time.
+%    \begin{macrocode}
+\def\VerbatimPygments#1#2{%
+  \def\FV@PygmentsHook{\FV@VerbatimPygments{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@VerbatimPygments}
+% This does all the actual work.  Again, |#1| is the Pygments macro that literally appears, and |#2| is the macro that is actually to be used.
+%
+% The |breakbefore| and |breakafter| hooks are redefined.  This requires some trickery to get the detokenized name of the main Pygments macro without the trailing space that detokenization of a macro name produces.
+%
+% In the non-|breakbytoken| case, |#1| is redefined to use |#2| internally, bringing in |\FancyVerbBreakStart| and |\FancyVerbBreakStop| to allow line breaks.
+%
+% In the |breakbytoken| cases, an |\hbox| is used to prevent breaks within the macro (breaks could occur at spaces even without |\FancyVerbBreakStart|).  The |breakbytokenanywhere| case is similar but a little tricky.  |\FV@BreakByTokenAnywhereHook|, which is inside |\FV@SaveLineBox| where line breaking occurs, is used to define |\FV@BreakByTokenAnywhereBreak| so that it will ``do nothing'' the first time it is used and on subsequent invocations become |\FancyVerbBreakByTokenAnywhereBreak|.  Because the hook is within the |internallinenumbers*| environment, the redefinition doesn't escape, and the default global definition of |\FV@BreakByTokenAnywhereBreak| as |\relax| is not affected.  We don't want the actual break to appear before the first Pygments macro in case it might cause a spurious break after leading whitespace.  But we must have breaks \emph{before} Pygments macros because otherwise lookahead would be necessary.
+%
+% An intermediate variable |\FV@PYG| is defined to avoid problems in case |#1|$=$|#2|.
+%    \begin{macrocode}
+\def\FV@VerbatimPygments#1#2{%
+  \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
+  \def\FV@BreakBeforePrep@PygmentsHook{%
+    \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}
+  \def\FV@BreakAfterPrep@PygmentsHook{%
+    \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}
+  \let\FV@PYG#2
+  \ifbool{FV@breakbytoken}%
+   {\ifbool{FV@breakbytokenanywhere}%
+     {\def\FV@BreakByTokenAnywhereHook{%
+        \def\FV@BreakByTokenAnywhereBreak{%
+          \let\FV@BreakByTokenAnywhereBreak\FancyVerbBreakByTokenAnywhereBreak}}%
+      \def#1##1##2{%
+        \FV@BreakByTokenAnywhereBreak
+        \leavevmode\hbox{\FV@PYG{##1}{##2}}}}%
+     {\def#1##1##2{%
+        \leavevmode\hbox{\FV@PYG{##1}{##2}}}}}%
+   {\def#1##1##2{%
+     \FV@PYG{##1}{\FancyVerbBreakStart##2\FancyVerbBreakStop}}}%
+}
+\let\FV@BreakByTokenAnywhereBreak\relax
+\def\FV@DetokMacro@StripSpace#1 {#1}
+%    \end{macrocode}
+% \end{macro}
 %
 %
 % \iffalse
