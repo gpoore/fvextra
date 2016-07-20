@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/07/17 v1.2dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/20 v1.2 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -213,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2837}
+% \CheckSum{2843}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -232,7 +232,7 @@
 %   Right brace   \}     Tilde         \~}
 %
 %
-% \begin{changelog}{v1.2}{2016/07/??}
+% \begin{changelog}{v1.2}{2016/07/20}
 % \item Added support for line breaking when working with Pygments for syntax highlighting.
 % \item The default \texttt{highlightcolor} is now defined with \texttt{rgb} for compatibility with the \texttt{color} package.  Fixed a bug in the conditional color definition when \texttt{color} and \texttt{xcolor} are not loaded before \texttt{fvextra}.
 % \end{changelog}
@@ -3371,7 +3371,7 @@
 %
 % In the |breakbytoken| cases, an |\hbox| is used to prevent breaks within the macro (breaks could occur at spaces even without |\FancyVerbBreakStart|).  The |breakbytokenanywhere| case is similar but a little tricky.  |\FV@BreakByTokenAnywhereHook|, which is inside |\FV@SaveLineBox| where line breaking occurs, is used to define |\FV@BreakByTokenAnywhereBreak| so that it will ``do nothing'' the first time it is used and on subsequent invocations become |\FancyVerbBreakByTokenAnywhereBreak|.  Because the hook is within the |internallinenumbers*| environment, the redefinition doesn't escape, and the default global definition of |\FV@BreakByTokenAnywhereBreak| as |\relax| is not affected.  We don't want the actual break to appear before the first Pygments macro in case it might cause a spurious break after leading whitespace.  But we must have breaks \emph{before} Pygments macros because otherwise lookahead would be necessary.
 %
-% An intermediate variable |\FV@PYG| is defined to avoid problems in case |#1|$=$|#2|.
+% An intermediate variable |\FV@PYG| is defined to avoid problems in case |#1|$=$|#2|.  There is also a check for a non-existant |#2| (|\PYG|\meta{style\_name} may not be created until a later compile in the \pkg{pythontex} case); if |#2| does not exist, fall back to |#1|.  For the existance check, |\ifx...\relax| must be used instead of |\ifcsname|, because |#2| will be a macro, and will typically be created with |\csname...\endcsname| which will |\let| the macro to |\relax| if it doesn't already exist.
 %    \begin{macrocode}
 \def\FV@VerbatimPygments#1#2{%
   \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
@@ -3379,7 +3379,11 @@
     \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}
   \def\FV@BreakAfterPrep@PygmentsHook{%
     \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}
-  \let\FV@PYG#2
+  \ifx#2\relax
+    \let\FV@PYG#1
+  \else
+    \let\FV@PYG#2
+  \fi
   \ifbool{FV@breakbytoken}%
    {\ifbool{FV@breakbytokenanywhere}%
      {\def\FV@BreakByTokenAnywhereHook{%

@@ -1,6 +1,17 @@
 # Changes
 
 
+## v1.2 2016/07/20
+
+*  Added support for line breaking when working with Pygments for syntax
+   highlighting.
+
+* The default `highlightcolor` is now defined with `rgb` for compatibility
+  with the `color` package.  Fixed a bug in the conditional color definition
+  when `color` and `xcolor` are not loaded before `fvextra`.
+
+
+
 ## v1.1 (2016/07/14)
 
 *  The options `rulecolor` and `fillcolor` now accept color names directly;

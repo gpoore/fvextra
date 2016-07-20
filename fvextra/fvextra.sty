@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2016/07/17 v1.2dev fvextra - extensions and patches for fancyvrb]
+    [2016/07/20 v1.2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -1373,7 +1373,11 @@
     \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}
   \def\FV@BreakAfterPrep@PygmentsHook{%
     \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}
-  \let\FV@PYG#2
+  \ifx#2\relax
+    \let\FV@PYG#1
+  \else
+    \let\FV@PYG#2
+  \fi
   \ifbool{FV@breakbytoken}%
    {\ifbool{FV@breakbytokenanywhere}%
      {\def\FV@BreakByTokenAnywhereHook{%
