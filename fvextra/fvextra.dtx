@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/07/20 v1.2 fvextra - extensions and patches for fancyvrb]
+    [2016/08/24 v1.2.1dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -213,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2843}
+% \CheckSum{2857}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -230,6 +230,11 @@
 %   Right bracket \]     Circumflex    \^     Underscore    \_
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
+%
+%
+% \begin{changelog}{v1.2.1}{2016/08/24}
+% \item The package is now compatible with classes and packages that redefine \texttt{\string\raggedright}.
+% \end{changelog}
 %
 %
 % \begin{changelog}{v1.2}{2016/07/20}
@@ -3082,6 +3087,17 @@
 %    \end{macrocode}
 % \end{macro}
 %
+%
+% \begin{macro}{\FV@RaggedRight}
+% We need a copy of the default |\raggedright| to ensure that everything works with classes or packages that use a special definition.
+%    \begin{macrocode}
+\def\FV@RaggedRight{%
+  \let\\\@centercr
+  \@rightskip\@flushglue\rightskip\@rightskip\leftskip\z@skip\parindent\z@}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{\FV@SaveLineBox}
 % This is the macro that does most of the work.  It was inspired by Marco Daniel's code at \url{http://tex.stackexchange.com/a/112573/10742}.
 %
@@ -3105,7 +3121,7 @@
     \ifdefempty{\FancyVerbBreakSymbolRight}{}%
      {\advance\linewidth by -\FV@BreakSymbolIndentRight}%
     \parbox[t]{\linewidth}{%
-      \raggedright
+      \FV@RaggedRight
       \leftlinenumbers*
       \begin{internallinenumbers*}%
       \let\makeLineNumber\FV@makeLineNumber
