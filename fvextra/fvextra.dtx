@@ -234,6 +234,7 @@
 %
 % \begin{changelog}{v1.2.1}{2016/08/24}
 % \item The package is now compatible with classes and packages that redefine \texttt{\string\raggedright}.
+% \item Fixed a bug that introduced extra space in inline contexts such as \texttt{\string\mintinline} when \texttt{breaklines=true} (\#3).
 % \end{changelog}
 %
 %
@@ -3392,13 +3393,13 @@
 \def\FV@VerbatimPygments#1#2{%
   \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
   \def\FV@BreakBeforePrep@PygmentsHook{%
-    \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}
+    \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}%
   \def\FV@BreakAfterPrep@PygmentsHook{%
-    \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}
+    \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}%
   \ifx#2\relax
-    \let\FV@PYG#1
+    \let\FV@PYG#1%
   \else
-    \let\FV@PYG#2
+    \let\FV@PYG#2%
   \fi
   \ifbool{FV@breakbytoken}%
    {\ifbool{FV@breakbytokenanywhere}%
