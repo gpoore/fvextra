@@ -1,7 +1,17 @@
 # Changes
 
 
-## v1.2 2016/07/20
+## v1.2.1 (2016/09/02)
+
+*  The package is now compatible with classes and packages that redefine
+   `\raggedright`.
+
+*  Fixed a bug that introduced extra space in inline contexts such as
+   `\mintinline` when `breaklines=true` (#3).
+
+
+
+## v1.2 (2016/07/20)
 
 *  Added support for line breaking when working with Pygments for syntax
    highlighting.
