@@ -2137,7 +2137,7 @@
 % Additional left indentation to make room for the left break symbol.
 %    \begin{macrocode}
 \newdimen\FV@BreakSymbolIndentLeft
-\settowidth{\FV@BreakSymbolIndentLeft}{\ttfamily xxxx}
+\AtBeginDocument{\settowidth{\FV@BreakSymbolIndentLeft}{\ttfamily xxxx}}
 \define@key{FV}{breaksymbolindentleft}{\FV@BreakSymbolIndentLeft=#1\relax}
 \define@key{FV}{breaksymbolindent}{\fvset{breaksymbolindentleft=#1}}
 %    \end{macrocode}
@@ -2147,7 +2147,7 @@
 % Additional right indentation to make room for the right break symbol.
 %    \begin{macrocode}
 \newdimen\FV@BreakSymbolIndentRight
-\settowidth{\FV@BreakSymbolIndentRight}{\ttfamily xxxx}
+\AtBeginDocument{\settowidth{\FV@BreakSymbolIndentRight}{\ttfamily xxxx}}
 \define@key{FV}{breaksymbolindentright}{\FV@BreakSymbolIndentRight=#1\relax}
 %    \end{macrocode}
 % \end{macro}
