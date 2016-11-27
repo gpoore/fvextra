@@ -559,11 +559,11 @@
 \define@key{FV}{breaksymbolsepright}{\FV@BreakSymbolSepRight=#1\relax}
 \fvset{breaksymbolsepright=1em}
 \newdimen\FV@BreakSymbolIndentLeft
-\settowidth{\FV@BreakSymbolIndentLeft}{\ttfamily xxxx}
+\AtBeginDocument{\settowidth{\FV@BreakSymbolIndentLeft}{\ttfamily xxxx}}
 \define@key{FV}{breaksymbolindentleft}{\FV@BreakSymbolIndentLeft=#1\relax}
 \define@key{FV}{breaksymbolindent}{\fvset{breaksymbolindentleft=#1}}
 \newdimen\FV@BreakSymbolIndentRight
-\settowidth{\FV@BreakSymbolIndentRight}{\ttfamily xxxx}
+\AtBeginDocument{\settowidth{\FV@BreakSymbolIndentRight}{\ttfamily xxxx}}
 \define@key{FV}{breaksymbolindentright}{\FV@BreakSymbolIndentRight=#1\relax}
 \newcommand{\FancyVerbBreakSymbolLeftLogic}[1]{%
   \ifnum\value{linenumber}=1\relax\else{#1}\fi}
