@@ -1,6 +1,24 @@
 # Changes
 
 
+## v1.3 (2017/07/08)
+
+*  Added `beameroverlays` option, which enables `beamer` overlays using the
+   `<` and `>` characters.
+
+*  Added options `breakindentnchars`, `breaksymbolsepleftnchars` (alias
+   `breaksymbolsepnchars`), `breaksymbolseprightnchars`,
+   `breaksymbolindentleftnchars` (alias `breaksymbolindentnchars`), and
+   `breaksymbolindentrightnchars`.  These are identical to the pre-existing
+   options without the `nchars` suffix, except that they allow indentation to
+   be specified as an integer number of characters rather than as a dimension.
+   As a result of these new options, `\settowidth` is no longer used in the
+   preamble, resolving some font incompatibilities (#4).
+
+*  Clarified in the docs that `breaksymbolsepright` is a *minimum*, rather
+   than exact, distance.
+
+
 ## v1.2.1 (2016/09/02)
 
 *  The package is now compatible with classes and packages that redefine

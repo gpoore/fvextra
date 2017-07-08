@@ -8,7 +8,7 @@
 %% 
 %% This is a generated file.
 %% 
-%% Copyright (C) 2016 by Geoffrey M. Poore <gpoore@gmail.com>
+%% Copyright (C) 2016-2017 by Geoffrey M. Poore <gpoore@gmail.com>
 %% --------------------------------------------------------------------------
 %% This work may be distributed and/or modified under the
 %% conditions of the LaTeX Project Public License, either version 1.3
@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2016/09/02 v1.2.1 fvextra - extensions and patches for fancyvrb]
+    [2017/07/08 v1.3 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -37,11 +37,12 @@
   to avoid a warning from the lineno package}}{}
 \def\FV@Space@ifx{\FV@Space}
 \def\FV@Tab@ifx{\FV@Tab}
-\let\FV@FormattingPrepHook\@empty
+\let\FV@FormattingPrep@PreHook\@empty
+\let\FV@FormattingPrep@PostHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
-  \expandafter\FV@FormattingPrepHook\FV@FormattingPrep}
+  \expandafter\FV@FormattingPrep@PreHook\FV@FormattingPrep\FV@FormattingPrep@PostHook}
 \let\FV@PygmentsHook\relax
-\g@addto@macro\FV@FormattingPrepHook{\FV@PygmentsHook}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@PygmentsHook}
 \edef\FV@hashchar{\string#}
 \edef\FV@dollarchar{\string$}
 \edef\FV@ampchar{\string&}
@@ -151,7 +152,7 @@
 \def\FancyVerbMathSpace{ }
 \def\FV@SetupMathSpace{%
   \everymath\expandafter{\the\everymath\let\FV@Space\FancyVerbMathSpace}}
-\g@addto@macro\FV@FormattingPrepHook{\FV@SetupMathSpace}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathSpace}
 \begingroup
 \catcode`\'=\active
 \catcode`\^=7
@@ -168,7 +169,7 @@
 \endgroup
 \def\FV@SetupMathFont{%
   \everymath\expandafter{\the\everymath\fontfamily{\familydefault}\selectfont}}
-\g@addto@macro\FV@FormattingPrepHook{\FV@SetupMathFont}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathFont}
 \def\FV@SetupMathLigs{%
   \everymath\expandafter{%
     \the\everymath
@@ -182,7 +183,7 @@
     \begingroup\lccode`\~=`\-\lowercase{\endgroup\def~}{-}%
   }%
 }
-\g@addto@macro\FV@FormattingPrepHook{\FV@SetupMathLigs}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathLigs}
 \def\FV@BeginListFrame@Lines{%
   \begingroup
   \lineskip\z@skip
@@ -252,6 +253,14 @@
 \def\FV@MathEscape{\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}
 \FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \fvset{mathescape=false}
+\define@booleankey{FV}{beameroverlays}%
+ {\let\FancyVerbBeamerOverlays\FV@BeamerOverlays}%
+ {\let\FancyVerbBeamerOverlays\relax}
+\def\FV@BeamerOverlays{%
+  \expandafter\def\expandafter\@noligs\expandafter{\@noligs
+    \catcode`\<=12\catcode`\>=12\relax}}
+\FV@AddToHook\FV@CatCodesHook\FancyVerbBeamerOverlays
+\fvset{beameroverlays=false}
 \newbool{FV@CurlyQuotes}
 \define@booleankey{FV}{curlyquotes}%
  {\booltrue{FV@CurlyQuotes}}%
@@ -262,7 +271,7 @@
       \begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
       \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{'}}}%
    {}}
-\g@addto@macro\FV@FormattingPrepHook{\FancyVerbCurlyQuotes}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FancyVerbCurlyQuotes}
 \fvset{curlyquotes=false}
 \def\FancyVerbFormatLine#1{#1}
 \def\FancyVerbFormatText#1{#1}
@@ -531,7 +540,26 @@
     \stepcounter{FV@HighlightLinesStart}%
     \expandafter\FV@HighlightLinesParse@Range@Loop
   \fi}
-\g@addto@macro\FV@FormattingPrepHook{\FV@HighlightLinesPrep}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@HighlightLinesPrep}
+\newcount\FV@LoopCount
+\newbox\FV@NCharsBox
+\def\FV@SetToWidthNChars#1#2{%
+  \FV@LoopCount=#2\relax
+  \ifnum\FV@LoopCount>0
+    \def\FV@NChars{}%
+    \loop
+    \ifnum\FV@LoopCount>0
+      \expandafter\def\expandafter\FV@NChars\expandafter{\FV@NChars x}%
+    \fi
+    \advance\FV@LoopCount by -1
+    \ifnum\FV@LoopCount>0
+    \repeat
+    \setbox\FV@NCharsBox\hbox{\FV@NChars}%
+    #1=\wd\FV@NCharsBox
+  \else
+    #1=0pt\relax
+  \fi
+}
 \newboolean{FV@BreakLines}
 \define@booleankey{FV}{breaklines}%
   {\FV@BreakLinestrue
@@ -539,9 +567,22 @@
   {\FV@BreakLinesfalse
     \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
 \AtEndOfPackage{\fvset{breaklines=false}}
+\def\FV@BreakLinesIndentationHook{}
+\g@addto@macro\FV@FormattingPrep@PostHook{%
+  \ifFV@BreakLines
+    \FV@BreakLinesIndentationHook
+  \fi}
 \newdimen\FV@BreakIndent
-\define@key{FV}{breakindent}{\FV@BreakIndent=#1\relax}
-\fvset{breakindent=0pt}
+\newcount\FV@BreakIndentNChars
+\define@key{FV}{breakindent}{%
+  \FV@BreakIndent=#1\relax
+  \FV@BreakIndentNChars=0\relax}
+\define@key{FV}{breakindentnchars}{\FV@BreakIndentNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakIndentNChars>0
+    \FV@SetToWidthNChars{\FV@BreakIndent}{\FV@BreakIndentNChars}%
+  \fi}
+\fvset{breakindentnchars=0}
 \newboolean{FV@BreakAutoIndent}
 \define@booleankey{FV}{breakautoindent}%
   {\FV@BreakAutoIndenttrue}{\FV@BreakAutoIndentfalse}
@@ -552,19 +593,53 @@
 \define@key{FV}{breaksymbolright}{\def\FancyVerbBreakSymbolRight{#1}}
 \fvset{breaksymbolright={}}
 \newdimen\FV@BreakSymbolSepLeft
-\define@key{FV}{breaksymbolsepleft}{\FV@BreakSymbolSepLeft=#1\relax}
+\newcount\FV@BreakSymbolSepLeftNChars
+\define@key{FV}{breaksymbolsepleft}{%
+  \FV@BreakSymbolSepLeft=#1\relax
+  \FV@BreakSymbolSepLeftNChars=0\relax}
 \define@key{FV}{breaksymbolsep}{\fvset{breaksymbolsepleft=#1}}
-\fvset{breaksymbolsepleft=1em}
+\define@key{FV}{breaksymbolsepleftnchars}{\FV@BreakSymbolSepLeftNChars=#1\relax}
+\define@key{FV}{breaksymbolsepnchars}{\fvset{breaksymbolsepleftnchars=#1}}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolSepLeftNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolSepLeft}{\FV@BreakSymbolSepLeftNChars}%
+  \fi}
+\fvset{breaksymbolsepleftnchars=2}
 \newdimen\FV@BreakSymbolSepRight
-\define@key{FV}{breaksymbolsepright}{\FV@BreakSymbolSepRight=#1\relax}
-\fvset{breaksymbolsepright=1em}
+\newcount\FV@BreakSymbolSepRightNChars
+\define@key{FV}{breaksymbolsepright}{%
+  \FV@BreakSymbolSepRight=#1\relax
+  \FV@BreakSymbolSepRightNChars=0\relax}
+\define@key{FV}{breaksymbolseprightnchars}{\FV@BreakSymbolSepRightNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolSepRightNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolSepRight}{\FV@BreakSymbolSepRightNChars}%
+  \fi}
+\fvset{breaksymbolseprightnchars=2}
 \newdimen\FV@BreakSymbolIndentLeft
-\settowidth{\FV@BreakSymbolIndentLeft}{\ttfamily xxxx}
-\define@key{FV}{breaksymbolindentleft}{\FV@BreakSymbolIndentLeft=#1\relax}
+\newcount\FV@BreakSymbolIndentLeftNChars
+\define@key{FV}{breaksymbolindentleft}{%
+  \FV@BreakSymbolIndentLeft=#1\relax
+  \FV@BreakSymbolIndentLeftNChars=0\relax}
 \define@key{FV}{breaksymbolindent}{\fvset{breaksymbolindentleft=#1}}
+\define@key{FV}{breaksymbolindentleftnchars}{\FV@BreakSymbolIndentLeftNChars=#1\relax}
+\define@key{FV}{breaksymbolindentnchars}{\fvset{breaksymbolindentleftnchars=#1}}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolIndentLeftNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolIndentLeft}{\FV@BreakSymbolIndentLeftNChars}%
+  \fi}
+\fvset{breaksymbolindentleftnchars=4}
 \newdimen\FV@BreakSymbolIndentRight
-\settowidth{\FV@BreakSymbolIndentRight}{\ttfamily xxxx}
-\define@key{FV}{breaksymbolindentright}{\FV@BreakSymbolIndentRight=#1\relax}
+\newcount\FV@BreakSymbolIndentRightNChars
+\define@key{FV}{breaksymbolindentright}{%
+  \FV@BreakSymbolIndentRight=#1\relax
+  \FV@BreakSymbolIndentRightNChars=0\relax}
+\define@key{FV}{breaksymbolindentrightnchars}{\FV@BreakSymbolIndentRightNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolIndentRightNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolIndentRight}{\FV@BreakSymbolIndentRightNChars}%
+  \fi}
+\fvset{breaksymbolindentrightnchars=4}
 \newcommand{\FancyVerbBreakSymbolLeftLogic}[1]{%
   \ifnum\value{linenumber}=1\relax\else{#1}\fi}
 \newcounter{FancyVerbLineBreakLast}
@@ -678,7 +753,7 @@
   \fi
 }
 \let\FV@BreakAfterPrep@PygmentsHook\relax
-\g@addto@macro\FV@FormattingPrepHook{%
+\g@addto@macro\FV@FormattingPrep@PreHook{%
   \ifcsname pdfmatch\endcsname
   \ifx\pdfmatch\relax
   \else

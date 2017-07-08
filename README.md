@@ -10,8 +10,7 @@ LaTeX.  `fvextra` builds on `fancyvrb` by adding support for automatic line
 breaking and improving math mode, among other things.  Many of the improvements
 are geared toward typesetting computer code; parts of `fvextra` were originally
 developed as part of the [`pythontex`](https://github.com/gpoore/pythontex)
-and [`minted`](https://github.com/gpoore/minted) packages.  Both of these
-packages will require `fvextra` once a few additional features are added.
+and [`minted`](https://github.com/gpoore/minted) packages.
 
 
 ## License

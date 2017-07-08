@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2016/09/02 v1.2.1 fvextra - extensions and patches for fancyvrb]
+    [2017/07/08 v1.3 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -128,7 +128,7 @@
 \def\fvextraprintopt#1(#2) (#3){%
   \vspace{0.1in}%
   \leavevmode%
-  \marginpar{\raggedleft\texttt{\textcolor{DarkGreen}{#1}}\ }%
+  \marginpar{\raggedleft\texttt{\small\textcolor{DarkGreen}{#1}}\ }%
   \kern-\parindent\textsf{(#2)}\hfill(default: \texttt{#3})\\}
 
 \newenvironment{optionlist}%
@@ -213,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{2857}
+% \CheckSum{3003}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -230,6 +230,13 @@
 %   Right bracket \]     Circumflex    \^     Underscore    \_
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
+%
+%
+% \begin{changelog}{v1.3}{2017/07/08}
+% \item Added \texttt{beameroverlays} option, which enables \texttt{beamer} overlays using the \texttt{<} and \texttt{>} characters.
+% \item Added options \texttt{breakindentnchars}, \texttt{breaksymbolsepleftnchars} (alias \texttt{breaksymbolsepnchars}), \texttt{breaksymbolseprightnchars}, \texttt{breaksymbolindentleftnchars} (alias \texttt{breaksymbolindentnchars}), and \texttt{breaksymbolindentrightnchars}.  These are identical to the pre-existing options without the \texttt{nchars} suffix, except that they allow indentation to be specified as an integer number of characters rather than as a dimension.  As a result of these new options, \texttt{\string\settowidth} is no longer used in the preamble, resolving some font incompatibilities (\#4).
+% \item Clarified in the docs that \texttt{breaksymbolsepright} is a \emph{minimum}, rather than exact, distance.
+% \end{changelog}
 %
 %
 % \begin{changelog}{v1.2.1}{2016/09/02}
@@ -317,6 +324,12 @@
 % \fvextra\ adds several general options to \fancyvrb.  All options related to automatic line breaking are described separately in \cref{sec:breaklines}.  All options related to syntax highlighting using Pygments are described in \cref{sec:pygments}.
 %
 % \begin{optionlist}
+%
+% \item[beameroverlays (boolean) (false)]
+% Give the |<| and |>| characters their normal text meanings, so that \pkg{beamer} overlays of the form |\only<1>{...}| will work.  Note that something like |commandchars=\\\{\}| is required separately to enable macros.  This is not incorporated in the |beameroverlays| option because essentially arbitrary command characters could be used; only the |<| and |>| characters are hard-coded for overlays.
+%
+% With some font encodings and language settings, |beameroverlays| prevents literal (non-overlay) |<| and |>| characters from appearing correctly, so they must be inserted using commands.
+%
 %
 % \item[curlyquotes (boolean) (false)]
 % Unlike \fancyvrb, \pkg{fvextra} requires the \pkg{upquote} package, so the backtick (\texttt{\textasciigrave}) and typewriter single quotation mark (\texttt{\textquotesingle}) always appear literally by default, instead of becoming the left and right curly single quotation marks (\texttt{`'}).  This option allows these characters to be replaced by the curly quotation marks when that is desirable.
@@ -616,8 +629,11 @@
 % The symbol inserted post-break for breaks inserted by |breakbefore|.
 %
 %
-% \item[breakindent (dimension) (0pt)]
+% \item[breakindent (dimension) (breakindentnchars)]
 % When a line is broken, indent the continuation lines by this amount.  When |breakautoindent| and |breakindent| are used together, the indentations add.  This  indentation is combined with |breaksymbolindentleft| to give the total actual left indentation.
+%
+% \item[breakindentnchars (integer) (0)]
+% This allows |breakindent| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
 %
 % \item[breaklines (boolean) (false)]
@@ -678,35 +694,44 @@
 % The symbol used at breaks (right) when |breaklines=true|. Does not appear at the end of the very last segment of a broken line.
 %
 %
-% \item[breaksymbolindent (dimension) (breaksymbolindentleft)]
+% \item[breaksymbolindent (dimension) (breaksymbolindentleftnchars)]
 % Alias for |breaksymbolindentleft|.
 %
+% \item[breaksymbolindentnchars (integer) (breaksymbolindentleftnchars)]
+% Alias for |breaksymbolindentleftnchars|.
 %
-% \item[breaksymbolindentleft (dimension) (\meta{width of 4 characters in teletype font at default point size})]
+%
+% \item[breaksymbolindentleft (dimension) (breaksymbolindentleftnchars)]
 % The extra left indentation that is provided to make room for |breaksymbolleft|.  This indentation is only applied when there is a |breaksymbolleft|.
 %
-%     This may be set to the width of a specific number of (fixed-width) characters by using an approach such as 
-% \begin{Verbatim}[gobble=2]
-% \newdimen\temporarydimen
-% \settowidth{\temporarydimen}{\ttfamily aaaa}
-% \end{Verbatim}
-% and then using |breaksymbolindentleft=\temporarydimen|.
+% \item[breaksymbolindentleftnchars (integer) (4)]
+% This allows |breaksymbolindentleft| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
-%
-% \item[breaksymbolindentright (dimension) (\meta{width of 4 characters in teletype font at default point size})]
+% \item[breaksymbolindentright (dimension) (breaksymbolindentrightnchars)]
 % The extra right indentation that is provided to make room for |breaksymbolright|.  This indentation is only applied when there is a |breaksymbolright|.
 %
+% \item[breaksymbolindentrightnchars (integer) (4)]
+% This allows |breaksymbolindentright| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
-% \item[breaksymbolsep (dimension) (breaksymbolsepleft)]
+%
+% \item[breaksymbolsep (dimension) (breaksymbolsepleftnchars)]
 % Alias for |breaksymbolsepleft|.
 %
+% \item[breaksymbolsepnchars (integer) (breaksymbolsepleftnchars)]
+% Alias for |breaksymbolsepleftnchars|.
 %
-% \item[breaksymbolsepleft (dimension) (1em)]
+%
+% \item[breaksymbolsepleft (dimension) (breaksymbolsepleftnchars)]
 % The separation between the |breaksymbolleft| and the adjacent text. 
 %
+% \item[breaksymbolsepleftnchars (integer) (2)]
+% Allows |breaksymbolsepleft| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
-% \item[breaksymbolsepright (dimension) (1em)]
-% The separation between the |breaksymbolright| and the adjacent text.
+% \item[breaksymbolsepright (dimension) (breaksymbolseprightnchars)]
+% The \emph{minimum} separation between the |breaksymbolright| and the adjacent text.  This is the separation between |breaksymbolright| and the furthest extent to which adjacent text could reach.  In practice, |\linewidth| will typically not be an exact integer multiple of the character width (assuming a fixed-width font), so the actual separation between the |breaksymbolright| and adjacent text will generally be larger than |breaksymbolsepright|.  This ensures that break symbols have the same spacing from the margins on both left and right.  If the same spacing from text is desired instead, |breaksymbolsepright| may be adjusted.  (See the definition of |\FV@makeLineNumber| for implementation details.)
+%
+% \item[breaksymbolseprightnchars (integer) (2)]
+% Allows |breaksymbolsepright| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
 % \end{optionlist}
 %
@@ -1115,21 +1140,24 @@
 % \subsection{Hooks}
 %
 %
-% \begin{macro}{\FV@FormattingPrepHook}
-% This is a hook for extending |\FV@FormattingPrep|.  |\FV@FormattingPrep| is inside a group, before the beginning of processing, so it is a good place to add extension code.  This hook is used for such things as tweaking math mode behavior and preparing for |breakbefore| and |breakafter|.
+% \begin{macro}{\FV@FormattingPrep@PreHook}
+% \begin{macro}{\FV@FormattingPrep@PostHook}
+% These are hooks for extending |\FV@FormattingPrep|.  |\FV@FormattingPrep| is inside a group, before the beginning of processing, so it is a good place to add extension code.  These hooks are used for such things as tweaking math mode behavior and preparing for |breakbefore| and |breakafter|.  The |PreHook| should typically be used, unless \pkg{fancyvrb}'s font settings, whitespace setup, and active character definitions are needed for extension code.
 %    \begin{macrocode}
-\let\FV@FormattingPrepHook\@empty
+\let\FV@FormattingPrep@PreHook\@empty
+\let\FV@FormattingPrep@PostHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
-  \expandafter\FV@FormattingPrepHook\FV@FormattingPrep}
+  \expandafter\FV@FormattingPrep@PreHook\FV@FormattingPrep\FV@FormattingPrep@PostHook}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 %
 % \begin{macro}{\FV@PygmentsHook}
-% This is a hook for turning on Pygments-related features for packages like \pkg{minted} and \pkg{pythontex} (\cref{sec:impl:pygments}).  It needs to be the first thing in |\FV@FormattingPrepHook|, since it will potentially affect some of the later things in the hook.  It is activated by |\VerbatimPygments|.
+% This is a hook for turning on Pygments-related features for packages like \pkg{minted} and \pkg{pythontex} (\cref{sec:impl:pygments}).  It needs to be the first thing in |\FV@FormattingPrep@PreHook|, since it will potentially affect some of the later things in the hook.  It is activated by |\VerbatimPygments|.
 %    \begin{macrocode}
 \let\FV@PygmentsHook\relax
-\g@addto@macro\FV@FormattingPrepHook{\FV@PygmentsHook}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@PygmentsHook}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1385,7 +1413,7 @@
 %    \begin{macrocode}
 \def\FV@SetupMathSpace{%
   \everymath\expandafter{\the\everymath\let\FV@Space\FancyVerbMathSpace}}
-\g@addto@macro\FV@FormattingPrepHook{\FV@SetupMathSpace}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathSpace}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1420,7 +1448,7 @@
 %    \begin{macrocode}
 \def\FV@SetupMathFont{%
   \everymath\expandafter{\the\everymath\fontfamily{\familydefault}\selectfont}}
-\g@addto@macro\FV@FormattingPrepHook{\FV@SetupMathFont}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathFont}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1444,7 +1472,7 @@
     \begingroup\lccode`\~=`\-\lowercase{\endgroup\def~}{-}%
   }%
 }
-\g@addto@macro\FV@FormattingPrepHook{\FV@SetupMathLigs}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathLigs}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1594,6 +1622,21 @@
 % \end{macro}
 %
 %
+% \begin{macro}{beameroverlays}
+% Give |<| and |>| their normal catcodes (not |\active|), so that \pkg{beamer} overlays will work.
+%    \begin{macrocode}
+\define@booleankey{FV}{beameroverlays}%
+ {\let\FancyVerbBeamerOverlays\FV@BeamerOverlays}%
+ {\let\FancyVerbBeamerOverlays\relax}
+\def\FV@BeamerOverlays{%
+  \expandafter\def\expandafter\@noligs\expandafter{\@noligs
+    \catcode`\<=12\catcode`\>=12\relax}}
+\FV@AddToHook\FV@CatCodesHook\FancyVerbBeamerOverlays
+\fvset{beameroverlays=false}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{curlyquotes}
 % Let \texttt{\textasciigrave} and \texttt{\textquotesingle} produce curly quotation marks \texttt{`} and \texttt{'} rather than the backtick and typewriter single quotation mark produced by default via \pkg{upquote}.
 %    \begin{macrocode}
@@ -1607,7 +1650,7 @@
       \begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
       \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{'}}}%
    {}}
-\g@addto@macro\FV@FormattingPrepHook{\FancyVerbCurlyQuotes}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FancyVerbCurlyQuotes}
 \fvset{curlyquotes=false}
 %    \end{macrocode}
 % \end{macro}
@@ -2048,7 +2091,7 @@
     \stepcounter{FV@HighlightLinesStart}%
     \expandafter\FV@HighlightLinesParse@Range@Loop
   \fi}
-\g@addto@macro\FV@FormattingPrepHook{\FV@HighlightLinesPrep}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@HighlightLinesPrep}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2063,6 +2106,31 @@
 % \subsubsection{Options and associated macros}
 % Begin by defining keys, with associated macros, bools, and dimens.
 %
+% \begin{macro}{\FV@SetToWidthNChars}
+% Set a dimen to the width of a given number of characters.  This is used in setting several indentation-related dimensions.
+%    \begin{macrocode}
+\newcount\FV@LoopCount
+\newbox\FV@NCharsBox
+\def\FV@SetToWidthNChars#1#2{%
+  \FV@LoopCount=#2\relax
+  \ifnum\FV@LoopCount>0
+    \def\FV@NChars{}%
+    \loop
+    \ifnum\FV@LoopCount>0
+      \expandafter\def\expandafter\FV@NChars\expandafter{\FV@NChars x}%
+    \fi
+    \advance\FV@LoopCount by -1
+    \ifnum\FV@LoopCount>0
+    \repeat
+    \setbox\FV@NCharsBox\hbox{\FV@NChars}%
+    #1=\wd\FV@NCharsBox
+  \else
+    #1=0pt\relax
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{FV@BreakLines}
 % Turn line breaking on or off.  The |\FV@ListProcessLine| from \fancyvrb\ is |\let| to a (patched) version of the original or a version that supports line breaks.
 %    \begin{macrocode}
@@ -2076,14 +2144,38 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\FV@BreakIndent}
-% Indentation of continuation lines.
+%
+% \begin{macro}{\FV@BreakLinesIndentationHook}
+% A hook for performing on-the-fly indentation calculations when |breaklines=true|.  This is used for all |*NChars| related indentation.  It is important to use |\FV@FormattingPrep@PostHook| because it is always invoked \emph{after} any font-related settings.
 %    \begin{macrocode}
-\newdimen\FV@BreakIndent
-\define@key{FV}{breakindent}{\FV@BreakIndent=#1\relax}
-\fvset{breakindent=0pt}
+\def\FV@BreakLinesIndentationHook{}
+\g@addto@macro\FV@FormattingPrep@PostHook{%
+  \ifFV@BreakLines
+    \FV@BreakLinesIndentationHook
+  \fi}
 %    \end{macrocode}
 % \end{macro}
+%
+%
+% \begin{macro}{\FV@BreakIndent}
+% \begin{macro}{\FV@BreakIndentNChars}
+% Indentation of continuation lines. 
+%    \begin{macrocode}
+\newdimen\FV@BreakIndent
+\newcount\FV@BreakIndentNChars
+\define@key{FV}{breakindent}{%
+  \FV@BreakIndent=#1\relax
+  \FV@BreakIndentNChars=0\relax}
+\define@key{FV}{breakindentnchars}{\FV@BreakIndentNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakIndentNChars>0
+    \FV@SetToWidthNChars{\FV@BreakIndent}{\FV@BreakIndentNChars}%
+  \fi}
+\fvset{breakindentnchars=0}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
 %
 % \begin{macro}{FV@BreakAutoIndent}
 % Auto indentation of continuation lines to indentation of original line.  Adds to |\FV@BreakIndent|.
@@ -2114,43 +2206,88 @@
 %
 % 
 % \begin{macro}{\FV@BreakSymbolSepLeft}
+% \begin{macro}{\FV@BreakSymbolSepLeftNChars}
 % Separation of left break symbol from the text.
 %    \begin{macrocode}
 \newdimen\FV@BreakSymbolSepLeft
-\define@key{FV}{breaksymbolsepleft}{\FV@BreakSymbolSepLeft=#1\relax}
+\newcount\FV@BreakSymbolSepLeftNChars
+\define@key{FV}{breaksymbolsepleft}{%
+  \FV@BreakSymbolSepLeft=#1\relax
+  \FV@BreakSymbolSepLeftNChars=0\relax}
 \define@key{FV}{breaksymbolsep}{\fvset{breaksymbolsepleft=#1}}
-\fvset{breaksymbolsepleft=1em}
+\define@key{FV}{breaksymbolsepleftnchars}{\FV@BreakSymbolSepLeftNChars=#1\relax}
+\define@key{FV}{breaksymbolsepnchars}{\fvset{breaksymbolsepleftnchars=#1}}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolSepLeftNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolSepLeft}{\FV@BreakSymbolSepLeftNChars}%
+  \fi}
+\fvset{breaksymbolsepleftnchars=2}
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+%
 %
 % \begin{macro}{\FV@BreakSymbolSepRight}
+% \begin{macro}{\FV@BreakSymbolSepRightNChars}
 % Separation of right break symbol from the text.
 %    \begin{macrocode}
 \newdimen\FV@BreakSymbolSepRight
-\define@key{FV}{breaksymbolsepright}{\FV@BreakSymbolSepRight=#1\relax}
-\fvset{breaksymbolsepright=1em}
+\newcount\FV@BreakSymbolSepRightNChars
+\define@key{FV}{breaksymbolsepright}{%
+  \FV@BreakSymbolSepRight=#1\relax
+  \FV@BreakSymbolSepRightNChars=0\relax}
+\define@key{FV}{breaksymbolseprightnchars}{\FV@BreakSymbolSepRightNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolSepRightNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolSepRight}{\FV@BreakSymbolSepRightNChars}%
+  \fi}
+\fvset{breaksymbolseprightnchars=2}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 %
 % \begin{macro}{\FV@BreakSymbolIndentLeft}
+% \begin{macro}{\FV@BreakSymbolIndentLeftNChars}
 % Additional left indentation to make room for the left break symbol.
 %    \begin{macrocode}
 \newdimen\FV@BreakSymbolIndentLeft
-\settowidth{\FV@BreakSymbolIndentLeft}{\ttfamily xxxx}
-\define@key{FV}{breaksymbolindentleft}{\FV@BreakSymbolIndentLeft=#1\relax}
+\newcount\FV@BreakSymbolIndentLeftNChars
+\define@key{FV}{breaksymbolindentleft}{%
+  \FV@BreakSymbolIndentLeft=#1\relax
+  \FV@BreakSymbolIndentLeftNChars=0\relax}
 \define@key{FV}{breaksymbolindent}{\fvset{breaksymbolindentleft=#1}}
+\define@key{FV}{breaksymbolindentleftnchars}{\FV@BreakSymbolIndentLeftNChars=#1\relax}
+\define@key{FV}{breaksymbolindentnchars}{\fvset{breaksymbolindentleftnchars=#1}}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolIndentLeftNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolIndentLeft}{\FV@BreakSymbolIndentLeftNChars}%
+  \fi}
+\fvset{breaksymbolindentleftnchars=4}
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+%
 %
 % \begin{macro}{\FV@BreakSymbolIndentRight}
+% \begin{macro}{\FV@BreakSymbolIndentRightNChars}
 % Additional right indentation to make room for the right break symbol.
 %    \begin{macrocode}
 \newdimen\FV@BreakSymbolIndentRight
-\settowidth{\FV@BreakSymbolIndentRight}{\ttfamily xxxx}
-\define@key{FV}{breaksymbolindentright}{\FV@BreakSymbolIndentRight=#1\relax}
+\newcount\FV@BreakSymbolIndentRightNChars
+\define@key{FV}{breaksymbolindentright}{%
+  \FV@BreakSymbolIndentRight=#1\relax
+  \FV@BreakSymbolIndentRightNChars=0\relax}
+\define@key{FV}{breaksymbolindentrightnchars}{\FV@BreakSymbolIndentRightNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolIndentRightNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolIndentRight}{\FV@BreakSymbolIndentRightNChars}%
+  \fi}
+\fvset{breaksymbolindentrightnchars=4}
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+%
 %
 % We need macros that contain the logic for typesetting the break symbols.  By default, the symbol macros contain everything regarding the symbol and its typesetting, while these macros contain pure logic.  The symbols should be wrapped in braces so that formatting commands (for example, |\tiny|) don't escape.
 % \begin{macro}{\FancyVerbBreakSymbolLeftLogic}
@@ -2252,7 +2389,7 @@
 % \end{macro}
 %
 % \begin{macro}{\FV@BreakBeforePrep}
-% We need a way to break before characters if and only if they have been specified as breaking characters.  It would be possible to do that via a nested conditional, but that would be messy.  It is much simpler to create an empty macro whose name contains the character, and test for the existence of this macro.  This needs to be done inside a |\begingroup...\endgroup| so that the macros do not have to be cleaned up manually.  A good place to do this is in |\FV@FormattingPrep|, which is inside a group and before processing starts.  The macro is added to |\FV@FormattingPrepHook|, which contains \fvextra\ exntensions to |\FV@FormattingPrep|, after |\FV@BreakAfterPrep| is defined below.
+% We need a way to break before characters if and only if they have been specified as breaking characters.  It would be possible to do that via a nested conditional, but that would be messy.  It is much simpler to create an empty macro whose name contains the character, and test for the existence of this macro.  This needs to be done inside a |\begingroup...\endgroup| so that the macros do not have to be cleaned up manually.  A good place to do this is in |\FV@FormattingPrep|, which is inside a group and before processing starts.  The macro is added to |\FV@FormattingPrep@PreHook|, which contains \fvextra\ exntensions to |\FV@FormattingPrep|, after |\FV@BreakAfterPrep| is defined below.
 %
 % The procedure here is a bit roundabout.  We need to use |\FV@EscChars| to handle character escapes, but the character redefinitions need to be kept local, requiring that we work within a |\begingroup...\endgroup|.  So we loop through the breaking tokens and assemble a macro that will itself define character macros.  Only this defining macro is declared global, and it contains \emph{expanded} characters so that there is no longer any dependence on |\FV@EscChars|.
 %
@@ -2360,9 +2497,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% Now that |\FV@BreakBeforePrep| and |\FV@BreakAfterPrep| are defined, add them to |\FV@FormattingPrepHook|, which is the \fvextra\ extension to |\FV@FormattingPrep|.  The ordering here is important, since |\FV@BreakAfterPrep| contains compatibility checks with |\FV@BreakBeforePrep|, and thus must be used after it.  Also, we have to check for the pdfTeX engine with \pkg{inputenc} using UTF-8, and use the |UTF| macros instead when that is the case.
+% Now that |\FV@BreakBeforePrep| and |\FV@BreakAfterPrep| are defined, add them to |\FV@FormattingPrep@PreHook|, which is the \fvextra\ extension to |\FV@FormattingPrep|.  The ordering here is important, since |\FV@BreakAfterPrep| contains compatibility checks with |\FV@BreakBeforePrep|, and thus must be used after it.  Also, we have to check for the pdfTeX engine with \pkg{inputenc} using UTF-8, and use the |UTF| macros instead when that is the case.
 %    \begin{macrocode}
-\g@addto@macro\FV@FormattingPrepHook{%
+\g@addto@macro\FV@FormattingPrep@PreHook{%
   \ifcsname pdfmatch\endcsname
   \ifx\pdfmatch\relax
   \else
@@ -2835,7 +2972,7 @@
 %
 %
 % \begin{macro}{\FV@BreakBeforePrep@UTF}
-% We need |UTF| variants of the |breakbefore| and |breakafter| prep macros.  These are only ever used with \pkg{inputenc} with UTF-8.  There is no need for encoding checks here; checks are performed in |\FV@FormattingPrepHook| (checks are inserted into it after the non-|UTF| macro definitions).
+% We need |UTF| variants of the |breakbefore| and |breakafter| prep macros.  These are only ever used with \pkg{inputenc} with UTF-8.  There is no need for encoding checks here; checks are performed in |\FV@FormattingPrep@PreHook| (checks are inserted into it after the non-|UTF| macro definitions).
 %    \begin{macrocode}
 \def\FV@BreakBeforePrep@UTF{%
   \ifx\FV@BreakBefore\@empty\relax
@@ -3371,7 +3508,7 @@
 %
 %
 % \begin{macro}{\VerbatimPygments}
-% This is the command that activates Pygments features.  It must be invoked before \verb|\begin{Verbatim}|, etc., but inside a |\begingroup...\endgroup| so that its effects do not escape into the rest of the document (for example, within the beginning of an environment.  It takes two arguments:  The Pygments macro that literally appears (|\PYG| for \pkg{minted} and \pkg{pythontex}), and the Pygments macro that should actually be used (|\PYG|\meta{style\_name} for \pkg{minted} and \pkg{pythontex}).  The two are distinguished because it can be convenient to highlight everything using the same literal macro name, and then |\let| it to appropriate values to change styles, rather than redoing all highlighting to change styles.  It modifies |\FV@PygmentsHook|, which is at the beginning of |\FV@FormattingPrepHook|, to make the actual changes at the appropriate time.
+% This is the command that activates Pygments features.  It must be invoked before \verb|\begin{Verbatim}|, etc., but inside a |\begingroup...\endgroup| so that its effects do not escape into the rest of the document (for example, within the beginning of an environment.  It takes two arguments:  The Pygments macro that literally appears (|\PYG| for \pkg{minted} and \pkg{pythontex}), and the Pygments macro that should actually be used (|\PYG|\meta{style\_name} for \pkg{minted} and \pkg{pythontex}).  The two are distinguished because it can be convenient to highlight everything using the same literal macro name, and then |\let| it to appropriate values to change styles, rather than redoing all highlighting to change styles.  It modifies |\FV@PygmentsHook|, which is at the beginning of |\FV@FormattingPrep@PreHook|, to make the actual changes at the appropriate time.
 %    \begin{macrocode}
 \def\VerbatimPygments#1#2{%
   \def\FV@PygmentsHook{\FV@VerbatimPygments{#1}{#2}}}
