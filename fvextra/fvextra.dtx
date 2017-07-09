@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2017/07/08 v1.3 fvextra - extensions and patches for fancyvrb]
+    [2017/07/08 v1.3.1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -231,6 +231,10 @@
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
 %
+%
+% \begin{changelog}{v1.3.1}{2017/07/08}
+% \item \texttt{beameroverlays} now works with \texttt{VerbatimOut}.
+% \end{changelog}
 %
 % \begin{changelog}{v1.3}{2017/07/08}
 % \item Added \texttt{beameroverlays} option, which enables \texttt{beamer} overlays using the \texttt{<} and \texttt{>} characters.
@@ -1623,7 +1627,7 @@
 %
 %
 % \begin{macro}{beameroverlays}
-% Give |<| and |>| their normal catcodes (not |\active|), so that \pkg{beamer} overlays will work.
+% Give |<| and |>| their normal catcodes (not |\active|), so that \pkg{beamer} overlays will work.  This modifies |\@noligs| because that is the only way to prevent the settings from being overwritten later.  This could have used |\FV@CatCodesHook|, but then it would have had to compare |\@noligs| to |\relax| to avoid issues when |\let\@noligs\relax| in |VerbatimOut|.
 %    \begin{macrocode}
 \define@booleankey{FV}{beameroverlays}%
  {\let\FancyVerbBeamerOverlays\FV@BeamerOverlays}%
@@ -1631,7 +1635,7 @@
 \def\FV@BeamerOverlays{%
   \expandafter\def\expandafter\@noligs\expandafter{\@noligs
     \catcode`\<=12\catcode`\>=12\relax}}
-\FV@AddToHook\FV@CatCodesHook\FancyVerbBeamerOverlays
+\FV@AddToHook\FV@FormattingPrep@PreHook\FancyVerbBeamerOverlays
 \fvset{beameroverlays=false}
 %    \end{macrocode}
 % \end{macro}

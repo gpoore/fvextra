@@ -1,6 +1,11 @@
 # Changes
 
 
+## v1.3.1 (2017/07/08)
+
+* `beameroverlays` now works with `VerbatimOut`.
+
+
 ## v1.3 (2017/07/08)
 
 *  Added `beameroverlays` option, which enables `beamer` overlays using the
