@@ -1,6 +1,6 @@
 % \iffalse meta-comment
 %
-% Copyright (C) 2016 by Geoffrey M. Poore <gpoore@gmail.com>
+% Copyright (C) 2016-2018 by Geoffrey M. Poore <gpoore@gmail.com>
 % ---------------------------------------------------------------------------
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3
@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2017/07/08 v1.3.1 fvextra - extensions and patches for fancyvrb]
+    [2018/08/08 v1.4dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -213,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{3003}
+% \CheckSum{3026}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -231,6 +231,10 @@
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
 %
+%
+% \begin{changelog}{v1.4}{2018/08/??}
+% \item \texttt{highlightlines} now works correctly with \texttt{frame} (\#7).
+% \end{changelog}
 %
 % \begin{changelog}{v1.3.1}{2017/07/08}
 % \item \texttt{beameroverlays} now works with \texttt{VerbatimOut}.
@@ -633,7 +637,7 @@
 % The symbol inserted post-break for breaks inserted by |breakbefore|.
 %
 %
-% \item[breakindent (dimension) (breakindentnchars)]
+% \item[breakindent (dimension) (\meta{breakindentnchars})]
 % When a line is broken, indent the continuation lines by this amount.  When |breakautoindent| and |breakindent| are used together, the indentations add.  This  indentation is combined with |breaksymbolindentleft| to give the total actual left indentation.
 %
 % \item[breakindentnchars (integer) (0)]
@@ -698,40 +702,40 @@
 % The symbol used at breaks (right) when |breaklines=true|. Does not appear at the end of the very last segment of a broken line.
 %
 %
-% \item[breaksymbolindent (dimension) (breaksymbolindentleftnchars)]
+% \item[breaksymbolindent (dimension) (\meta{breaksymbolindentleftnchars})]
 % Alias for |breaksymbolindentleft|.
 %
-% \item[breaksymbolindentnchars (integer) (breaksymbolindentleftnchars)]
+% \item[breaksymbolindentnchars (integer) (\meta{breaksymbolindentleftnchars})]
 % Alias for |breaksymbolindentleftnchars|.
 %
 %
-% \item[breaksymbolindentleft (dimension) (breaksymbolindentleftnchars)]
+% \item[breaksymbolindentleft (dimension) (\meta{breaksymbolindentleftnchars})]
 % The extra left indentation that is provided to make room for |breaksymbolleft|.  This indentation is only applied when there is a |breaksymbolleft|.
 %
 % \item[breaksymbolindentleftnchars (integer) (4)]
 % This allows |breaksymbolindentleft| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
-% \item[breaksymbolindentright (dimension) (breaksymbolindentrightnchars)]
+% \item[breaksymbolindentright (dimension) (\meta{breaksymbolindentrightnchars})]
 % The extra right indentation that is provided to make room for |breaksymbolright|.  This indentation is only applied when there is a |breaksymbolright|.
 %
 % \item[breaksymbolindentrightnchars (integer) (4)]
 % This allows |breaksymbolindentright| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
 %
-% \item[breaksymbolsep (dimension) (breaksymbolsepleftnchars)]
+% \item[breaksymbolsep (dimension) (\meta{breaksymbolsepleftnchars})]
 % Alias for |breaksymbolsepleft|.
 %
-% \item[breaksymbolsepnchars (integer) (breaksymbolsepleftnchars)]
+% \item[breaksymbolsepnchars (integer) (\meta{breaksymbolsepleftnchars})]
 % Alias for |breaksymbolsepleftnchars|.
 %
 %
-% \item[breaksymbolsepleft (dimension) (breaksymbolsepleftnchars)]
+% \item[breaksymbolsepleft (dimension) (\meta{breaksymbolsepleftnchars})]
 % The separation between the |breaksymbolleft| and the adjacent text. 
 %
 % \item[breaksymbolsepleftnchars (integer) (2)]
 % Allows |breaksymbolsepleft| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
 %
-% \item[breaksymbolsepright (dimension) (breaksymbolseprightnchars)]
+% \item[breaksymbolsepright (dimension) (\meta{breaksymbolseprightnchars})]
 % The \emph{minimum} separation between the |breaksymbolright| and the adjacent text.  This is the separation between |breaksymbolright| and the furthest extent to which adjacent text could reach.  In practice, |\linewidth| will typically not be an exact integer multiple of the character width (assuming a fixed-width font), so the actual separation between the |breaksymbolright| and adjacent text will generally be larger than |breaksymbolsepright|.  This ensures that break symbols have the same spacing from the margins on both left and right.  If the same spacing from text is desired instead, |breaksymbolsepright| may be adjusted.  (See the definition of |\FV@makeLineNumber| for implementation details.)
 %
 % \item[breaksymbolseprightnchars (integer) (2)]
@@ -2037,7 +2041,18 @@
   \colorbox{\FancyVerbHighlightColor}{%
     \setlength{\fboxsep}{\FV@TmpLength}%
     \rlap{\strut#1}%
-    \hspace{\linewidth}}}
+    \hspace{\linewidth}%
+    \ifx\FV@RightListFrame\relax\else
+      \hspace{-\FV@FrameSep}%
+      \hspace{-\FV@FrameRule}%
+    \fi
+    \ifx\FV@LeftListFrame\relax\else
+      \hspace{-\FV@FrameSep}%
+      \hspace{-\FV@FrameRule}%
+    \fi
+  }%
+  \hss
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3240,29 +3255,37 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\FV@LineWidth}
+% This is the effective line width within a broken line.
+%    \begin{macrocode}
+\newdimen\FV@LineWidth
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{\FV@SaveLineBox}
 % This is the macro that does most of the work.  It was inspired by Marco Daniel's code at \url{http://tex.stackexchange.com/a/112573/10742}.
 %
-% This macro is invoked when a line is too long.  We modify the |\linewidth| to take into account |breakindent| and |breakautoindent|, and insert |\hbox|es to fill the empty space.  We also account for |breaksymbolindentleft| and |breaksymbolindentright|, but \emph{only} when there are actually break symbols.  The code is placed in a |\parbox|.  Break symbols are inserted via \pkg{lineno}'s |internallinenumbers*|, which does internal line numbers without continuity between environments (the |linenumber| counter is automatically reset).  The beginning of the line has negative |\hspace| inserted to pull it out to the correct starting position.  |\strut|s are used to maintain correct line heights.  The |\parbox| is followed by an empty |\hbox| that takes up the space needed for a right-hand break symbol (if any).  |\FV@BreakByTokenAnywhereHook| is a hook for using  |breakbytokenanywhere| when working with Pygments.  Since it is within |internallinenumbers*|, its effects do not escape.
+% This macro is invoked when a line is too long.  We modify |\FV@LineWidth| to take into account |breakindent| and |breakautoindent|, and insert |\hbox|es to fill the empty space.  We also account for |breaksymbolindentleft| and |breaksymbolindentright|, but \emph{only} when there are actually break symbols.  The code is placed in a |\parbox|.  Break symbols are inserted via \pkg{lineno}'s |internallinenumbers*|, which does internal line numbers without continuity between environments (the |linenumber| counter is automatically reset).  The beginning of the line has negative |\hspace| inserted to pull it out to the correct starting position.  |\strut|s are used to maintain correct line heights.  The |\parbox| is followed by an empty |\hbox| that takes up the space needed for a right-hand break symbol (if any).  |\FV@BreakByTokenAnywhereHook| is a hook for using  |breakbytokenanywhere| when working with Pygments.  Since it is within |internallinenumbers*|, its effects do not escape.
 %    \begin{macrocode}
 \def\FV@SaveLineBox#1{%
   \savebox{\FV@LineBox}{%
-    \advance\linewidth by -\FV@BreakIndent
+    \advance\FV@LineWidth by -\FV@BreakIndent
     \hbox to \FV@BreakIndent{\hfill}%
     \ifthenelse{\boolean{FV@BreakAutoIndent}}%
      {\let\FV@LineIndentChars\@empty
       \FV@GetLineIndent#1\FV@Undefined
       \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
       \hbox to \wd\FV@LineIndentBox{\hfill}%
-      \advance\linewidth by -\wd\FV@LineIndentBox
+      \advance\FV@LineWidth by -\wd\FV@LineIndentBox
       \setcounter{FV@TrueTabCounter}{0}}%
      {}%
     \ifdefempty{\FancyVerbBreakSymbolLeft}{}%
      {\hbox to \FV@BreakSymbolIndentLeft{\hfill}%
-      \advance\linewidth by -\FV@BreakSymbolIndentLeft}%
+      \advance\FV@LineWidth by -\FV@BreakSymbolIndentLeft}%
     \ifdefempty{\FancyVerbBreakSymbolRight}{}%
-     {\advance\linewidth by -\FV@BreakSymbolIndentRight}%
-    \parbox[t]{\linewidth}{%
+     {\advance\FV@LineWidth by -\FV@BreakSymbolIndentRight}%
+    \parbox[t]{\FV@LineWidth}{%
       \FV@RaggedRight
       \leftlinenumbers*
       \begin{internallinenumbers*}%
@@ -3288,7 +3311,7 @@
 %
 %
 % \begin{macro}{\FV@ListProcessLine@Break}
-% This macro is based on the original |\FV@ListProcessLine| and follows it as closely as possible.  The |\linewidth| is reduced by |\FV@FrameSep| and |\FV@FrameRule| so that text will not overrun frames.  This is done conditionally based on which frames are in use.  We save the current line in a box, and only do special things if the box is too wide.  For uniformity, all text is placed in a |\parbox|, even if it doesn't need to be wrapped.
+% This macro is based on the original |\FV@ListProcessLine| and follows it as closely as possible.  |\FV@LineWidth| is reduced by |\FV@FrameSep| and |\FV@FrameRule| so that text will not overrun frames.  This is done conditionally based on which frames are in use.  We save the current line in a box, and only do special things if the box is too wide.  For uniformity, all text is placed in a |\parbox|, even if it doesn't need to be wrapped.
 %
 % If a line is too wide, then it is passed to |\FV@SaveLineBox|.  If there is no right-hand break symbol, then the saved result in |\FV@LineBox| may be used immediately.  If there is a right-hand break symbol, then the line must be processed a second time, so that the right-hand break symbol may be removed from the final segment of the broken line (since it does not continue).  During the first use of |\FV@SaveLineBox|, the counter |FancyVerbLineBreakLast| is set to the internal line number of the last segment of the broken line.  During the second use of |\FV@SaveLineBox|, we disable this (|\let\FV@SetLineBreakLast\relax|) so that the value of |FancyVerbLineBreakLast| remains fixed and thus may be used to determine when a right-hand break symbol should be inserted.
 %    \begin{macrocode}
@@ -3296,13 +3319,14 @@
   \hbox to \hsize{%
   \kern\leftmargin
   \hbox to \linewidth{%
+  \FV@LineWidth\linewidth
   \ifx\FV@RightListFrame\relax\else
-    \advance\linewidth by -\FV@FrameSep
-    \advance\linewidth by -\FV@FrameRule
+    \advance\FV@LineWidth by -\FV@FrameSep
+    \advance\FV@LineWidth by -\FV@FrameRule
   \fi
   \ifx\FV@LeftListFrame\relax\else
-    \advance\linewidth by -\FV@FrameSep
-    \advance\linewidth by -\FV@FrameRule
+    \advance\FV@LineWidth by -\FV@FrameSep
+    \advance\FV@LineWidth by -\FV@FrameRule
   \fi
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
@@ -3315,7 +3339,7 @@
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\relax
   \fi
-  \ifdim\wd\FV@LineBox>\linewidth
+  \ifdim\wd\FV@LineBox>\FV@LineWidth
     \setcounter{FancyVerbLineBreakLast}{0}%
     \ifx\FV@Tab\FV@TrueTab
       \let\FV@Tab\FV@TrueTab@UseWidth
@@ -3340,7 +3364,7 @@
     \FV@LeftListFrame
     \FancyVerbFormatLine{%
       \FancyVerbHighlightLine{%
-        \parbox[t]{\linewidth}{%
+        \parbox[t]{\FV@LineWidth}{%
           \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
     \FV@RightListFrame
     \FV@RightListNumber

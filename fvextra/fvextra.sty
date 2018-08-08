@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2017/07/08 v1.3.1 fvextra - extensions and patches for fancyvrb]
+    [2018/08/08 v1.4dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -507,7 +507,18 @@
   \colorbox{\FancyVerbHighlightColor}{%
     \setlength{\fboxsep}{\FV@TmpLength}%
     \rlap{\strut#1}%
-    \hspace{\linewidth}}}
+    \hspace{\linewidth}%
+    \ifx\FV@RightListFrame\relax\else
+      \hspace{-\FV@FrameSep}%
+      \hspace{-\FV@FrameRule}%
+    \fi
+    \ifx\FV@LeftListFrame\relax\else
+      \hspace{-\FV@FrameSep}%
+      \hspace{-\FV@FrameRule}%
+    \fi
+  }%
+  \hss
+}
 \let\FancyVerbHighlightLineMiddle\FancyVerbHighlightLineFirst
 \let\FancyVerbHighlightLineLast\FancyVerbHighlightLineFirst
 \let\FancyVerbHighlightLineSingle\FancyVerbHighlightLineFirst
@@ -1230,24 +1241,25 @@
 \def\FV@RaggedRight{%
   \let\\\@centercr
   \@rightskip\@flushglue\rightskip\@rightskip\leftskip\z@skip\parindent\z@}
+\newdimen\FV@LineWidth
 \def\FV@SaveLineBox#1{%
   \savebox{\FV@LineBox}{%
-    \advance\linewidth by -\FV@BreakIndent
+    \advance\FV@LineWidth by -\FV@BreakIndent
     \hbox to \FV@BreakIndent{\hfill}%
     \ifthenelse{\boolean{FV@BreakAutoIndent}}%
      {\let\FV@LineIndentChars\@empty
       \FV@GetLineIndent#1\FV@Undefined
       \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
       \hbox to \wd\FV@LineIndentBox{\hfill}%
-      \advance\linewidth by -\wd\FV@LineIndentBox
+      \advance\FV@LineWidth by -\wd\FV@LineIndentBox
       \setcounter{FV@TrueTabCounter}{0}}%
      {}%
     \ifdefempty{\FancyVerbBreakSymbolLeft}{}%
      {\hbox to \FV@BreakSymbolIndentLeft{\hfill}%
-      \advance\linewidth by -\FV@BreakSymbolIndentLeft}%
+      \advance\FV@LineWidth by -\FV@BreakSymbolIndentLeft}%
     \ifdefempty{\FancyVerbBreakSymbolRight}{}%
-     {\advance\linewidth by -\FV@BreakSymbolIndentRight}%
-    \parbox[t]{\linewidth}{%
+     {\advance\FV@LineWidth by -\FV@BreakSymbolIndentRight}%
+    \parbox[t]{\FV@LineWidth}{%
       \FV@RaggedRight
       \leftlinenumbers*
       \begin{internallinenumbers*}%
@@ -1272,13 +1284,14 @@
   \hbox to \hsize{%
   \kern\leftmargin
   \hbox to \linewidth{%
+  \FV@LineWidth\linewidth
   \ifx\FV@RightListFrame\relax\else
-    \advance\linewidth by -\FV@FrameSep
-    \advance\linewidth by -\FV@FrameRule
+    \advance\FV@LineWidth by -\FV@FrameSep
+    \advance\FV@LineWidth by -\FV@FrameRule
   \fi
   \ifx\FV@LeftListFrame\relax\else
-    \advance\linewidth by -\FV@FrameSep
-    \advance\linewidth by -\FV@FrameRule
+    \advance\FV@LineWidth by -\FV@FrameSep
+    \advance\FV@LineWidth by -\FV@FrameRule
   \fi
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
@@ -1291,7 +1304,7 @@
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\relax
   \fi
-  \ifdim\wd\FV@LineBox>\linewidth
+  \ifdim\wd\FV@LineBox>\FV@LineWidth
     \setcounter{FancyVerbLineBreakLast}{0}%
     \ifx\FV@Tab\FV@TrueTab
       \let\FV@Tab\FV@TrueTab@UseWidth
@@ -1316,7 +1329,7 @@
     \FV@LeftListFrame
     \FancyVerbFormatLine{%
       \FancyVerbHighlightLine{%
-        \parbox[t]{\linewidth}{%
+        \parbox[t]{\FV@LineWidth}{%
           \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
     \FV@RightListFrame
     \FV@RightListNumber
