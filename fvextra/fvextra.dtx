@@ -213,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{3026}
+% \CheckSum{3047}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -233,6 +233,7 @@
 %
 %
 % \begin{changelog}{v1.4}{2018/08/??}
+% \item Added new option \texttt{fontencoding} (\texttt{minted} \#208).
 % \item \texttt{highlightlines} now works correctly with \texttt{frame} (\#7).
 % \end{changelog}
 %
@@ -353,6 +354,10 @@
 %   `quoted text'
 %   \end{Verbatim}
 % \end{example}
+%
+%
+% \item[fontencoding (string) (\meta{document font encoding})]
+% Set the font encoding inside \pkg{fancyvrb} commands and environments.  Setting |fontencoding=none| resets to the default document font encoding.
 %
 %
 % \item[highlightcolor (string) (LightCyan)]
@@ -1660,6 +1665,22 @@
    {}}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FancyVerbCurlyQuotes}
 \fvset{curlyquotes=false}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{fontencoding}
+% Add option for font encoding.
+%    \begin{macrocode}
+\define@key{FV}{fontencoding}%
+ {\ifstrempty{#1}%
+   {\let\FV@FontEncoding\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@FontEncoding\relax}%
+     {\def\FV@FontEncoding{\fontencoding{#1}}}}}
+\expandafter\def\expandafter\FV@SetupFont\expandafter{%
+  \expandafter\FV@FontEncoding\FV@SetupFont}
+\fvset{fontencoding=none}
 %    \end{macrocode}
 % \end{macro}
 % 

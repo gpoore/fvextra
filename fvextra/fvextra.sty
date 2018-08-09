@@ -273,6 +273,15 @@
    {}}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FancyVerbCurlyQuotes}
 \fvset{curlyquotes=false}
+\define@key{FV}{fontencoding}%
+ {\ifstrempty{#1}%
+   {\let\FV@FontEncoding\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@FontEncoding\relax}%
+     {\def\FV@FontEncoding{\fontencoding{#1}}}}}
+\expandafter\def\expandafter\FV@SetupFont\expandafter{%
+  \expandafter\FV@FontEncoding\FV@SetupFont}
+\fvset{fontencoding=none}
 \def\FancyVerbFormatLine#1{#1}
 \def\FancyVerbFormatText#1{#1}
 \def\FV@ListProcessLine@NoBreak#1{%
