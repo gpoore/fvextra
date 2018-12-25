@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2018/08/08 v1.4dev fvextra - extensions and patches for fancyvrb]
+    [2018/12/25 v1.4dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -69,7 +69,8 @@
 \def\FV@@ObeyTabs#1{%
   \let\FV@Space@Orig\FV@Space
   \let\FV@Space\FV@Space@ObeyTabs
-  \setcounter{FV@TrueTabGroupLevel}{\the\currentgrouplevel}%
+  \edef\FV@TmpCurrentGroupLevel{\the\currentgrouplevel}%
+  \setcounter{FV@TrueTabGroupLevel}{\FV@TmpCurrentGroupLevel}%
   \addtocounter{FV@TrueTabGroupLevel}{1}%
   \setbox\FV@TabBox=\hbox{#1}\box\FV@TabBox
   \let\FV@Space\FV@Space@Orig}

@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2018/08/08 v1.4dev fvextra - extensions and patches for fancyvrb]
+    [2018/12/25 v1.4dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -213,7 +213,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{3047}
+% \CheckSum{3050}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -232,7 +232,8 @@
 %   Right brace   \}     Tilde         \~}
 %
 %
-% \begin{changelog}{v1.4}{2018/08/??}
+% \begin{changelog}{v1.4}{2018/12/??}
+% \item \texttt{obeytabs} now works with the \texttt{calc} package's redefined \texttt{\string\setcounter}.  Since \texttt{minted} loads \texttt{calc}, this also fixes \texttt{minted} compatibility (\texttt{minted} \#221).
 % \item Added new option \texttt{fontencoding} (\texttt{minted} \#208).
 % \item \texttt{highlightlines} now works correctly with \texttt{frame} (\#7).
 % \end{changelog}
@@ -314,7 +315,7 @@
 % Some features of \fvextra\ were originally created as part of the \pkg{pythontex} and \pkg{minted} packages.  \fancyvrb-related patches and extensions that currently exist in those packages will gradually be migrated into \fvextra, and both packages will require \fvextra\ in the future.
 %
 %
-% 
+%
 %
 % \section{Usage}
 %
@@ -369,7 +370,7 @@
 %
 % The highlighting color can be customized with |highlightcolor|.
 %
-% \begingroup 
+% \begingroup
 % \fvset{xleftmargin=2em}
 % \begin{longexample}
 %   \begin{Verbatim}[numbers=left, highlightlines={1, 3-4}]
@@ -463,7 +464,7 @@
 % \begingroup
 % \fvset{xleftmargin=2em}
 % \begin{longexample}
-%   \begin{Verbatim}[numbers=left, stepnumber=2, 
+%   \begin{Verbatim}[numbers=left, stepnumber=2,
 %                    stepnumberfromfirst]
 %   First line
 %   Second line
@@ -482,7 +483,7 @@
 % \begingroup
 % \fvset{xleftmargin=2em}
 % \begin{longexample}
-%   \begin{Verbatim}[numbers=left, stepnumber=2, 
+%   \begin{Verbatim}[numbers=left, stepnumber=2,
 %                    firstnumber=4, stepnumberoffsetvalues]
 %   First line
 %   Second line
@@ -503,13 +504,13 @@
 % \begingroup
 % \fvset{frame=single, rulecolor=DarkGreen, gobble=4}
 % \begin{VerbatimVerbatim}[breaklines, obeytabs, showtabs]
-%   \begin{Verbatim}[obeytabs, showtabs, breaklines, 
+%   \begin{Verbatim}[obeytabs, showtabs, breaklines,
 %                    tab=\rightarrowfill, tabcolor=orange]
 %   	First	Second	Third	And more text that goes on for a while until wrapping is needed
 %   	First	Second	Third	Forth
 %   \end{Verbatim}
 % \end{VerbatimVerbatim}
-%   \begin{Verbatim}[obeytabs, showtabs, breaklines, 
+%   \begin{Verbatim}[obeytabs, showtabs, breaklines,
 %                    tab=\rightarrowfill, tabcolor=orange]
 %   	First	Second	Third	And more text that goes on for a while until wrapping is needed
 %   	First	Second	Third	Forth
@@ -532,7 +533,7 @@
 %
 % \DescribeMacro{\FancyVerbFormatLine}
 % \DescribeMacro{\FancyVerbFormatText}
-% 
+%
 % \fancyvrb\ defines |\FancyVerbFormatLine|, which can be used to apply custom formatting to each individual line of text.  By default, it takes a line as an argument and inserts it with no modification.  This is equivalent to |\newcommand{\FancyVerbFormatLine}[1]{#1}|.\footnote{The actual definition in \fancyvrb\ is |\def\FancyVerbFormatLine#1{\FV@ObeyTabs{#1}}|.  This is problematic because redefining the macro could easily eliminate |\FV@ObeyTabs|, which governs tab expansion.  \fvextra\ redefines the macro to |\def\FancyVerbFormatLine#1{#1}| and patches all parts of \fancyvrb\ that use |\FancyVerbFormatLine| so that |\FV@ObeyTabs| is explicitly inserted at the appropriate points.}
 %
 % \fvextra\ introduces line breaking, which complicates line formatting.  We might want to apply formatting to the entire line, including line breaks, line continuation symbols, and all indentation, including any extra indentation provided by line breaking.  Or we might want to apply formatting only to the actual text of the line.  \fvextra\ leaves |\FancyVerbFormatLine| as applying to the entire line, and introduces a new command |\FancyVerbFormatText| that only applies to the text part of the line.\footnote{When |breaklines=true|, each line is wrapped in a |\parbox|.  |\FancyVerbFormatLine| is outside the |\parbox|, and |\FancyVerbFormatText| is inside.}   By default, |\FancyVerbFormatText| inserts the text unmodified.  When it is customized, it should not use boxes that do not allow line breaks to avoid conflicts with line breaking code.
@@ -559,7 +560,7 @@
 %
 % Automatic line breaking may be turned on with |breaklines=true|.  By default, breaks only occur at spaces.  Breaks may be allowed anywhere with |breakanywhere|, or only before or after specified characters with |breakbefore| and |breakafter|.  Many options are provided for customizing breaks.  A good place to start is the description of |breaklines|.
 %
-% 
+%
 % \subsection{Line breaking options}
 %
 % Options are provided for customizing typical line breaking features.  See \cref{sec:breaklines:advanced} for details about low-level customization of break behavior.
@@ -735,7 +736,7 @@
 %
 %
 % \item[breaksymbolsepleft (dimension) (\meta{breaksymbolsepleftnchars})]
-% The separation between the |breaksymbolleft| and the adjacent text. 
+% The separation between the |breaksymbolleft| and the adjacent text.
 %
 % \item[breaksymbolsepleftnchars (integer) (2)]
 % Allows |breaksymbolsepleft| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
@@ -827,7 +828,7 @@
 %\newcommand{\mycmd}[1]{\_before:#1:after\_}
 %\end{verbatim}
 % Then you would discover that line breaking does not occur:
-% 
+%
 % \newcommand{\mycmd}[1]{\_before:#1:after\_}
 % \begin{longexample}
 %   \begin{Verbatim}[commandchars=\\\{\}, breaklines, breakafter=a]
@@ -849,7 +850,7 @@
 %   \end{Verbatim}
 % \end{longexample}
 %
-% Instead of completely redefining macros, it may be more convenient to use |\let|.  For example, 
+% Instead of completely redefining macros, it may be more convenient to use |\let|.  For example,
 %\begin{verbatim}
 %\let\originalmycmd\mycmd
 %\renewcommand{\mycmd}[1]{%
@@ -940,7 +941,7 @@
 % Various macros associated with |obeytabs=true| are also redefined so that tabs may be expanded regardless of whether they are within a group (within |{...}| with the normal \LaTeX\ meaning due to |commandchars|, etc.).  In the \fancyvrb\ implementation, using |obeytabs=true| when a tab is inside a group typically causes the entire line to vanish.  \fvextra\ patches this so that the tab is expanded and will be visible if |showtabs=true|.  Note, though, that the tab expansion in these cases is only guaranteed to be correct for leading whitespace that is inside a group.  The start of each run of whitespace that is inside a group is treated as a tab stop, whether or not it actually is, due to limitations of the tab expansion algorithm.  A more detailed discussion is provided in the implementation.
 %
 % The example below shows correct tab expansion of leading whitespace within a macro argument.  With \fancyvrb, the line of text would simply vanish in this case.
-% 
+%
 % \begingroup
 % \fvset{frame=single, rulecolor=DarkGreen, gobble=4}
 % \begin{VerbatimVerbatim}[showtabs]
@@ -980,7 +981,7 @@
 % \label{sec:patch:math}
 %
 % \subsubsection{Spaces}
-% 
+%
 % When typeset math is included within verbatim material, \fancyvrb\ makes spaces within the math appear literally.
 %
 % \begingroup
@@ -1042,7 +1043,7 @@
 %
 % \subsection{Backtick and single quotation mark}
 %
-% With \fancyvrb, the backtick \texttt{\textasciigrave} and typewriter single quotation mark \texttt{\textquotesingle} are typeset as the left and right curly single quotation marks \texttt{`'}.  \pkg{fvextra} loads the \pkg{upquote} package so that these characters will appear literally by default.  The original \fancyvrb\ behavior can be restored with the \fvextra\ option |curlyquotes| (\cref{sec:general-options}). 
+% With \fancyvrb, the backtick \texttt{\textasciigrave} and typewriter single quotation mark \texttt{\textquotesingle} are typeset as the left and right curly single quotation marks \texttt{`'}.  \pkg{fvextra} loads the \pkg{upquote} package so that these characters will appear literally by default.  The original \fancyvrb\ behavior can be restored with the \fvextra\ option |curlyquotes| (\cref{sec:general-options}).
 %
 %
 % \subsection{Line numbering}
@@ -1053,18 +1054,18 @@
 % \fvextra\ changes line numbering so that when |stepnumber| is used, the actual line numbers that appear are always multiples of |stepnumber| by default, regardless of any |firstnumber| offset.  The original \fancyvrb\ behavior may be turned on by setting |stepnumberoffsetvalues=true| (\cref{sec:general-options}).
 %
 %
-% 
+%
 % \section{Undocumented features of \fancyvrb}
 %
 % \fancyvrb\ defines some potentially useful but undocumented features.
 %
 % \subsection{Undocumented options}
-% 
+%
 % \begin{optionlist}
 %
 % \item[codes* (macro) (\meta{empty})]
 % \fancyvrb's |codes| is used to specify catcode changes.  It overwrites any existing |codes|.  |codes*| appends changes to existing settings.
-%  
+%
 % \item[defineactive* (macro) (\meta{empty})]
 % \fancyvrb's |defineactive| is used to define the effect of active characters.  It overwrites any existing |defineactive|.  |defineactive*| appends changes to existing settings.
 %
@@ -1077,7 +1078,7 @@
 % \subsection{Undocumented macros}
 %
 % \DescribeMacro{\FancyVerbTab}
-% 
+%
 % This defines the visible tab character (\FancyVerbTab) that is used when |showtabs=true|.  The default definition is
 %\begin{verbatim}
 %\def\FancyVerbTab{%
@@ -1241,12 +1242,13 @@
 %
 %
 % \begin{macro}{\FV@@ObeyTabs}
-% The \fancyvrb\ macro responsible for tab expansion is modified so that it can handle tabs inside groups, even if imperfectly.  We need to use a special version of the space, |\FV@Space@ObeyTabs|, that within a group will capture all following spaces or tabs and then insert them with tab expansion based on the beginning of the run of whitespace.  We need to record the current group level, but then increment it by $1$ because all comparisons will be performed within the |\hbox{...}|.
+% The \fancyvrb\ macro responsible for tab expansion is modified so that it can handle tabs inside groups, even if imperfectly.  We need to use a special version of the space, |\FV@Space@ObeyTabs|, that within a group will capture all following spaces or tabs and then insert them with tab expansion based on the beginning of the run of whitespace.  We need to record the current group level, but then increment it by $1$ because all comparisons will be performed within the |\hbox{...}|.  The |\FV@TmpCurrentGroupLevel| is needed for compatibility with the \pkg{calc} package, which redefines |\setcounter|.
 %    \begin{macrocode}
 \def\FV@@ObeyTabs#1{%
   \let\FV@Space@Orig\FV@Space
   \let\FV@Space\FV@Space@ObeyTabs
-  \setcounter{FV@TrueTabGroupLevel}{\the\currentgrouplevel}%
+  \edef\FV@TmpCurrentGroupLevel{\the\currentgrouplevel}%
+  \setcounter{FV@TrueTabGroupLevel}{\FV@TmpCurrentGroupLevel}%
   \addtocounter{FV@TrueTabGroupLevel}{1}%
   \setbox\FV@TabBox=\hbox{#1}\box\FV@TabBox
   \let\FV@Space\FV@Space@Orig}
@@ -1513,7 +1515,7 @@
 % \subsubsection{\texttt{rulecolor} and \texttt{fillcolor}}
 %
 % The |rulecolor| and |fillcolor| options are redefined so that they accept color names directly, rather than requiring |\color{|\meta{color\_name}|}|.  The definitions still allow the old usage.
-% 
+%
 % \begin{macro}{rulecolor}
 %    \begin{macrocode}
 \define@key{FV}{rulecolor}{%
@@ -1683,11 +1685,11 @@
 \fvset{fontencoding=none}
 %    \end{macrocode}
 % \end{macro}
-% 
+%
 %
 %
 % \subsubsection{Formatting with \texttt{\textbackslash FancyVerbFormatLine}, \texttt{\textbackslash FancyVerbFormatText}, and \texttt{\textbackslash FancyVerbHighlightLine}}
-% 
+%
 % \fancyvrb\ defines |\FancyVerbFormatLine|, which defines the formatting for each line. The introduction of line breaks introduces an issue for |\FancyVerbFormatLine|.  Does it format the entire line, including any whitespace in the margins or behind line break symbols (that is, is it outside the |\parbox| in which the entire line is wrapped when breaking is active)?  Or does it only format the text part of the line, only affecting the actual characters (inside the |\parbox|)?  Since both might be desirable, |\FancyVerbFormatLine| is assigned to the entire line, and a new macro |\FancyVerbFormatText| is assigned to the text, within the |\parbox|.
 %
 % An additional complication is that the \fancyvrb\ documentation says that the default value is |\def\FancyVerbFormatLine#1{#1}|.  But the actual default is |\def\FancyVerbFormatLine#1{\FV@ObeyTabs{#1}}|.  That is, |\FV@ObeyTabs| needs to operate directly on the line to handle tabs.  As a result, \emph{all} \fancyvrb\ commands that involve |\FancyVerbFormatLine| are patched, so that |\def\FancyVerbFormatLine#1{#1}|.
@@ -1712,7 +1714,7 @@
 %
 % \begin{macro}{\FV@ListProcessLine@NoBreak}
 % Redefined |\FV@ListProcessLine| in which |\FancyVerbFormatText| is added and tab handling is explicit.  The |@NoBreak| suffix is added because |\FV@ListProcessLine| will be |\let| to either this macro or to |\FV@ListProcessLine@Break| depending on whether line breaking is enabled.
-%    \begin{macrocode} 
+%    \begin{macrocode}
 \def\FV@ListProcessLine@NoBreak#1{%
   \hbox to \hsize{%
     \kern\leftmargin
@@ -2199,7 +2201,7 @@
 %
 % \begin{macro}{\FV@BreakIndent}
 % \begin{macro}{\FV@BreakIndentNChars}
-% Indentation of continuation lines. 
+% Indentation of continuation lines.
 %    \begin{macrocode}
 \newdimen\FV@BreakIndent
 \newcount\FV@BreakIndentNChars
@@ -2244,7 +2246,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% 
+%
 % \begin{macro}{\FV@BreakSymbolSepLeft}
 % \begin{macro}{\FV@BreakSymbolSepLeftNChars}
 % Separation of left break symbol from the text.
@@ -3191,7 +3193,7 @@
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\g@addto@macro{\FV@TmpLine}{#1}%
-      \ifx\@let@token\bgroup\relax        
+      \ifx\@let@token\bgroup\relax
         \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
       \else
         \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@i
