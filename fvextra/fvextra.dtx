@@ -1,6 +1,6 @@
 % \iffalse meta-comment
 %
-% Copyright (C) 2016-2018 by Geoffrey M. Poore <gpoore@gmail.com>
+% Copyright (C) 2016-2019 by Geoffrey M. Poore <gpoore@gmail.com>
 % ---------------------------------------------------------------------------
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3
@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2018/12/25 v1.4dev fvextra - extensions and patches for fancyvrb]
+    [2019/01/25 v1.4dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -41,6 +41,20 @@
 
 \usepackage[svgnames]{xcolor}
 \usepackage{upquote}
+% The typesetting for macrocode doesn't use \@noligs, which upquote modifies.
+% So apply the upquote fix to \verbatim@nolig@list as well, which is in macrocode.
+\begingroup
+\catcode`'=\active
+\catcode``=\active
+\g@addto@macro\verbatim@nolig@list{%
+  \let'\textquotesingle
+  \let`\textasciigrave
+  \ifx\encodingdefault\upquote@OTone
+  \ifx\ttdefault\upquote@cmtt
+    \def'{\char13 }%
+    \def`{\char18 }%
+  \fi\fi}
+\endgroup
 \usepackage{fvextra}
 
 \usepackage{dingbat}
@@ -59,6 +73,9 @@
   allcolors=ForestGreen,
 }
 \usepackage{cleveref}
+
+% A more robust \cmd
+\let\cmd\Verb
 
 % Create a short verbatim pipe that handles quotation marks properly
 \begingroup
@@ -213,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{3050}
+% \CheckSum{4729}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -232,7 +249,12 @@
 %   Right brace   \}     Tilde         \~}
 %
 %
-% \begin{changelog}{v1.4}{2018/12/??}
+% \begin{changelog}{v1.4}{2019/01/??}
+% \item Reimplemented \texttt{\string\Verb}.  It now works as expected inside other commands (with a few limitations), including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.
+% \item Added \texttt{extra} option for switching between the reimplemented  \texttt{\string\Verb} and the original \texttt{fancyvrb} definition.  This option will apply to any future reimplemented commands and environments.
+% \item New command \texttt{\string\fvinlineset} only applies options to commands that typeset verbatim inline, like \texttt{\string\Verb}.  It overrides options from \texttt{\string\fvset}.
+% \item Patched \texttt{fancyvrb} so that \texttt{\string\Verb} (either reimplemented version or original) can use characters like \texttt{\%} for delimiters when used outside any commands.
+% \item New command \texttt{\string\EscVerb} works like the reimplemented \texttt{\string\Verb}, except that special characters can be escaped with a backslash.  It works inside other commands without any limitations, including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.
 % \item \texttt{obeytabs} now works with the \texttt{calc} package's redefined \texttt{\string\setcounter}.  Since \texttt{minted} loads \texttt{calc}, this also fixes \texttt{minted} compatibility (\texttt{minted} \#221).
 % \item Added new option \texttt{fontencoding} (\texttt{minted} \#208).
 % \item \texttt{highlightlines} now works correctly with \texttt{frame} (\#7).
@@ -295,12 +317,21 @@
 % \maketitle
 %
 % \begin{abstract}
-% \noindent\fvextra\ provides several extensions to \fancyvrb, including automatic line breaking and improved math mode.  It also patches some \fancyvrb\ internals.
+% \noindent\fvextra\ provides several extensions to \fancyvrb, including automatic line breaking and improved math mode.  \cmd{\Verb} is reimplemented so that it works (with a few limitations) inside other commands, even in movable arguments and PDF bookmarks.  The new command \cmd{\EscVerb} is similar to \cmd{\Verb} except that it works everywhere without limitations by allowing the backslash to serve as an escape character.  \fvextra\ also patches some \fancyvrb\ internals.
 % \end{abstract}
 %
 %
 % \pagebreak
+% \begingroup
+% \makeatletter
+% ^^A https://tex.stackexchange.com/a/45165/10742
+% \patchcmd{\@dottedtocline}
+%   {\rightskip\@tocrmarg}
+%   {\rightskip\@tocrmarg plus 4em \hyphenpenalty\@M}
+%   {}{}
+% \makeatother
 % \tableofcontents
+% \endgroup
 % \pagebreak
 %
 %
@@ -310,9 +341,9 @@
 %
 % Additional verbatim features would be nice, but since \fancyvrb\ has remained almost unchanged for so long, a major upgrade could be problematic.  There are likely many existing documents that tweak or patch \fancyvrb\ internals in a way that relies on the existing implementation.  At the same time, creating a completely new verbatim package would require a major time investment and duplicate much of \fancyvrb\ that remains perfectly functional.  Perhaps someday there will be an amazing new verbatim package.  Until then, we have \fvextra.
 %
-% \fvextra\ is an add-on package that gives \fancyvrb\ several additional features, including automatic line breaking.  Because \fvextra\ patches and overwrites some of the \fancyvrb\ internals, it may not be suitable for documents that rely on the details of the original \fancyvrb\ implementation.  \fvextra\ tries to maintain the default \fancyvrb\ behavior in most cases.  All patches (\cref{sec:patch}) and modifications to \fancyvrb\ defaults (\cref{sec:modifications}) are documented.
+% \fvextra\ is an add-on package that gives \fancyvrb\ several additional features, including automatic line breaking.  Because \fvextra\ patches and overwrites some of the \fancyvrb\ internals, it may not be suitable for documents that rely on the details of the original \fancyvrb\ implementation.  \fvextra\ tries to maintain the default \fancyvrb\ behavior in most cases.  All reimplementations (\cref{sec:reimplemented-cmd-env}), patches (\cref{sec:patch}), and modifications to \fancyvrb\ defaults (\cref{sec:modifications}) are documented.  In most cases, there are options to switch back to original implementations or original default behavior.
 %
-% Some features of \fvextra\ were originally created as part of the \pkg{pythontex} and \pkg{minted} packages.  \fancyvrb-related patches and extensions that currently exist in those packages will gradually be migrated into \fvextra, and both packages will require \fvextra\ in the future.
+% Some features of \fvextra\ were originally created as part of the \pkg{pythontex} and \pkg{minted} packages.  \fancyvrb-related patches and extensions that currently exist in those packages will gradually be migrated into \fvextra.
 %
 %
 %
@@ -355,6 +386,10 @@
 %   `quoted text'
 %   \end{Verbatim}
 % \end{example}
+%
+%
+% \item[extra (boolean) (true)]
+% Use \fvextra\ reimplementations of \fancyvrb\ commands and environments when available.  For example, use \fvextra's reimplemented \cmd{\Verb} that works (with a few limitations) inside other commands, rather than the original \fancyvrb\ implementation that essentially functions as \cmd{\texttt} inside other commands.
 %
 %
 % \item[fontencoding (string) (\meta{document font encoding})]
@@ -529,6 +564,14 @@
 %
 % \section{General commands}
 %
+% \subsection{Inline formatting with \cmd{\fvinlineset}}
+% \DescribeMacro{\fvinlineset\marg{options}}
+%
+% This is like \cmd{\fvset}, except that options only apply to commands that typeset inline verbatim, like \cmd{\Verb} and \cmd{\EscVerb}.  Settings from \cmd{\fvinlineset} override those from \cmd{\fvset}.
+%
+% Note that \cmd{\fvinlineset} only works with commands that are reimplemented, patched, or defined by \fvextra; it is not compatible with the original \fancyvrb\ definitions.  
+%
+%
 % \subsection{Line and text formatting}
 %
 % \DescribeMacro{\FancyVerbFormatLine}
@@ -552,6 +595,66 @@
 %   \end{Verbatim}
 % \end{longexample}
 % \endgroup
+%
+%
+%
+%
+% \section{Reimplemented commands and environments}
+% \label{sec:reimplemented-cmd-env}
+%
+% \fvextra\ reimplements parts of \fancyvrb.  These new implementations stay close to the original definitions while allowing for new features that otherwise would not be possible.  Reimplemented versions are used by default.  The original implementations may be used via |\fvset{extra=false}| or by using |extra=false| in the optional arguments to a command or environment.
+%
+% \subsection{\cmd{\Verb}}
+% \DescribeMacro{\Verb*\oarg{options}\meta{delim~char~or~\{}\meta{text}\meta{delim~char~or~\}}}
+%
+% The new \cmd{\Verb} works as expected (with a few limitations) inside other commands.  It even works in movable arguments (for example, in \cmd{\section}), and is compatible with \pkg{hyperref} for generating PDF strings (for example, PDF bookmarks).  The \fancyvrb\ definition did work inside some other commands, but essentially functioned as \cmd{\texttt} in that context.
+%
+% \cmd{\Verb} is compatible with |breaklines| and the relevant line-breaking options.  
+%
+% Like the original \fancyvrb\ implementation, the new \cmd{\Verb} can be starred (|*|) as a shortcut for |showspaces|, and accepts optional arguments.
+% \begin{description}
+% \item[Delimiters]  A repeated character like normal \cmd{\verb}, or a pair of curly braces |{...}|.  Note that curly braces should be preferred when using \cmd{\Verb} inside other commands, and curly braces are \emph{required} when \cmd{\Verb} is in a movable argument, such as in a \cmd{\section}.  Non-ASCII characters now work as delimiters under pdfTeX with \pkg{inputenc} using UTF-8.\footnote{Under pdfTeX, non-ASCII code points are processed at the byte rather than code point level, so \cmd{\Verb} must treat a sequence of multiple bytes as the delimiter.}  For example, \Verb{\Verb§verb§} now works as expected.
+% \item[Limitations inside other commands]  While the new \cmd{\Verb} does work inside arbitrary other commands, there are a few limitations.
+%     \begin{itemize}
+%     \item |#| and |%| cannot be used.  If you need them, consider \cmd{\EscVerb} or perhaps \cmd{\SaveVerb} plus \cmd{\UseVerb}.
+%     \item Curly braces are only allowed in pairs.
+%     \item Multiple adjacent spaces will be collapsed into a single space.
+%     \item Be careful with backslashes.  A backslash that is followed by one or more ASCII letters will cause a following space to be lost, if the space is not immediately followed by an ASCII letter.  For example, |\Verb{\r \n}| becomes \texttt{\Verb{\r \n}}, but |\Verb{\r n}| becomes \texttt{\Verb{\r n}}.  Basically, anything that looks like a \LaTeX\ command (control word) will gobble following spaces, unless the next character after the spaces is an ASCII letter.
+%     \item A single |^| is fine, but avoid |^^| because it will serve as an escape sequence for an ASCII command character.
+%     \end{itemize}
+% \item[Using in movable arguments]  \cmd{\Verb} works automatically in movable arguments, such as in a \cmd{\section}.  \cmd{\protect} or similar measures are not needed for \cmd{\Verb} itself, or for any of its arguments, and should not be used.  \cmd{\Verb} performs operations that amount to applying \cmd{\protect} to all of these automatically.
+% \item[\pkg{hyperref} PDF strings] \cmd{\Verb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  If you need options to be applied to obtain desired PDF strings, consider \cmd{\SaveVerb} plus \cmd{\UseVerb} or a custom approach.
+% \item[Line breaking]  |breaklines| allows breaks at spaces.  |breakbefore|, |breakafter|, and |breakanywhere| function as expected, as do things like |breakaftersymbolpre| and |breakaftersymbolpost|.  Break options that are only applicable to block text like a |Verbatim| environment do not have any effect.  For example, |breakindent| and |breaksymbol| do nothing.
+% \end{description}
+% 
+%
+%
+%
+% \section{New commands and environments}
+% \label{sec:new-cmd-env}
+%
+% \subsection{\cmd{\EscVerb}}
+% \DescribeMacro{\EscVerb*\oarg{options}\marg{backslash-escaped~text}}
+%
+% This is like \cmd{\Verb} but with backslash escapes to allow for characters such as |#| and |%|.  For example, |\EscVerb{\\Verb{\#\%}}| gives \EscVerb{\\Verb{\#\%}}.  It behaves exactly the same regardless of whether it is used inside another command.  Like the reimplemented \cmd{\Verb}, it works in movable arguments (for example, in \cmd{\section}), and is compatible with \pkg{hyperref} for generating PDF strings (for example, PDF bookmarks).
+%
+% \begin{description}
+% \item[Delimiters] Text must \emph{always} be delimited with a pair of curly braces |{...}|.  This ensures that \cmd{\EscVerb} is always used in the same manner regardless of whether it is inside another command.
+% \item[Escaping rules]\hfill
+%     \begin{itemize}
+%     \item Only printable, non-alphanumeric ASCII characters (symbols, punctuation) can be escaped with backslashes.\footnote{Allowing backslash escapes of letters would lead to ambiguity regarding spaces; see \cmd{\Verb}.}
+%     \item Always escape these characters:  |\|, |%|, |#|.
+%     \item Escape spaces when there are more than one in a row.
+%     \item Escape |^| if there are more than one in a row.
+%     \item Escape unpaired curly braces.
+%     \item Additional symbols or punctuation characters may require escaping if they are made \cmd{\active}, depending on their definitions.
+%     \end{itemize}
+% \item[Using in movable arguments]  \cmd{\EscVerb} works automatically in movable arguments, such as in a \cmd{\section}.  \cmd{\protect} or similar measures are not needed for \cmd{\EscVerb} itself, or for any of its arguments, and should not be used.  \cmd{\EscVerb} performs operations that amount to applying \cmd{\protect} to all of these automatically.
+% \item[\pkg{hyperref} PDF strings] \cmd{\EscVerb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text after backslash escapes have been applied, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  If you need options to be applied to obtain desired PDF strings, consider \cmd{\SaveVerb} plus \cmd{\UseVerb} or a custom approach.
+% \end{description}
+%
+%
+%
 %
 %
 %
@@ -923,6 +1026,7 @@
 %
 %
 %
+%
 % \section{Patches}
 % \label{sec:patch}
 %
@@ -1033,6 +1137,11 @@
 %
 %
 %
+% \subsection{Command lookahead tokenization}
+% 
+% \cmd{\FV@Command} is used internally by commands like \cmd{\Verb} to read stars (|*|) and optional arguments (|[...]|) before invoking the core of the command.  This is redefined so that lookahead tokenizes under a verbatim catcode regime.  The original definition could prevent commands like \cmd{\Verb} from using characters like |%| as delimiters, because the lookahead for a star and optional argument could read the |%| and give it its normal meaning of comment character.  The new definition fixes this, so that commands like \cmd{\Verb} behave as closely to \cmd{\verb} as possible.
+%
+%
 %
 %
 % \section{Additional modifications to \fancyvrb}
@@ -1133,18 +1242,1730 @@
 %
 % \subsection{Utility macros}
 %
-% \begin{macro}{\FV@Space@ifx}
-% Macro for testing if a |\let| token is |\FV@Space| with |\ifx|.  The space will be active and defined as |\FV@Space|.
+% \subsubsection{\fancyvrb\ space and tab tokens}
+%
+% \begin{macro}{\FV@FVSpaceToken}
+% Macro with the same definition as \fancyvrb's active space.  Useful for |\ifx| comparisons with |\@ifnextchar| lookaheads.
 %    \begin{macrocode}
-\def\FV@Space@ifx{\FV@Space}
+\def\FV@FVSpaceToken{\FV@Space}
 %    \end{macrocode}
 % \end{macro}
 %
 %
-% \begin{macro}{\FV@Tab@ifx}
-% Macro for testing if a |\let| token is |\FV@Tab| with |\ifx|.  The tab will be active and defined as |\FV@Tab|.
+% \begin{macro}{\FV@FVTabToken}
+% Macro with the same definition as \fancyvrb's active tab.  Useful for |\ifx| comparisons with |\@ifnextchar| lookaheads.
 %    \begin{macrocode}
-\def\FV@Tab@ifx{\FV@Tab}
+\def\FV@FVTabToken{\FV@Tab}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{ASCII processing}
+%
+% \begin{macro}{\FVExtraDoSpecials}
+% Apply \cmd{\do} to all printable, non-alphanumeric ASCII characters (codepoints |0x20| through |0x7E| except for alphanumeric characters).
+%
+% These punctuation marks and symbols are the most likely characters to be made \cmd{\active}, so it is convenient to be able to change the catcodes for all of them, not just for those in the \cmd{\dospecials} defined in |latex.ltx|:
+% \begin{quote}
+%\begin{verbatim}
+%\def\dospecials{\do\ \do\\\do\{\do\}\do\$\do\&%
+%  \do\#\do\^\do\_\do\%\do\~}
+%\end{verbatim}
+% \end{quote}
+% If a command takes an argument delimited by a given symbol, but that symbol has been made \cmd{\active} and defined as \cmd{\outer} (perhaps it is being used as a short \cmd{\verb}), then changing the symbol's catcode is the only way to use it as a delimiter.
+%    \begin{macrocode}
+\def\FVExtraDoSpecials{%
+  \do\ \do\!\do\"\do\#\do\$\do\%\do\&\do\'\do\(\do\)\do\*\do\+\do\,\do\-%
+  \do\.\do\/\do\:\do\;\do\<\do\=\do\>\do\?\do\@\do\[\do\\\do\]\do\^\do\_%
+  \do\`\do\{\do\|\do\}\do\~}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@Special:<char>}
+% Create macros for all printable, non-alphanumeric ASCII characters.  This is used in creating backslash escapes that can only be applied to ASCII symbols and punctuation; these macros serve as \cmd{\ifcsname} lookups for valid escapes.
+%    \begin{macrocode}
+\begingroup
+\def\do#1{%
+  \expandafter\global\expandafter
+  \let\csname FV@Special:\expandafter\@gobble\detokenize{#1}\endcsname\relax}
+\FVExtraDoSpecials
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+% \subsubsection{Sentinels}
+%
+% Sentinel macros are needed for scanning tokens.
+%
+% There are two contexts in which sentinels may be needed.  In delimited macro arguments, such as |\def\macro#1\sentinel{...}|, a sentinel is needed as the delimiter.  Because the delimiting macro need not be defined, special delimiting macros need not be created for this case.  The important thing is to ensure that the macro name is sufficiently unique to avoid collisions.  Typically, using \cmd{\makeatletter} to allow something like \cmd{\@sentinel} will be sufficient.  For added security, additional characters can be given catcode 11, to allow things like \cmd{\@sent!nel}.
+%
+% The other context for sentinels is in scanning through a sequence of tokens that is delimited by a sentinel, and using \cmd{\ifx} comparisons to identify the sentinel and stop scanning.  In this case, using an undefined macro is risky.  Under normal conditions, the sequence of tokens could contain an undefined macro due to mistyping.  In some \fvextra\ applications, the tokens will have been incorrectly tokenized under a normal catcode regime, and need to be retokenized as verbatim, in which case undefined macros must be expected.  Thus, a sentinel macro whose expansion is resistent to collisions is needed.
+%
+% \begin{macro}{\FV@<Sentinel>}
+% This is the standard default \fvextra\ delimited-macro sentinel.  It is used with \cmd{\makeatletter} by changing |<| and |>| to catcode 11.  The |<| and |>| add an extra level of collision resistance.  Because it is undefined, it is \emph{only} appropriate for use in delimited macro arguments.
+% \end{macro}
+%
+% \begin{macro}{\FV@Sentinel}
+% This is the standard \fvextra\ \cmd{\ifx} comparison sentinel.  It expands to the control word \cmd{\FV@<Sentinel>}, which is very unlikely to be in any other macro since it requires that |@|, |<|, and |>| all have catcode 11 and appear in the correct sequence.  Because its definition is itself undefined, this sentinel will result in an error if it escapes.
+%    \begin{macrocode}
+\begingroup
+\catcode`\<=11
+\catcode`\>=11
+\gdef\FV@Sentinel{\FV@<Sentinel>}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{Active character definitions}
+%
+% \begin{macro}{\FV@OuterDefEOLEmpty}
+% Macro for defining the active end-of-line character |^^M| (|\r|), which \fancyvrb\ uses to prevent runaway command arguments.  \fancyvrb\ uses macro definitions of the form
+%\begin{verbatim}
+%\begingroup
+%\catcode`\^^M=\active%
+%\gdef\macro{%
+%  ...
+%  \outer\def^^M{}%
+%  ...
+%}%
+%\endgroup
+%\end{verbatim}
+% While this works, it is nice to avoid the |\begingroup...\endgroup| and especially the requirement that all lines now end with |%| to discard the |^^M| that would otherwise be inserted.
+%    \begin{macrocode}
+\begingroup
+\catcode`\^^M=\active%
+\gdef\FV@OuterDefEOLEmpty{\outer\def^^M{}}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@DefEOLEmpty}
+% The same thing, without the \cmd{\outer}.  This is used to ensure that |^^M| is not \cmd{\outer} when it should be read.
+%    \begin{macrocode}
+\begingroup
+\catcode`\^^M=\active%
+\gdef\FV@DefEOLEmpty{\def^^M{}}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@OuterDefSTXEmpty}
+% Define start-of-text (STX) |^^B| so that it cannot be used inside other macros.  This makes it possible to guarantee that |^^B| is not part of a verbatim argument, so that it can be used later as a sentinel in retokenizing the argument.
+%    \begin{macrocode}
+\begingroup
+\catcode`\^^B=\active
+\gdef\FV@OuterDefSTXEmpty{\outer\def^^B{}}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@OuterDefETXEmpty}
+% Define end-of-text (ETX) |^^C| so that it cannot be used inside other macros.  This makes it possible to guarantee that |^^C| is not part of a verbatim argument, so that it can be used later as a sentinel in retokenizing the argument.
+%    \begin{macrocode}
+\begingroup
+\catcode`\^^C=\active
+\gdef\FV@OuterDefETXEmpty{\outer\def^^C{}}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \subsection{pdfTeX with \pkg{inputenc} using UTF-8}
+%
+% Working with verbatim text often involves handling individual code points.  While these are treated as single entities under LuaTeX and XeTeX, under pdfTeX code points must be handled at the byte level instead.  This means that reading a single code point encoded in UTF-8 may involve a macro that reads up to four arguments.
+%
+% Macros are defined for working with non-ASCII code points under pdfTeX.  These are only for use with the \pkg{inputenc} package set to |utf8| encoding.
+%
+% \begin{macro}{\ifFV@pdfTeXinputenc}
+% All of the |UTF| macros are only needed with pdfTeX when \pkg{inputenc} is loaded, so they are created conditionally, inspired by the approach of the \pkg{iftex} package.  The tests deal with the possibility that a previous test using |\ifx| rather than the cleaner |\ifcsname| has already been performed.  These assume that \pkg{inputenc} will be loaded before \fvextra.  The \cmd{\inputencodingname} tests should be redundant after the \cmd{\@ifpackageloaded} test, but do provide some additional safety if another package is faking \pkg{inputenc} being loaded but not providing an equivalent encoding interface.
+%
+% Note that an encoding test of the form
+% \begin{quote}
+%\begin{verbatim}
+%\ifdefstring{\inputencodingname}{utf8}{<true>}{<false>}
+%\end{verbatim}
+% \end{quote}
+% is still required before switching to the |UTF| variants in any given situation.  A document using \pkg{inputenc} can switch encodings (for example, around an \cmd{\input}), so simply checking encoding when \fvextra\ is loaded is \emph{not} sufficient.
+%    \begin{macrocode}
+\newif\ifFV@pdfTeXinputenc
+\FV@pdfTeXinputencfalse
+\ifcsname pdfmatch\endcsname
+\ifx\pdfmatch\relax
+\else
+  \@ifpackageloaded{inputenc}%
+   {\ifcsname inputencodingname\endcsname
+    \ifx\inputencodingname\relax
+    \else
+      \FV@pdfTeXinputenctrue
+    \fi\fi}
+   {}%
+\fi\fi
+%    \end{macrocode}
+% \end{macro}
+%
+% Define |UTF| macros conditionally:
+%    \begin{macrocode}
+\ifFV@pdfTeXinputenc
+%    \end{macrocode}
+%
+%
+% \begin{macro}{\FV@U8:<byte>}
+% Define macros of the form |\FV@U8:<byte>| for each active byte.  These are used for determining whether a token is the first byte in a multi-byte sequence, and if so, invoking the necessary macro to capture the remaining bytes.  The code is adapted from the beginning of |utf8.def|.  Completely capitalized macro names are used to avoid having to worry about |\uppercase|.
+%    \begin{macrocode}
+\begingroup
+\catcode`\~=13
+\catcode`\"=12
+\def\FV@UTFviii@loop{%
+  \uccode`\~\count@
+  \uppercase\expandafter{\FV@UTFviii@Tmp}%
+  \advance\count@\@ne
+  \ifnum\count@<\@tempcnta
+  \expandafter\FV@UTFviii@loop
+  \fi}
+%    \end{macrocode}
+% Setting up 2-byte UTF-8:
+%    \begin{macrocode}
+\count@"C2
+\@tempcnta"E0
+\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
+  \FV@UTF@two@octets}}
+\FV@UTFviii@loop
+%    \end{macrocode}
+% Setting up 3-byte UTF-8:
+%    \begin{macrocode}
+\count@"E0
+\@tempcnta"F0
+\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
+  \FV@UTF@three@octets}}
+\FV@UTFviii@loop
+%    \end{macrocode}
+% Setting up 4-byte UTF-8:
+%    \begin{macrocode}
+\count@"F0
+\@tempcnta"F4
+\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
+  \FV@UTF@four@octets}}
+\FV@UTFviii@loop
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@UTF@two@octets}%
+% \begin{macro}{\FV@UTF@three@octets}%
+% \begin{macro}{\FV@UTF@four@octets}
+% These are variants of the |utf8.def| macros that capture all bytes of a multi-byte code point and then pass them on to \cmd{\FV@UTF@octets@after} as a single argument for further processing.  The invoking macro should \cmd{\let} or \cmd{\def}'ed \cmd{\FV@UTF@octets@after} to an appropriate macro that performs further processing.
+%
+% Typical use will involve the following steps:
+% \begin{enumerate}
+% \item Read a token, say |#1|.
+% \item Use |\ifcsname FV@U8:\detokenize{#1}\endcsname| to determine that the token is the first byte of a multi-byte code point.
+% \item Ensure that |\FV@UTF@octets@after| has an appropriate value, if this has not already been done.
+% \item Use |\csname FV@U8:\detokenize{#1}\endcsname#1| at the end of the original reading macro to read the full multi-byte code point and then pass it on as a single argument to |\FV@UTF@octets@after|.
+% \end{enumerate}
+%
+% All code points are checked for validity here so as to raise errors as early as possible.  Otherwise an invalid terminal byte sequence might gobble a sentinel macro in a scanning context, potentially making debugging much more difficult.  It would be possible to use |\UTFviii@defined{|\meta{bytes}|}| to trigger an error directly, but the current approach is to attempt to typeset invalid code points, which should trigger errors without relying on the details of the |utf8.def| implementation.
+%    \begin{macrocode}
+\def\FV@UTF@two@octets#1#2{%
+  \ifcsname u8:\detokenize{#1#2}\endcsname
+  \else
+    #1#2%
+  \fi
+  \FV@UTF@octets@after{#1#2}}
+\def\FV@UTF@three@octets#1#2#3{%
+  \ifcsname u8:\detokenize{#1#2#3}\endcsname
+  \else
+    #1#2#3%
+  \fi
+  \FV@UTF@octets@after{#1#2#3}}
+\def\FV@UTF@four@octets#1#2#3#4{%
+  \ifcsname u8:\detokenize{#1#2#3#4}\endcsname
+  \else
+    #1#2#3#4%
+  \fi
+  \FV@UTF@octets@after{#1#2#3#4}}
+%    \end{macrocode}
+% \end{macro}\end{macro}\end{macro}
+%
+%
+% End conditional creation of |UTF| macros:
+%    \begin{macrocode}
+\fi
+%    \end{macrocode}
+%
+%
+%
+%
+% \subsection{Reading and processing command arguments}
+%
+% \fvextra\ provides macros for reading and processing verbatim arguments.  These are primarily intended for creating commands that take verbatim arguments but can still be used within other commands (with some limitations).  These macros are used in reimplementing \fancyvrb\ commands like \cmd{\Verb}.  They may also be used in other packages; \pkg{minted} and \pkg{pythontex} use them for handling inline code.
+%
+% All macros meant for internal use have names of the form \cmd{\FV@<Name>}, while all macros meant for use in other packages have names of the form \cmd{\FVExtra<Name>}.  Only the latter are intended to have a stable interface.
+%
+%
+% \subsubsection{Tokenization and lookahead}
+%
+% \begin{macro}{\FVExtra@ifnextcharVArg}
+% This is a wrapper for \cmd{\@ifnextchar} from |latex.ltx| (|ltdefns.dtx|) that tokenizes lookaheads under a mostly verbatim catcode regime rather than the current catcode regime.  This is important when looking ahead for stars |*| and optional argument delimiters~|[|, because if these are not present when looking ahead for a verbatim argument, then the first thing tokenized will be the verbatim argument's delimiting character.  Ideally, the delimiter should be tokenized under a verbatim catcode regime.  This is necessary for instance if the delimiter is \cmd{\active} and \cmd{\outer}.
+%
+% The catcode of the space is preserved (in the unlikely event it is \cmd{\active}) and curly braces are given their normal catcodes for the lookahead.  This simplifies space handling in an untokenized context, and allows paired curly braces to be used as verbatim delimiters.
+%    \begin{macrocode}
+\long\def\FVExtra@ifnextcharVArg#1#2#3{%
+  \begingroup
+  \edef\FV@TmpSpaceCat{\the\catcode` }%
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\ =\FV@TmpSpaceCat\relax
+  \catcode`\{=1
+  \catcode`\}=2
+  \@ifnextchar#1{\endgroup#2}{\endgroup#3}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtra@ifstarVArg}
+% A starred command behaves differently depending on whether it is followed by an optional star or asterisk |*|.  \cmd{\@ifstar} from |latex.ltx| is typically used to check for the |*|.  In the process, it discards following spaces (catcode 10) and tokenizes the next non-space character under the current catcode regime.  While this is fine for normal commands, it is undesirable if the next character turns out to be not a |*| but rather a verbatim argument's delimiter.  This reimplementation prevents such issues for all printable ASCII symbols via \cmd{\FVExtra@ifnextcharVArg}.
+%    \begin{macrocode}
+\begingroup
+\catcode`\*=12
+\gdef\FVExtra@ifstarVArg#1{\FVExtra@ifnextcharVArg*{\@firstoftwo{#1}}}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{Reading arguments}
+%
+% \begin{macro}{\FV@ReadOArgContinue}
+% Read a macro followed by an optional argument, then pass the optional argument to the macro for processing and to continue.
+%    \begin{macrocode}
+\def\FV@ReadOArgContinue#1[#2]{#1{#2}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraReadOArgBeforeVArg}
+% Read an optional argument that comes before a verbatim argument.  The lookahead for the optional argument tokenizes with a verbatim catcode regime in case it encounters the delimiter for the verbatim argument rather than |[|.  If the lookahead doesn't find |[|, the optional argument for \cmd{\FVExtraReadOArgBeforeVArg} can be used to supply a default optional argument other than \meta{empty}.
+%    \begin{macrocode}
+\newcommand{\FVExtraReadOArgBeforeVArg}[2][]{%
+  \FVExtra@ifnextcharVArg[%
+   {\FV@ReadOArgContinue{#2}}%
+   {\FV@ReadOArgContinue{#2}[#1]}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraReadOArgBeforeVEnv}
+% Read an optional argument that comes before the contents of a verbatim environment, after the |\begin{|\meta{environment}|}| but before the start of the next line where the verbatim content begins.  Note that this is not needed when an environment takes a mandatory argument that follows the optional argument.
+%
+% The case with only an optional argument is tricky because the default behavior of \cmd{\@ifnextchar} is to read into the next line looking for the optional argument.  Setting |^^M| \cmd{\active} prevents this.  That does mean, though, that the end-of-line token will have to be read and removed later as an \cmd{\active} |^^M|.  See the definition of \cmd{\FV@BeginScanning} in \fancyvrb\ for an example of doing this:
+% \begin{quote}
+%\begin{verbatim}
+%\begingroup
+%\catcode`\^^M=\active
+%  \gdef\FV@BeginScanning#1^^M{%
+%    \def\@tempa{#1}\ifx\@tempa\@empty\else\FV@BadBeginError\fi%
+%    \FV@GetLine}%
+%\endgroup
+%\end{verbatim}
+% \end{quote}
+%
+% \cmd{\@ifnextchar} is used instead of \cmd{\FVExtra@ifnextcharVArg} because the latter is not needed since there is an explicit, required delimiter (|^^M|) before the actual start of verbatim content.  Lookahead can never tokenize verbatim content under an incorrect catcode regime.
+%    \begin{macrocode}
+\newcommand{\FVExtraReadOArgBeforeVEnv}[2][]{%
+  \begingroup
+  \catcode`\^^M=\active
+  \@ifnextchar[%
+   {\endgroup\FV@ReadOArgContinue{#2}}%
+   {\endgroup\FV@ReadOArgContinue{#2}[#1]}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraReadVArg}
+% Read a verbatim argument that is bounded by two identical characters or by paired curly braces.  This uses the \cmd{\outer} |^^M| with \cmd{\FV@EOL} trick from \fancyvrb\ to prevent runaway arguments.  An \cmd{\outer} |^^C| is used to prevent |^^C| from being part of arguments, so that it can be used later as a sentinel if retokenization is needed.  |^^B| is handled in the same manner for symmetry with later usage, though technically it is not used as a sentinel so this is not strictly necessary.  Alternate |UTF| macros, defined later, are invoked when under pdfTeX with \pkg{inputenc} using UTF-8.
+%
+% The lookahead for the type of delimiting character is done under a verbatim catcode regime, except that the space catcode is preserved and curly braces are given their normal catcodes.  This provides consistency with any \cmd{\FVExtra@ifnextcharVArg} or \cmd{\FVExtra@ifstarVArg} that may have been used previously, allows characters like |#| and |%| to be used as delimiters when the verbatim argument is read outside any other commands (untokenized), and allows paired curly braces to serve as delimiters.  Any additional command-specific catcode modifications should only be applied to the argument after it has been read, since they do not apply to the delimiters.
+%
+% Once the delimiter lookahead is complete, catcodes revert to full verbatim, and are then modified appropriately given the type of delimiter.  The space and tab must be \cmd{\active} to be preserved correctly when the verbatim argument is not inside any other commands (otherwise, they collapse into single spaces).
+%    \begin{macrocode}
+\def\FVExtraReadVArg#1{%
+  \begingroup
+  \ifFV@pdfTeXinputenc
+    \ifdefstring{\inputencodingname}{utf8}%
+     {\let\FV@ReadVArg@Char\FV@ReadVArg@Char@UTF}%
+     {}%
+  \fi
+  \edef\FV@TmpSpaceCat{\the\catcode` }%
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\^^B=\active
+  \FV@OuterDefSTXEmpty
+  \catcode`\^^C=\active
+  \FV@OuterDefETXEmpty
+  \catcode`\^^M=\active
+  \FV@OuterDefEOLEmpty
+  \begingroup
+  \catcode`\ =\FV@TmpSpaceCat\relax
+  \catcode`\{=1
+  \catcode`\}=2
+  \@ifnextchar\bgroup
+   {\endgroup
+    \catcode`\{=1
+    \catcode`\}=2
+    \catcode`\ =\active
+    \catcode`\^^I=\active
+    \FV@ReadVArg@Group{#1}\FV@EOL}%
+   {\endgroup
+    \catcode`\ =\active
+    \catcode`\^^I=\active
+    \FV@ReadVArg@Char{#1}\FV@EOL}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@ReadVArg@Group}
+% The argument is read under the verbatim catcode regime already in place from \cmd{\FVExtraReadVArg}.  The \cmd{\endgroup} returns to prior catcodes.  Any command-specific catcodes can be applied later via \cmd{\scantokens}.  Using them here in reading the argument would have no effect as far as later processing with \cmd{\scantokens} is concerned, unless the argument were read outside any other commands and additional characters were given catcodes 1 or 2 (like the curly braces).  That scenario is not allowed because it makes reading the argument overly dependent on the argument content.  (Technically, reading the argument is already dependent on the argument content in the sense that the argument cannot contain unescaped unpaired curly braces, given that it is delimited by curly braces.)
+%    \begin{macrocode}
+\def\FV@ReadVArg@Group#1#2#3{%
+  \endgroup
+  #1{#3}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@ReadVArg@Char}
+% The delimiting character is read under the verbatim catcode regime in place from \cmd{\FVExtraReadVArg}.  If the command is not inside a normal command, then this means the delimiting character will typically have catcode 12 and that characters like |#| and |%| can be used as delimiters; otherwise, the delimiter may have any catcode that is possible for a single character captured by a macro.  If the argument is read inside another command (already tokenized), then it is possible for the delimiter to be a control sequence rather than a singler character.  An error is raised in this case.  The \cmd{\endgroup} in \cmd{\FV@ReadVArg@Char@i} returns to prior catcodes after the argument is captured.
+%
+% It would be possible to read the argument using any command-specific catcode settings, but that would result in different behavior depending on whether the argument is already tokenized, and would make reading the argument overly dependent on the argument content.
+%    \begin{macrocode}
+\def\FV@ReadVArg@Char#1#2#3{%
+  \expandafter\expandafter\expandafter
+  \if\expandafter\expandafter\expandafter\relax\expandafter\@gobble\detokenize{#3}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\PackageError{fvextra}%
+    {Verbatim delimiters must be single characters, not commands}%
+    {Try a different delimiter}}%
+  \def\FV@ReadVArg@Char@i##1##2##3#3{%
+    \endgroup
+    ##1{##3}}%
+  \FV@ReadVArg@Char@i{#1}\FV@EOL}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \paragraph{Alternate implementation for pdfTeX with \pkg{inputenc} using UTF-8}\hfill\\
+%
+% Start conditional creation of macros:
+%    \begin{macrocode}
+\ifFV@pdfTeXinputenc
+%    \end{macrocode}
+%
+% \begin{macro}{\FV@ReadVArg@Char@UTF}
+% This is a variant of \cmd{\FV@ReadVArg@Char} that allows non-ASCII codepoints as delimiters under the pdfTeX engine with \pkg{inputenc} using UTF-8.  Under pdfTeX, non-ASCII codepoints must be handled as a sequence of bytes rather than as a single entity.  \cmd{\FV@ReadVArg@Char} is automatically \cmd{\let} to this version when appropriate.  This uses the \cmd{\FV@U8:<byte>} macros for working with \pkg{inputenc}'s UTF-8.
+%    \begin{macrocode}
+\def\FV@ReadVArg@Char@UTF#1#2#3{%
+  \expandafter\expandafter\expandafter
+  \if\expandafter\expandafter\expandafter\relax\expandafter\@gobble\detokenize{#3}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\PackageError{fvextra}%
+    {Verbatim delimiters must be single characters, not commands}%
+    {Try a different delimiter}}%
+  \ifcsname FV@U8:\detokenize{#3}\endcsname
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\def\FV@UTF@octets@after##1{\FV@ReadVArg@Char@UTF@i{#1}{##1}}%
+   \csname FV@U8:\detokenize{#3}\endcsname#3}%
+  {\FV@ReadVArg@Char@UTF@i{#1}{#3}}}
+%    \end{macrocode}
+%
+% \begin{macro}{\FV@ReadVArg@Char@UTF@i}
+%    \begin{macrocode}
+\def\FV@ReadVArg@Char@UTF@i#1#2{%
+  \def\FV@ReadVArg@Char@i##1##2##3#2{%
+    \endgroup
+    ##1{##3}}%
+  \FV@ReadVArg@Char@i{#1}\FV@EOL}%
+%    \end{macrocode}
+% \end{macro}
+%
+% End conditional creation of |UTF| macros:
+%   \begin{macrocode}
+\fi
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \subsubsection{Reading and protecting arguments in expansion-only contexts}
+%
+% The objective here is to make possible commands that can function correctly after being in expansion-only contexts like \cmd{\edef}.  The general strategy is to allow commands to be defined like this:
+%\begin{verbatim}
+%\def\cmd{\FVExtraRobustCommand\robustcmd\reader}
+%\end{verbatim}
+% |\robustcmd| is the actual command, including argument reading and processing, and is \cmd{\protected}.  |\reader| is an expandable macro that reads all of |\robustcmd|'s arguments, then wraps them in \cmd{\FVExtraAlwaysUnexpanded}.  When |\FVExtraAlwaysUnexpanded{|\meta{args}|}| is expanded, the result is always |\FVExtraAlwaysUnexpanded{|\meta{args}|}|.  |\FVExtraRobustCommand| is \cmd{\protected} and manages everything in a context-sensitive manner.
+% \begin{itemize}
+% \item In a normal context, \cmd{\FVExtraRobustCommand} reads two arguments, which will be |\robustcmd| and |\reader|.  It detects that |\reader| has not expanded to |\FVExtraAlwaysUnexpanded{|\meta{args}|}|, so it discards |\reader| and reinserts |\robustcmd| so that it can operate normally.
+% \item In an expansion-only context, neither \cmd{\FVExtraRobustCommand} nor |\robustcmd| will expand, because both are \cmd{\protected}.  |\reader| will read |\robustcmd|'s arguments and protect them with \cmd{\FVExtraAlwaysUnexpanded}.  When this is used later in a normal context, \cmd{\FVExtraRobustCommand} reads two arguments, which will be |\robustcmd| and \cmd{\FVExtraAlwaysUnexpanded}.  It detects that |\reader| did expand, so it discards \cmd{\FVExtraAlwaysUnexpanded} and reads its argument to discard the wrapping braces.  Then it reinserts |\robustcmd|\meta{args} so that everything can proceed as if expansion had not occurred.
+% \end{itemize}
+%
+% \begin{macro}{\FVExtrapdfstringdef}
+% \begin{macro}{\FVExtrapdfstringdefDisableCommands}
+% Conditionally allow alternate definitions for PDF bookmarks when \pkg{hyperref} is in use.  This is helpful for working with \cmd{\protected} or otherwise unexpandable commands.
+%    \begin{macrocode}
+\def\FVExtrapdfstringdef#1#2{%
+  \AfterPreamble{%
+    \ifcsname pdfstringdefDisableCommands\endcsname
+    \ifx\pdfstringdefDisableCommands\relax
+    \else
+    \pdfstringdef#1{#2}%
+    \fi\fi}}
+\def\FVExtrapdfstringdefDisableCommands#1{%
+  \AfterPreamble{%
+    \ifcsname pdfstringdefDisableCommands\endcsname
+    \ifx\pdfstringdefDisableCommands\relax
+    \else
+    \pdfstringdefDisableCommands{#1}%
+    \fi\fi}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\FVExtraAlwaysUnexpanded}
+% Always expands to itself, thanks to \cmd{\unexpanded}.
+%    \begin{macrocode}
+\long\def\FVExtraAlwaysUnexpanded#1{%
+  \unexpanded{\FVExtraAlwaysUnexpanded{#1}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \long\def\FVExtraAlwaysUnexpanded#1{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{FVExtraRobustCommandExpanded}
+% Boolean to track whether expansion occurred.  Set in \cmd{\FVExtraRobustCommand}.  Useful in creating commands that behave differently depending on whether expansion occurred.
+%    \begin{macrocode}
+\newbool{FVExtraRobustCommandExpanded}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVExtraRobustCommand}
+%    \begin{macrocode}
+\protected\def\FVExtraRobustCommand#1#2{%
+  \ifx#2\FVExtraAlwaysUnexpanded
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\booltrue{FVExtraRobustCommandExpanded}\FV@RobustCommand@i{#1}}%
+  {\boolfalse{FVExtraRobustCommandExpanded}#1}}
+\FVExtrapdfstringdefDisableCommands{%
+  \def\FVExtraRobustCommand{}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@RobustCommand@i}
+% |#2| will be the argument of \cmd{\FVExtraAlwaysUnexpanded}.  Reading this strips the braces.  At the beginning of |#2| will be the reader macro, which must be \cmd{\@gobble}'d.
+%    \begin{macrocode}
+\def\FV@RobustCommand@i#1#2{\expandafter#1\@gobble#2}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVExtraUnexpandedReadStarOArgMArg}
+% Read the arguments for a command that may be starred, may have an optional argument, and has a single brace-delimited mandatory argument.  Then protect them with \cmd{\FVExtraAlwaysUnexpanded}.  The reader macro is itself maintained in the protected result, so that it can be redefined to provide a simple default value for \pkg{hyperref}.
+%
+% Note the argument signature |#1#{|.  This reads everything up to, but not including, the next brace group.
+%    \begin{macrocode}
+\def\FVExtraUnexpandedReadStarOArgMArg#1#{%
+  \FV@UnexpandedReadStarOArgMArg@i{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@UnexpandedReadStarOArgMArg@i}
+%    \begin{macrocode}
+\def\FV@UnexpandedReadStarOArgMArg@i#1#2{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUnexpandedReadStarOArgMArg#1{#2}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \makeatletter
+  \def\FV@UnexpandedReadStarOArgMArg@i#1#2{#2}%
+  \makeatother}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraUnexpandedReadStarOArgBVArg}
+% Same as \cmd{\FVExtraUnexpandedReadStarOArgMArg}, except |BVArg|, brace-delimited verbatim argument.
+%    \begin{macrocode}
+\def\FVExtraUnexpandedReadStarOArgBVArg#1#{%
+  \FV@UnexpandedReadStarOArgBVArg@i{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@UnexpandedReadStarOArgBVArg@i}
+%    \begin{macrocode}
+\def\FV@UnexpandedReadStarOArgBVArg@i#1#2{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUnexpandedReadStarOArgBVArg#1{#2}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \makeatletter
+  \def\FV@UnexpandedReadStarOArgBVArg@i#1#2{%
+    \FVExtraPDFStringVerbatimDetokenize{#2}}%
+  \makeatother}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraUnexpandedReadStarOArgBEscVArg}
+% Same as \cmd{\FVExtraUnexpandedReadStarOArgMArg}, except |BEscVArg|, brace-delimited escaped verbatim argument.
+%    \begin{macrocode}
+\def\FVExtraUnexpandedReadStarOArgBEscVArg#1#{%
+  \FV@UnexpandedReadStarOArgBEscVArg@i{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@UnexpandedReadStarOArgBEscVArg@i}
+%    \begin{macrocode}
+\def\FV@UnexpandedReadStarOArgBEscVArg@i#1#2{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUnexpandedReadStarOArgBEscVArg#1{#2}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \makeatletter
+  \def\FV@UnexpandedReadStarOArgBEscVArg@i#1#2{%
+    \FVExtraPDFStringEscapedVerbatimDetokenize{#2}}%
+  \makeatother}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \subsubsection{Converting detokenized tokens into PDF strings}
+%
+% At times it will be convenient to convert detokenized tokens into PDF strings, such as bookmarks.  Define macros to escape such detokenized content so that it is in a suitable form.
+%
+% \begin{macro}{\FVExtraPDFStringEscapeChar}
+% Note that this does not apply any special treatment to spaces.  If there are multiple adjacent spaces, then the octal escape \cmd{\040} is needed to prevent them from being merged.  In the detokenization macros where \cmd{\FVExtraPDFStringEscapeChar} is currently used, spaces are processed separately without \cmd{\FVExtraPDFStringEscapeChar}, and literal spaces or \cmd{\040} are inserted in a context-dependent manner.
+%    \begin{macrocode}
+\def\FVExtraPDFStringEscapeChar#1{%
+  \ifcsname FV@PDFStringEscapeChar@#1\endcsname
+    \csname FV@PDFStringEscapeChar@#1\endcsname
+  \else
+    #1%
+  \fi}
+\begingroup
+\catcode`\&=14
+\catcode`\%=12&
+\catcode`\(=12&
+\catcode`\)=12&
+\catcode`\^^J=12&
+\catcode`\^^M=12&
+\catcode`\^^I=12&
+\catcode`\^^H=12&
+\catcode`\^^L=12&
+\catcode`\!=0\relax&
+!catcode`!\=12!relax&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@\!endcsname{\\}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@%!endcsname{\%}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@(!endcsname{\(}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@)!endcsname{\)}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@^^J!endcsname{\n}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@^^M!endcsname{\r}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@^^I!endcsname{\t}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@^^H!endcsname{\b}&
+!expandafter!gdef!csname FV@PDFStringEscapeChar@^^L!endcsname{\f}&
+!catcode`!\=0!relax&
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraPDFStringEscapeChars}
+%    \begin{macrocode}
+\def\FVExtraPDFStringEscapeChars#1{%
+  \FV@PDFStringEscapeChars#1\FV@Sentinel}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStringEscapeChars}
+%    \begin{macrocode}
+\def\FV@PDFStringEscapeChars#1{%
+  \ifx#1\FV@Sentinel
+  \else
+    \FVExtraPDFStringEscapeChar{#1}%
+    \expandafter\FV@PDFStringEscapeChars
+  \fi}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \subsubsection{Detokenizing verbatim arguments}
+%
+% Ensure correct catcodes for this subsection (note |<| and |>| for \cmd{\FV@<Sentinel>}):
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =10
+\catcode`\a=11
+\catcode`\<=11
+\catcode`\>=11
+\catcode`\^^C=\active
+%    \end{macrocode}
+%
+%
+% \paragraph{Detokenize as if the original source were tokenized verbatim}\hfill\\
+%
+% \begin{macro}{\FVExtraVerbatimDetokenize}
+% Detokenize tokens as if their original source was tokenized verbatim, rather than under any other catcode regime that may actually have been in place.  This recovers the original source when tokenization was verbatim.  Otherwise, it recovers the closest approximation of the source that is possible given information loss during tokenization (for example, adjacent space characters may be merged into a single space token).  This is useful in constructing nearly verbatim commands that can be used inside other commands.  It functions in an expansion-only context (``fully expandable,'' works in \cmd{\edef}).
+%
+% This yields spaces with catcode 12, \emph{not} spaces with catcode 10 like \cmd{\detokenize}.  Spaces with catcode 10 require special handling when being read by macros, so detokenizing them to catcode 10 makes further processing difficult.  Spaces with catcode 12 may be used just like any other catcode 12 token.
+%
+% This requires that the \cmd{\active} end-of-text (ETX) |^^C| (U+0003) not be defined as \cmd{\outer}, since |^^C| is used as a sentinel.  Usually, it should not be defined at all, or defined to an error sequence.  When in doubt, it may be worth explicitly defining |^^C| before using \cmd{\FVExtraVerbatimDetokenize}:
+% \begin{quote}
+%\begin{verbatim}
+%\begingroup
+%\catcode`\^^C=\active
+%\def^^C{}
+%...
+%\FVExtraVerbatimDetokenize{...}
+%...
+%\endgroup
+%\end{verbatim}
+% \end{quote}
+%
+% \cmd{\detokenize} inserts a space after each control word (control sequence with a name composed of catcode 11 tokens, ASCII letters |[a-zA-Z]|).  For example,
+% \begin{quote}
+% \Verb{\detokenize{\macroA\macroB{}\csname name\endcsname123}}
+% \end{quote}
+% yields
+% \begin{quote}
+% \expandafter\Verb\expandafter{\detokenize{\macroA\macroB{}\csname name\endcsname123}}
+% \end{quote}
+% That is the correct behavior when detokenizing text that will later be retokenized for normal use.  The space prevents the control word from accidentally merging with any letters that follow it immediately, and will be gobbled by the macro when retokenized.  However, the inserted spaces are unwanted in the current context, because
+% \begin{quote}
+% \Verb{\FVExtraVerbatimDetokenize{\macroA\macroB{}\csname name\endcsname123}}
+% \end{quote}
+% should yield
+% \begin{quote}
+% \ttfamily
+% \FVExtraVerbatimDetokenize{\macroA\macroB{}\csname name\endcsname123}
+% \end{quote}
+% Note that the space is visible since it is catcode 12.
+%
+% Thus, \cmd{\FVExtraVerbatimDetokenize} is essentially a context-sensitive wrapper around \cmd{\detokenize} that removes extraneous space introduced by \cmd{\detokenize}.  It iterates through the tokens, detokenizing them individually and then removing any trailing space inserted by \cmd{\detokenize}.
+%    \begin{macrocode}
+\gdef\FVExtraVerbatimDetokenize#1{%
+  \FV@VDetok@Scan{}#1^^C \FV@<Sentinel>}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@Scan}
+% This scans through a token sequence while performing two tasks:
+% \begin{enumerate}
+% \item Replace all catcode 10 spaces with catcode 12 spaces.
+% \item Insert macros that will process groups, after which they will insert yet other macros to process individual tokens.
+% \end{enumerate}
+% Usage must \emph{always} have the form
+% \begin{quote}
+% |\FV@VDetok@Scan{}|\meta{tokens}\Verb*|^^C \FV@<Sentinel>|
+% \end{quote}
+% where |^^C| is \cmd{\active}, the catcode 10 space after |^^C| is mandatory, and \cmd{\FV@<Sentinel>} is a \emph{single}, undefined control word (this is accomplished via catcodes).
+% \begin{itemize}
+% \item \cmd{\FV@VDetok@Scan} searches for spaces to replace.  After any spaces in \meta{tokens} have been handled, the space in \Verb*|^^C \FV@<Sentinel>| triggers space processing.  When \cmd{\FV@VDetok@Scan} detects the sentinel macro \cmd{\FV@<Sentinel>}, scanning stops.
+% \item The |{}| protects the beginning of \meta{tokens}, so that if \meta{tokens} is a group, its braces won't be gobbled.  Later, the inserted |{}| must be stripped so that it does not become part the processed \meta{tokens}.
+% \item |^^C| is a convenient separator between \meta{tokens} and the rest of the sentinel sequence.  
+%     \begin{itemize}
+%     \item Since \cmd{\FV@VDetok@Scan} has delimited arguments, a leading catcode 10 space in \meta{tokens} will be preserved automatically.  Preserving a trailing catcode 10 space is much easier if it is immediately adjacent to a non-space character in the sentinel sequence; two adjacent catcode 10 spaces would be difficult to handle with macro pattern matching.  However, the sentinel sequence must contain a catcode 10 space, so the sentinel sequence must contain at least 3 tokens.
+%     \item Since |^^C| is not a control word, it does not gobble following spaces.  That makes it much easier to assemble macro arguments that contain a catcode 10 space.  This is useful because the sentinel sequence \Verb*|^^C \FV@<Sentinel>| may have to be inserted into processing multiple times (for example, in recursive handling of groups).
+%     \item \cmd{\FVExtraReadVArg} defines |^^C| as \cmd{\outer}, so any verbatim argument read by it is guaranteed not to contain |^^C|.  This is in contrast to \cmd{\active} ASCII symbols and to two-character sequences |<backslash><symbol>| that should be expected in arbitrary verbatim content.  It is a safe sentinel from that perspective.
+%     \item A search of a complete TeX Live 2018 installation revealed no other uses of |^^C| that would clash (thanks, |ripgrep|!).  As a control character, it should not be in common use except as a sentinel or for similar special purposes.
+%     \end{itemize}
+% \end{itemize}
+%
+% If \meta{tokens} is empty or contains no spaces, then |#1| will contain |{}|\meta{tokens}|^^C| and |#2| will be empty.  Otherwise, |#1| will contain |{}|\meta{tokens\_to\_space} and |#2| will contain \meta{tokens\_after\_space}\Verb*|^^C |.
+%
+% This uses the |\if\relax\detokenize{|\meta{argument}|}\relax| approach to check for an empty argument.  If |#2| is empty, then the space that was just removed by \cmd{\FV@VDetok@Scan} reading its arguments was the space in the sentinel sequence, in which case scanning should end.  |#1| is passed on raw so that \cmd{\FV@VDetok@ScanEnd} can strip the |^^C| from the end, which is the only remaining token from the sentinel sequence \Verb*|^^C \FV@<Sentinel>|.  Otherwise, if |#2| is not empty, continue.  In that case, the braces in |{#1}{#2}| ensure arguments remain intact.
+%
+% Note that \cmd{\FV@<Sentinel>} is removed during each space search, and thus must be reinserted in \cmd{\FV@VDetok@ScanCont}.  It would be possible to use the macro signature |#1 #2| instead of |#1 #2\FV@<Sentinel>|, and then do an \cmd{\ifx} test on |#2| for \cmd{\FV@<Sentinel>}.  However, that is problematic, because |#2| may contain an arbitrary sequence of arbitrary tokens, so it cannot be used safely without \cmd{\detokenize}.
+%    \begin{macrocode}
+\gdef\FV@VDetok@Scan#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@VDetok@ScanEnd#1}%
+  {\FV@VDetok@ScanCont{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanEnd}
+% This removes the |^^C| from the sentinel sequence \Verb*|^^C \FV@<Sentinel>|, so the sentinel sequence is now completely gone.  If |#1| is empty, there is nothing to do (|#1| being empty means that |#1| consumed the |{}| that was inserted to protect anything following, because there was nothing after it).  Otherwise, \cmd{\@gobble} the inserted |{}| before starting a different scan to deal with groups.  The group scanner \cmd{\FV@VDetok@ScanGroup} has its own sentinel sequence |{\FV@<Sentinel>}|.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanEnd#1^^C{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@VDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanCont}
+% Continue scanning after removing a space in \cmd{\FV@VDetok@Scan}.
+%
+% |#1| is everything before the space.  If |#1| is empty, there is nothing to do related to it; |#1| simply consumed an inserted |{}| that preceded nothing (that would be a leading space).  Otherwise, start a different scan on |#1| to deal with groups.  A non-empty |#1| will start with the |{}| that was inserted to protect groups, hence the \cmd{\@gobble} before group scanning.
+%
+% Then insert a literal catcode 12 space to account for the space removed in \cmd{\FV@VDetok@Scan}.  Note the catcode, and thus the lack of indentation and the |%| to avoid unwanted catcode 12 spaces.
+%
+% |#2| is everything after the space, ending with \Verb*|^^C | from the sentinel sequence \Verb*|^^C \FV@<Sentinel>|.  This needs continued scanning to deal with spaces, with |{}| inserted in front to protect a leading group and \cmd{\FV@<Sentinel>} after to complete the sentinel sequence.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@VDetok@ScanCont#1#2{%
+\if\relax\detokenize{#1}\relax%
+\expandafter\@gobble%
+\else%
+\expandafter\@firstofone%
+\fi%
+{\expandafter\FV@VDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}%
+ %<-catcode 12 space
+\FV@VDetok@Scan{}#2\FV@<Sentinel>}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanGroup}
+% The macro argument |#1#| reads up to the next group.  When this macro is invoked, the sentinel sequence |{\FV@<Sentinel>}| is inserted, so there is guaranteed to be at least one group.
+%
+% Everything in |#1| contains no spaces and no groups, and thus is ready for token scanning, with the sentinel \cmd{\FV@Sentinel}.  Note that \cmd{\FV@Sentinel}, which is defined as |\def\FV@Sentinel{\FV@<Sentinel>}|, is used here, \emph{not} \cmd{\FV@<Sentinel>}.  \cmd{\FV@<Sentinel>} is not defined and is thus unsuitable for \cmd{\ifx} comparisons with tokens that may have been tokenized under an incorrect catcode regime and thus are undefined.  \cmd{\FV@Sentinel} \emph{is} defined, and its definition is resistant against accidental collisions.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanGroup#1#{%
+  \FV@VDetok@ScanToken#1\FV@Sentinel
+  \FV@VDetok@ScanGroup@i}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanGroup@i}
+% The braces from the group are stripped during reading |#1|.  Proceed based on whether the group is empty.  If the group is not empty, |{}| must be inserted to protect |#1| in case it is a group, and the new sentinel sequence |\FV@<Sentinel>^^C| is added for the group contents.  \cmd{\FV@<Sentinel>} cannot be used as a sentinel for the group contents, because if this is the sentinel group |{\FV@<Sentinel>}|, then |#1| is \cmd{\FV@<Sentinel>}.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanGroup@i#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@VDetok@ScanEmptyGroup}%
+  {\FV@VDetok@ScanGroup@ii{}#1\FV@<Sentinel>^^C}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanEmptyGroup}
+% Insert |{}| to handle the empty group, then continue group scanning.
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@VDetok@ScanEmptyGroup({}\FV@VDetok@ScanGroup)
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanGroup@ii}
+% The group is not empty, so determine whether it contains \cmd{\FV@<Sentinel>} and thus is the sentinel group.  The group contents are followed by the sentinel sequence |\FV@<Sentinel>^^C| inserted in \cmd{\FV@VDetok@ScanGroup@i}.  This means that if |#2| is empty, the group did not contain \cmd{\FV@<Sentinel>} and thus is not the sentinel group.  Otherwise, |#2| will be \cmd{\FV@<Sentinel>}.
+%
+% If this is not the sentinel group, then the group contents must be scanned, with surrounding literal braces inserted.  |#1| already contains an inserted leading |{}| to protect groups; see \cmd{\FV@VDetok@ScanGroup@i}.  A sentinel sequence \Verb*|^^C \FV@<Sentinel>| is needed, though.  Then group scanning must continue.
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@VDetok@ScanGroup@ii#1\FV@<Sentinel>#2^^C(%
+  \if\relax\detokenize(#2)\relax
+    \expandafter\@firstofone
+  \else
+    \expandafter\@gobble
+  \fi
+  ({\FV@VDetok@Scan#1^^C \FV@<Sentinel>}\FV@VDetok@ScanGroup))
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanToken}
+% Scan individual tokens.  At this point, all spaces and groups have been handled, so this will only ever encounter individual tokens that can be iterated with a |#1| argument.  The sentinel for token scanning is \cmd{\FV@Sentinel}.  This is the appropriate sentinel because \cmd{\ifx} comparisons are now safe (individual tokens) and \cmd{\FV@Sentinel} is defined.  Processing individual detokenized tokens requires the same sentinel sequence as handling spaces, since it can produce them.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanToken#1{%
+  \ifx\FV@Sentinel#1%
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@VDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\FV@VDetok@ScanToken@i}
+% If |#2| is empty, then there are no spaces in the detokenized token, so it is either an \cmd{\active} character other than the space, or a two-character sequence of the form |<backslash><symbol>| where the second character is not a space.  Thus, |#1| contains \meta{detokenized}|^^C|.  Otherwise, |#1| contains \meta{detokenized\_without\_space}, and |#2| may be discarded since it contains \Verb*|^^C \FV@<Sentinel>|.  (If the detokenized token contains a space, it is always at the end.)
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@VDetok@ScanTokenNoSpace#1}%
+  {\FV@VDetok@ScanTokenWithSpace{#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanTokenNoSpace}
+% Strip |^^C| sentinel in reading, then insert character(s) and continue scanning.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanTokenNoSpace#1^^C{#1\FV@VDetok@ScanToken}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanTokenWithSpace}
+% Handle a token that when detokenized produces a space.  If there is nothing left once the space is removed, this is the \cmd{\active} space.  Otherwise, process further.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanTokenWithSpace#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@VDetok@ScanTokenActiveSpace}%
+  {\FV@VDetok@ScanTokenWithSpace@i#1\FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanTokenActiveSpace}
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@VDetok@ScanTokenActiveSpace{ \FV@VDetok@ScanToken}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanTokenWithSpace@i}
+% If there is only one character left once the space is removed, this is the escaped space \Verb*|\ |.  Otherwise, this is a command word that needs further processing.
+%    \begin{macrocode}
+\gdef\FV@VDetok@ScanTokenWithSpace@i#1#2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@VDetok@ScanTokenEscSpace{#1}}%
+  {\FV@VDetok@ScanTokenCW{#1#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanTokenEscSpace}
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@VDetok@ScanTokenEscSpace#1{#1 \FV@VDetok@ScanToken}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@VDetok@ScanTokenCW}
+% Process control words in a context-sensitive manner by looking ahead to the next token (|#2|).  The lookahead must be reinserted into processing, hence the |\FV@VDetok@ScanToken#2|.
+%
+% A control word will detokenize to a sequence of characters followed by a space.  If the following token has catcode 11, then this space represents one or more space characters that must have been present in the original source, because otherwise the catcode 11 token would have become part of the control word's name.  If the following token has another catcode, then it is impossible to determine whether a space was present, so assume that one was not.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@VDetok@ScanTokenCW#1#2{%
+\ifcat\noexpand#2a%
+\expandafter\@firstoftwo%
+\else%
+\expandafter\@secondoftwo%
+\fi%
+{#1 \FV@VDetok@ScanToken#2}%
+{#1\FV@VDetok@ScanToken#2}}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \paragraph{Detokenize as if the original source were tokenized verbatim, then convert to PDF string}\hfill\\
+%
+% \begin{macro}{\FVExtraPDFStringVerbatimDetokenize}
+% This is identical to \cmd{\FVExtraVerbatimDetokenize}, except that the output is converted to a valid PDF string.  Some spaces are represented with the octal escape \cmd{\040} to prevent adjacent spaces from being merged.
+%    \begin{macrocode}
+\gdef\FVExtraPDFStringVerbatimDetokenize#1{%
+  \FV@PDFStrVDetok@Scan{}#1^^C \FV@<Sentinel>}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@Scan}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@Scan#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrVDetok@ScanEnd#1}%
+  {\FV@PDFStrVDetok@ScanCont{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanEnd}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanEnd#1^^C{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@PDFStrVDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanCont}
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@PDFStrVDetok@ScanCont#1#2{%
+\if\relax\detokenize{#1}\relax%
+\expandafter\@gobble%
+\else%
+\expandafter\@firstofone%
+\fi%
+{\expandafter\FV@PDFStrVDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}%
+ %<-catcode 12 space
+\FV@PDFStrVDetok@Scan{}#2\FV@<Sentinel>}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanGroup}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanGroup#1#{%
+  \FV@PDFStrVDetok@ScanToken#1\FV@Sentinel
+  \FV@PDFStrVDetok@ScanGroup@i}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanGroup@i}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanGroup@i#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrVDetok@ScanEmptyGroup}%
+  {\FV@PDFStrVDetok@ScanGroup@ii{}#1\FV@<Sentinel>^^C}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanEmptyGroup}
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@PDFStrVDetok@ScanEmptyGroup({}\FV@PDFStrVDetok@ScanGroup)
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanGroup@ii}
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@PDFStrVDetok@ScanGroup@ii#1\FV@<Sentinel>#2^^C(%
+  \if\relax\detokenize(#2)\relax
+    \expandafter\@firstofone
+  \else
+    \expandafter\@gobble
+  \fi
+  ({\FV@PDFStrVDetok@Scan#1^^C \FV@<Sentinel>}\FV@PDFStrVDetok@ScanGroup))
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanToken}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanToken#1{%
+  \ifx\FV@Sentinel#1%
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@PDFStrVDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\FV@PDFStrVDetok@ScanToken@i}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrVDetok@ScanTokenNoSpace#1}%
+  {\FV@PDFStrVDetok@ScanTokenWithSpace{#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanTokenNoSpace}
+% This is modified to use \cmd{\FVExtraPDFStringEscapeChars}.
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanTokenNoSpace#1^^C{%
+  \FVExtraPDFStringEscapeChars{#1}\FV@PDFStrVDetok@ScanToken}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanTokenWithSpace}
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanTokenWithSpace#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrVDetok@ScanTokenActiveSpace}%
+  {\FV@PDFStrVDetok@ScanTokenWithSpace@i#1\FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanTokenActiveSpace}
+% This is modified to use \cmd{\040} rather than a catcode 12 space.
+%    \begin{macrocode}
+\begingroup
+\catcode`\!=0\relax
+\catcode`\\=12!relax
+!gdef!FV@PDFStrVDetok@ScanTokenActiveSpace{\040!FV@PDFStrVDetok@ScanToken}%
+!catcode`!\=0!relax
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanTokenWithSpace@i}
+% If there is only one character left once the space is removed, this is the escaped space \Verb*|\ |.  Otherwise, this is a command word that needs further processing.
+%    \begin{macrocode}
+\gdef\FV@PDFStrVDetok@ScanTokenWithSpace@i#1#2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrVDetok@ScanTokenEscSpace{#1}}%
+  {\FV@PDFStrVDetok@ScanTokenCW{#1#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanTokenEscSpace}
+% This is modified to add \cmd{\FVExtraPDFStringEscapeChar} and use |\040| for the space, since a space could follow.
+%    \begin{macrocode}
+\begingroup
+\catcode`\!=0\relax
+\catcode`\\=12!relax
+!gdef!FV@PDFStrVDetok@ScanTokenEscSpace#1{%
+  !FVExtraPDFStringEscapeChar{#1}\040!FV@PDFStrVDetok@ScanToken}%
+!catcode`!\=0!relax
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrVDetok@ScanTokenCW}
+% This is modified to add \cmd{\FVExtraPDFStringEscapeChars}.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@PDFStrVDetok@ScanTokenCW#1#2{%
+\ifcat\noexpand#2a%
+\expandafter\@firstoftwo%
+\else%
+\expandafter\@secondoftwo%
+\fi%
+{\FVExtraPDFStringEscapeChars{#1} \FV@PDFStrVDetok@ScanToken#2}%
+{\FVExtraPDFStringEscapeChars{#1}\FV@PDFStrVDetok@ScanToken#2}}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \paragraph{Detokenize as if the original source were tokenized verbatim, except for backslash escapes of non-catcode 11 characters}
+%
+% \begin{macro}{\FVExtraEscapedVerbatimDetokenize}
+% This is a variant of \cmd{\FVExtraVerbatimDetokenize} that treats character sequences of the form |\<char>| as escapes for |<char>|.  It is primarily intended for making |\<symbol>| escapes for |<symbol>|, but allowing arbitrary escapes simplifies the default behavior and implementation.  This is useful in constructing nearly verbatim commands that can be used inside other commands, because the backslash escapes allow for characters like |#| and |%|, as well as making possible multiple adjacent spaces via \Verb*|\ |.  It should be applied to arguments that are read verbatim insofar as is possible, except that the backslash |\| should have its normal meaning (catcode 0).  Most of the implementation is identical to that for \cmd{\FVExtraVerbatimDetokenize}.  Only the token processing requires modification to handle backslash escapes.
+%
+% It is possible to restrict escapes to ASCII symbols and punctuation.  See \cmd{\FVExtraDetokenizeREscVArg}.  The disadvantage of restricting escapes is that it prevents functioning in an expansion-only context (unless you want to use undefined macros as a means of raising errors).  The advantage is that it eliminates ambiguity introduced by allowing arbitrary escapes. Backslash escapes of characters with catcode 11 (ASCII letters, |[A-Za-z]|) are typically not necessary, and introduce ambiguity because something like |\x| will gobble following spaces since it will be tokenized originally as a control word.  
+%    \begin{macrocode}
+\gdef\FVExtraEscapedVerbatimDetokenize#1{%
+  \FV@EscVDetok@Scan{}#1^^C \FV@<Sentinel>}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@Scan}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@Scan#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@EscVDetok@ScanEnd#1}%
+  {\FV@EscVDetok@ScanCont{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanEnd}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanEnd#1^^C{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@EscVDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanCont}
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@EscVDetok@ScanCont#1#2{%
+\if\relax\detokenize{#1}\relax%
+\expandafter\@gobble%
+\else%
+\expandafter\@firstofone%
+\fi%
+{\expandafter\FV@EscVDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}%
+ %<-catcode 12 space
+\FV@EscVDetok@Scan{}#2\FV@<Sentinel>}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanGroup}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanGroup#1#{%
+  \FV@EscVDetok@ScanToken#1\FV@Sentinel
+  \FV@EscVDetok@ScanGroup@i}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanGroup@i}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanGroup@i#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@EscVDetok@ScanEmptyGroup}%
+  {\FV@EscVDetok@ScanGroup@ii{}#1\FV@<Sentinel>^^C}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanEmptyGroup}
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@EscVDetok@ScanEmptyGroup({}\FV@EscVDetok@ScanGroup)
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanGroup@ii}
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@EscVDetok@ScanGroup@ii#1\FV@<Sentinel>#2^^C(%
+  \if\relax\detokenize(#2)\relax
+    \expandafter\@firstofone
+  \else
+    \expandafter\@gobble
+  \fi
+  ({\FV@EscVDetok@Scan#1^^C \FV@<Sentinel>}\FV@EscVDetok@ScanGroup))
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanToken}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanToken#1{%
+  \ifx\FV@Sentinel#1%
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@EscVDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\FV@EscVDetok@ScanToken@i}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@EscVDetok@ScanTokenNoSpace#1}%
+  {\FV@EscVDetok@ScanTokenWithSpace{#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subparagraph{Parallel implementations, with a restricted option}
+% Starting here, there are alternate macros for restricting escapes to ASCII punctuation and symbols.  These alternates have names of the form \cmd{\FV@REscVDetok@<name>}.  They are used in \cmd{\FVExtraDetokenizeREscVArg}.  The alternate \cmd{\FV@REscVDetok@<name>} macros replace invalid escape sequences with the undefined \cmd{\FV@<InvalidEscape>}, which is later scanned for with a delimited macro.
+%
+% \begin{macro}{\FV@EscVDetok@ScanTokenNoSpace}
+% This was modified from \cmd{\FV@VDetok@ScanTokenNoSpace} to discard the first character of multi-character sequences (that would be the backslash |\|).
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanTokenNoSpace#1#2^^C{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {#1\FV@EscVDetok@ScanToken}%
+  {#2\FV@EscVDetok@ScanToken}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@REscVDetok@ScanTokenNoSpace}
+%    \begin{macrocode}
+\gdef\FV@REscVDetok@ScanTokenNoSpace#1#2^^C{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {#1\FV@EscVDetok@ScanToken}%
+  {\ifcsname FV@Special:\detokenize{#2}\endcsname#2\else\noexpand\FV@<InvalidEscape>\fi
+   \FV@EscVDetok@ScanToken}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@EscVDetok@ScanTokenWithSpace}
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanTokenWithSpace#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@EscVDetok@ScanTokenActiveSpace}%
+  {\FV@EscVDetok@ScanTokenWithSpace@i#1\FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanTokenActiveSpace}
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@EscVDetok@ScanTokenActiveSpace{ \FV@EscVDetok@ScanToken}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanTokenWithSpace@i}
+% If there is only one character left once the space is removed, this is the escaped space \Verb*|\ |.  Otherwise, this is a command word.  A command word is passed on so as to keep the backslash and letters separate.
+%    \begin{macrocode}
+\gdef\FV@EscVDetok@ScanTokenWithSpace@i#1#2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@EscVDetok@ScanTokenEscSpace{#1}}%
+  {\FV@EscVDetok@ScanTokenCW{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@REscVDetok@ScanTokenWithSpace@i}
+%    \begin{macrocode}
+\gdef\FV@REscVDetok@ScanTokenWithSpace@i#1#2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@EscVDetok@ScanTokenEscSpace{#1}}%
+  {\noexpand\FV@<InvalidEscape>\FV@EscVDetok@ScanToken}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanTokenEscSpace}
+% This is modified to drop |#1|, which will be the backslash.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@EscVDetok@ScanTokenEscSpace#1{ \FV@EscVDetok@ScanToken}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@EscVDetok@ScanTokenCW}
+% This is modified to accept an additional argument, since the control word is now split into backslash plus letters.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@EscVDetok@ScanTokenCW#1#2#3{%
+\ifcat\noexpand#2a%
+\expandafter\@firstoftwo%
+\else%
+\expandafter\@secondoftwo%
+\fi%
+{#2 \FV@EscVDetok@ScanToken#3}%
+{#2\FV@EscVDetok@ScanToken#3}}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \paragraph{Detokenize as if the original source were tokenized verbatim, except for backslash escapes of non-catcode 11 characters, then convert to PDF string}
+%
+% \begin{macro}{\FVExtraPDFStringEscapedVerbatimDetokenize}
+% This is identical to \cmd{\FVExtraEscapedVerbatimDetokenize}, except that the output is converted to a valid PDF string.  All spaces are represented with the octal escape \cmd{\040} to prevent adjacent spaces from being merged.  There is no alternate implementation for restricting escapes to ASCII symbols and punctuation.  Typically, this would be used in an expansion-only context to create something like bookmarks, while \cmd{\FVExtraEscapedVerbatimDetokenize} (potentially with escape restrictions) would be used in parallel to generate whatever is actually typeset.  Escape errors can be handled in generating what is typeset.
+%    \begin{macrocode}
+\gdef\FVExtraPDFStringEscapedVerbatimDetokenize#1{%
+  \FV@PDFStrEscVDetok@Scan{}#1^^C \FV@<Sentinel>}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@Scan}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@Scan#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrEscVDetok@ScanEnd#1}%
+  {\FV@PDFStrEscVDetok@ScanCont{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanEnd}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanEnd#1^^C{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@PDFStrEscVDetok@ScanGroup\@gobble#1{\FV@<Sentinel>}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanCont}
+% This is modified to use |\040| for the space.  In the unescaped case, using a normal space here is fine, but in the escaped case, the preceeding or following token could be an escaped space.
+%    \begin{macrocode}
+\begingroup
+\catcode`\!=0\relax
+\catcode`\\=12!relax
+!gdef!FV@PDFStrEscVDetok@ScanCont#1#2{%
+  !if!relax!detokenize{#1}!relax
+    !expandafter!@gobble
+  !else
+    !expandafter!@firstofone
+  !fi
+  {!expandafter!FV@PDFStrEscVDetok@ScanGroup!@gobble#1{!FV@<Sentinel>}}%
+  \040%<-space
+  !FV@PDFStrEscVDetok@Scan{}#2!FV@<Sentinel>}%
+!catcode`!\=0!relax
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanGroup}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanGroup#1#{%
+  \FV@PDFStrEscVDetok@ScanToken#1\FV@Sentinel
+  \FV@PDFStrEscVDetok@ScanGroup@i}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanGroup@i}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanGroup@i#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrEscVDetok@ScanEmptyGroup}%
+  {\FV@PDFStrEscVDetok@ScanGroup@ii{}#1\FV@<Sentinel>^^C}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanEmptyGroup}
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@PDFStrEscVDetok@ScanEmptyGroup({}\FV@PDFStrEscVDetok@ScanGroup)
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanGroup@ii}
+%    \begin{macrocode}
+\begingroup
+\catcode`\(=1
+\catcode`\)=2
+\catcode`\{=12
+\catcode`\}=12
+\gdef\FV@PDFStrEscVDetok@ScanGroup@ii#1\FV@<Sentinel>#2^^C(%
+  \if\relax\detokenize(#2)\relax
+    \expandafter\@firstofone
+  \else
+    \expandafter\@gobble
+  \fi
+  ({\FV@PDFStrEscVDetok@Scan#1^^C \FV@<Sentinel>}\FV@PDFStrEscVDetok@ScanGroup))
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanToken}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanToken#1{%
+  \ifx\FV@Sentinel#1%
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\FV@PDFStrEscVDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanToken@i}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrEscVDetok@ScanTokenNoSpace#1}%
+  {\FV@PDFStrEscVDetok@ScanTokenWithSpace{#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenNoSpace}
+% This was modifed to add \cmd{\FVExtraPDFStringEscapeChar}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanTokenNoSpace#1#2^^C{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FVExtraPDFStringEscapeChar{#1}\FV@PDFStrEscVDetok@ScanToken}%
+  {\FVExtraPDFStringEscapeChar{#2}\FV@PDFStrEscVDetok@ScanToken}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenWithSpace}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanTokenWithSpace#1{%
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrEscVDetok@ScanTokenActiveSpace}%
+  {\FV@PDFStrEscVDetok@ScanTokenWithSpace@i#1\FV@<Sentinel>}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenActiveSpace}
+% This is modified to use |\040| for the space.
+%    \begin{macrocode}
+\begingroup
+\catcode`\!=0\relax
+\catcode`\\=12!relax
+!gdef!FV@PDFStrEscVDetok@ScanTokenActiveSpace{\040!FV@PDFStrEscVDetok@ScanToken}%
+!catcode`!\=0!relax
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenWithSpace@i}
+%    \begin{macrocode}
+\gdef\FV@PDFStrEscVDetok@ScanTokenWithSpace@i#1#2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@PDFStrEscVDetok@ScanTokenEscSpace{#1}}%
+  {\FV@PDFStrEscVDetok@ScanTokenCW{#1}{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenEscSpace}
+% This is modified to drop |#1|, which will be the backslash, and use |\040| for the space.
+%    \begin{macrocode}
+\begingroup
+\catcode`\!=0\relax
+\catcode`\\=12!relax
+!gdef!FV@PDFStrEscVDetok@ScanTokenEscSpace#1{\040!FV@PDFStrEscVDetok@ScanToken}
+!catcode`!\=0!relax
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenCW}
+% This is modified to use \cmd{\FVExtraPDFStringEscapeChars}.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =12%
+\gdef\FV@PDFStrEscVDetok@ScanTokenCW#1#2#3{%
+\ifcat\noexpand#2a%
+\expandafter\@firstoftwo%
+\else%
+\expandafter\@secondoftwo%
+\fi%
+{\FVExtraPDFStringEscapeChars{#2} \FV@PDFStrEscVDetok@ScanToken#3}%
+{\FVExtraPDFStringEscapeChars{#2}\FV@PDFStrEscVDetok@ScanToken#3}}
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \paragraph{Detokenization wrappers}\hfill\\
+%
+% \begin{macro}{\FVExtraDetokenizeVArg}
+% Detokenize a verbatim argument read by \cmd{\FVExtraReadVArg}.  This is a wrapper around \cmd{\FVExtraVerbatimDetokenize} that adds some additional safety by ensuring |^^C| is \cmd{\active} with an appropriate definition, at the cost of not working in an expansion-only context.  This tradeoff isn't an issue when working with \cmd{\FVExtraReadVArg}, because it has the same expansion limitations.
+%    \begin{macrocode}
+\gdef\FVExtraDetokenizeVArg#1#2{%
+  \begingroup
+  \catcode`\^^C=\active
+  \let^^C\FV@Sentinel
+  \edef\FV@Tmp{\FVExtraVerbatimDetokenize{#2}}%
+  \expandafter\FV@DetokenizeVArg@i\expandafter{\FV@Tmp}{#1}}
+\gdef\FV@DetokenizeVArg@i#1#2{%
+  \endgroup
+  #2{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVExtraDetokenizeEscVArg}
+% This is the same as \cmd{\FVExtraDetokenizeVArg}, except it is intended to work with \cmd{\FVExtraReadEscVArg} by using \cmd{\FVExtraEscapedVerbatimDetokenize}.
+%    \begin{macrocode}
+\gdef\FVExtraDetokenizeEscVArg#1#2{%
+  \begingroup
+  \catcode`\^^C=\active
+  \let^^C\FV@Sentinel
+  \edef\FV@Tmp{\FVExtraEscapedVerbatimDetokenize{#2}}%
+  \expandafter\FV@DetokenizeVArg@i\expandafter{\FV@Tmp}{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVExtraDetokenizeREscVArg}
+%    \begin{macrocode}
+\gdef\FVExtraDetokenizeREscVArg#1#2{%
+  \begingroup
+  \catcode`\^^C=\active
+  \let^^C\FV@Sentinel
+  \let\FV@EscVDetok@ScanTokenNoSpace\FV@REscVDetok@ScanTokenNoSpace
+  \let\FV@EscVDetok@ScanTokenWithSpace@i\FV@REscVDetok@ScanTokenWithSpace@i
+  \edef\FV@Tmp{\FVExtraEscapedVerbatimDetokenize{#2}}%
+  \expandafter\FV@DetokenizeREscVArg@InvalidEscapeCheck\FV@Tmp\FV@<InvalidEscape>\FV@<Sentinel>
+  \expandafter\FV@DetokenizeVArg@i\expandafter{\FV@Tmp}{#1}}
+\gdef\FV@DetokenizeREscVArg@InvalidEscapeCheck#1\FV@<InvalidEscape>#2\FV@<Sentinel>{%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\PackageError{fvextra}%
+   {Invalid backslash escape; only escape ASCII symbols and punctuation}%
+   {Only use \@backslashchar <char> for ASCII symbols and punctuation}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% End catcodes for this subsection:
+%    \begin{macrocode}
+\endgroup
+%    \end{macrocode}
+%
+%
+%
+%
+% \subsubsection{Retokenizing detokenized arguments}
+%
+% \begin{macro}{\FV@RetokVArg@Read}
+% Read all tokens up to \cmd{\active} |^^C^^M|, then save them in a macro for further use.  This is used to read tokens inside \cmd{\scantokens} during retokenization.  The \cmd{\endgroup} disables catcode modifications that will have been put in place for the reading process, including making |^^C| and |^^M| \cmd{\active}.
+%    \begin{macrocode}
+\begingroup
+\catcode`\^^C=\active%
+\catcode`\^^M=\active%
+\gdef\FV@RetokVArg@Read#1^^C^^M{%
+  \endgroup%
+  \def\FV@TmpRetoked{#1}}%
+\endgroup
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVExtraRetokenizeVArg}
+% This retokenizes the detokenized output of something like \cmd{\FVExtraVerbatimDetokenize} or \cmd{\FVExtraDetokenizeVArg}.  |#1| is a macro that receives the output, |#2| sets catcodes but includes no \cmd{\begingroup} or \cmd{\endgroup}, and |#3| is the detokenized characters.  \cmd{\FV@RetokVArg@Read} contains an \cmd{\endgroup} that returns catcodes to their prior state.
+%
+% This is a somewhat atypical use of \cmd{\scantokens}.  There is no |\everyeof{\noexpand}| to handle the end-of-file marker, and no |\endlinechar=-1|  to ignore the end-of-line token so that it does not become a space.  Rather, the end-of-line |^^M| is made \cmd{\active} and used as a delimiter by \cmd{\FV@RetokVArg@Read}, which reads characters under the new catcode regime, then stores them unexpanded in \cmd{\FV@TmpRetoked}.
+%
+% Inside \cmd{\scantokens} is |^^B#3^^C|.  This becomes |^^B#3^^C^^M| once \cmd{\scantokens} inserts the end-of-line token.  |^^B| is \cmd{\let} to \cmd{\FV@RetokVArg@Read}, rather than using \cmd{\FV@RetokVArg@Read} directly, because \cmd{\scantokens} acts as a \cmd{\write} followed by \cmd{\input}.  That means that a command word like \cmd{\FV@RetokVArg@Read} will have a space inserted after it, while an \cmd{\active} character like |^^B| will not.  Using |^^B| is a way to avoid needing to remove this space; it is simpler not to handle the scenario where \cmd{\FV@RetokVArg@Read} introduces a space and the detokenized characters also start with a space.  The |^^C| is needed because trailing spaces on a line are automatically stripped, so a non-space character must be part of the delimiting token sequence.
+%    \begin{macrocode}
+\begingroup
+\catcode`\^^B=\active
+\catcode`\^^C=\active
+\gdef\FVExtraRetokenizeVArg#1#2#3{%
+  \begingroup
+  #2%
+  \catcode`\^^B=\active
+  \catcode`\^^C=\active
+  \catcode`\^^M=\active
+  \let^^B\FV@RetokVArg@Read
+  \let^^C\@empty
+  \FV@DefEOLEmpty
+  \scantokens{^^B#3^^C}%
+  \expandafter\FV@RetokenizeVArg@i\expandafter{\FV@TmpRetoked}{#1}}%
+\gdef\FV@RetokenizeVArg@i#1#2{%
+  #2{#1}}
+\endgroup
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1206,7 +3027,274 @@
 %
 %
 %
+% \subsection{Inline-only options}
+%
+% Create \cmd{\fvinlineset} for inline-only options.  Note that this only applies to new or reimplemented inline commands that use \cmd{\FV@UseInlineKeyValues}.
+% \begin{macro}{\FV@InlineKeyValues}
+%    \begin{macrocode}
+\def\FV@InlineKeyValues{}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\fvinlineset}
+%    \begin{macrocode}
+\def\fvinlineset#1{%
+  \expandafter\def\expandafter\FV@InlineKeyValues\expandafter{%
+    \FV@InlineKeyValues#1,}}
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\FV@UseInlineKeyValues}
+%    \begin{macrocode}
+\def\FV@UseInlineKeyValues{%
+  \expandafter\fvset\expandafter{\FV@InlineKeyValues}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \subsection{Reimplementations}
+% \label{sec:impl:reimplementations}
+%
+% \fvextra\ reimplements some \fancyvrb\ internals.  The patches in \cref{sec:impl:patches} fix bugs, handle edge cases, and extend existing functionality in logical ways, while leaving default \fancyvrb\ behavior largely unchanged.  In contrast, reimplementations add features by changing existing behavior in significant ways.  As a result, there is a boolean option |extra| that allows them to be disabled.
+%
+%
+% \subsubsection{\texttt{extra} option}
+% Boolean option that governs whether reimplemented commands and environments should be used, rather than the original definitions.
+% \begin{macro}{FV@extra}
+%    \begin{macrocode}
+\newbool{FV@extra}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{extra}
+%    \begin{macrocode}
+\define@booleankey{FV}{extra}%
+ {\booltrue{FV@extra}}%
+ {\boolfalse{FV@extra}}
+\fvset{extra=true}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\texttt{\textbackslash Verb}}
+%
+% \cmd{\Verb} is reimplemented so that it functions as well as possible when used within other commands.
+%
+% \cmd{\verb} cannot be used inside other commands.  The original \fancyvrb\ implementation of \cmd{\Verb} does work inside other commands, but being inside other commands reduces its functionality since there is no attempt at retokenization.  When used inside other commands, it essentially reduces to \cmd{\texttt}.  \cmd{\Verb} also fails when the delimiting characters are active, since it assumes that the closing delimiting character will have catcode 12.
+%
+% \fvextra's re-implemented \cmd{\Verb} uses \cmd{\scantokens} and careful consideration of catcodes to (mostly) remedy this.  It also adds support for paired curly braces |{...}| as the delimiters for the verbatim argument, since this is often convenient when \cmd{\Verb} is used within another command.  The original \cmd{\Verb} implementation is completely incompatible with curly braces being used as delimiters, so this doesn't affect backward compatibility.
+%
+% The re-implemented \cmd{\Verb} is constructed with \cmd{\FVExtraRobustCommand} so that it will function correctly after being in an expansion-only context, so long as the argument is delimited with curly braces.
+%
+% \begin{macro}{\Verb}
+%    \begin{macrocode}
+\def\Verb{%
+  \FVExtraRobustCommand\RobustVerb\FVExtraUnexpandedReadStarOArgBVArg}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\RobustVerb}
+%    \begin{macrocode}
+\protected\def\RobustVerb{\FV@Command{}{Verb}}
+\FVExtrapdfstringdefDisableCommands{%
+  \def\RobustVerb{}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@Verb@FV}
+% Save the original \fancyvrb\ definition of \cmd{\FVC@Verb}, so that the |extra| option can switch back to it.
+%    \begin{macrocode}
+\let\FVC@Verb@FV\FVC@Verb
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@Verb}
+% Redefine \cmd{\FVC@Verb} so that it will adjust based on |extra|.
+%    \begin{macrocode}
+\def\FVC@Verb{%
+  \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues
+  \ifFV@extra
+    \expandafter\endgroup\expandafter\FVC@Verb@Extra
+  \else
+    \expandafter\endgroup\expandafter\FVC@Verb@FV
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@Verb@Extra}
+% \fvextra\ reimplementation of \cmd{\FVC@Verb}.
+%
+% When used after expansion, there is a check for valid delimiters, curly braces.  If incorrect delimiters are used, and there are no following curly braces, then the reader macro \cmd{\FVExtraUnexpandedReadStarOArgBVArg} will give an error about unmatched braces.  However, if incorrect delimiters are used, and there \emph{are} following braces in a subsequent command, then this error will be triggered, preventing interference with the following command by the reader macro.
+%    \begin{macrocode}
+\def\FVC@Verb@Extra{%
+  \ifbool{FVExtraRobustCommandExpanded}%
+   {\@ifnextchar\bgroup
+     {\FVC@Verb@Extra@i}%
+     {\PackageError{fvextra}%
+       {\string\Verb\space delimiters must be paired curly braces in this context}%
+       {Use curly braces as delimiters}}}%
+   {\FVC@Verb@Extra@i}}
+%    \end{macrocode}
+% \end{macro}
+%  
+% \begin{macro}{\FVC@Verb@Extra@i}
+%    \begin{macrocode}
+\def\FVC@Verb@Extra@i{%
+  \begingroup
+  \FVExtraReadVArg{%
+    \FVExtraDetokenizeVArg{%
+      \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+      \FVExtraRetokenizeVArg{\FVC@Verb@Extra@ii}{\FV@CatCodes}}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@Verb@Extra@ii}
+%    \begin{macrocode}
+\def\FVC@Verb@Extra@ii#1{%
+  \ifFV@BreakLines
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\mbox{#1}}%
+  \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
+% \subsection{New commands and environments}
+% \label{sec:impl:new-commands-environments}
+%
+% \subsubsection{\cmd{\EscVerb}}
+% This is a variant of \cmd{\Verb} in which backslash escapes of the form |\<char>| are used for |<char>|.  Backslash escapes are \emph{only} permitted for printable, non-alphanumeric ASCII characters.  The argument is read under a normal catcode regime, so any characters that cannot be read under normal catcodes must always be escaped, and the argument must always be delimited by curly braces.  This ensures that \cmd{\EscVerb} behaves identically whether or not it is used inside another command.
+%
+% \cmd{\EscVerb} is constructed with \cmd{\FVExtraRobustCommand} so that it will function correctly after being in an expansion-only context.
+%
+% \begin{macro}{\EscVerb}
+% Note that while the typeset mandatory argument will be read under normal catcodes, the reader macro for expansion is \cmd{\FVExtraUnexpandedReadStarOArgBEscVArg}.  This reflects how the argument will be typeset.
+%    \begin{macrocode}
+\def\EscVerb{%
+  \FVExtraRobustCommand\RobustEscVerb\FVExtraUnexpandedReadStarOArgBEscVArg}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\RobustEscVerb}
+%    \begin{macrocode}
+\protected\def\RobustEscVerb{\FV@Command{}{EscVerb}}
+\FVExtrapdfstringdefDisableCommands{%
+  \def\RobustEscVerb{}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@EscVerb}
+% Delimiting with curly braces is required, so that the command will always behave the same whether or not it has been through expansion.
+%    \begin{macrocode}
+\def\FVC@EscVerb{%
+  \@ifnextchar\bgroup
+   {\FVC@EscVerb@i}%
+   {\PackageError{fvextra}%
+    {Invalid argument; argument must be delimited by paired curly braces}%
+    {Delimit argument with curly braces}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@EscVerb@i}
+%    \begin{macrocode}  
+\def\FVC@EscVerb@i#1{%
+  \begingroup
+  \FVExtraDetokenizeREscVArg{%
+    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+    \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@EscVerb@ii}
+%    \begin{macrocode}
+\def\FVC@EscVerb@ii#1{%
+  \ifFV@BreakLines
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\mbox{#1}}%
+  \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+%
 % \subsection{Patches}
+% \label{sec:impl:patches}
+%
+%
+% \subsubsection{Delimiting characters for verbatim commands}
+% \label{sec:impl:patches:delimiting-verbatim-commands}
+%
+% Unlike \cmd{\verb}, \fancyvrb's commands like \cmd{\Verb} cannot take arguments delimited by characters like |#| and |%| due to the way that starred commands and optional arguments are implemented.  The relevant macros are redefined to make this possible.
+%
+% \fancyvrb's \cmd{\Verb} is actually implemented in \cmd{\FVC@Verb}.  This is invoked by a helper macro \cmd{\FV@Command} which allows versions of commands with customized options:
+% \begin{quote}
+% \cmd{\FV@Command}\marg{customized\_options}\marg{base\_command\_name}
+% \end{quote}
+% \cmd{\Verb} is then defined as |\def\Verb{\FV@Command{}{Verb}}|.  The definition of \cmd{\FV@Command} (and \cmd{\FV@@Command} which it uses internally) involves looking ahead for a star |*| (\cmd{\@ifstar}) and for a left square bracket |[| that delimits an optional argument (\cmd{\@ifnextchar}).  As a result, the next character is tokenized under the current, normal catcode regime.  This prevents \cmd{\Verb} from being able to use delimiting characters like |#| and |%| that work with \cmd{\verb}.
+%
+% \cmd{\FV@Command} and \cmd{\FV@@Command} are redefined so that this lookahead tokenizes under a typical verbatim catcode regime (with one exception that is explained below).  This enables \cmd{\verb}-style delimiters.  This does not account for any custom catcode changes introduced by \cmd{\fvset}, customized commands, or optional arguments.  However, delimiting characters should never need custom catcodes, and both the \fancyvrb\ definition of \cmd{\Verb} (when not used inside another macro) as well as the \fvextra\ reimplementation (in all cases) handle the possibility of delimiters with valid but non-typical catcodes.  Other, non-verbatim commands that use \cmd{\FV@Command}, such as \cmd{\UseVerb}, are not affected by the patch.
+%
+% The catcode regime for lookahead has one exception to a typical verbatim catcode regime:  The curly braces |{}| retain their normal codes.  This allows the \fvextra\ reimplementation of \cmd{\Verb} to use a pair of curly braces as delimiters, which can be convenient when \cmd{\Verb} is used within another command.  Since the original \fancyvrb\ implementation of \cmd{\Verb} with unpatched \cmd{\FV@Command} is incompatible with curly braces being used as delimiters in any form, this does not affect any pre-existing \fancyvrb\ functionality.
+%
+% \begin{macro}{\FV@Command}
+%    \begin{macrocode}
+\def\FV@Command#1#2{%
+  \FVExtra@ifstarVArg
+   {\def\FV@KeyValues{#1,showspaces}\FV@@Command{#2}}%
+   {\def\FV@KeyValues{#1}\FV@@Command{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@@Command}
+%    \begin{macrocode}
+\def\FV@@Command#1{%
+  \FVExtra@ifnextcharVArg[%
+    {\FV@GetKeyValues{\@nameuse{FVC@#1}}}%
+    {\@nameuse{FVC@#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\cmd{\CustomVerbatimCommand} compatibility with \cmd{\FVExtraRobustCommand}}
+%
+% \begin{macro}{\@CustomVerbatimCommand}
+% |#1| is \cmd{\newcommand} or \cmd{\renewcommand}, |#2| is the (re)new command, |#3| is the base \fancyvrb\ command, |#4| is options.
+%    \begin{macrocode}
+\def\@CustomVerbatimCommand#1#2#3#4{%
+  \begingroup\fvset{#4}\endgroup
+  \@ifundefined{FVC@#3}%
+   {\FV@Error{Command `\string#3' is not a FancyVerb command.}\@eha}%
+   {\ifcsname Robust#3\endcsname
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+    {\expandafter\let\expandafter\@tempa\csname #3\endcsname
+     \def\@tempb##1##2##3{%
+       \expandafter\def\expandafter\@tempc\expandafter{%
+         \csname Robust\expandafter\@gobble\string#2\endcsname}%
+       \def\@tempd####1{%
+         #1{#2}{##1####1##3}}%
+       \expandafter\@tempd\@tempc
+       \expandafter\protected\expandafter\def\@tempc{\FV@Command{#4}{#3}}}%
+     \expandafter\@tempb\@tempa}%
+    {#1{#2}{\FV@Command{#4}{#3}}}}}
+%    \end{macrocode}
+% \end{macro}
 %
 %
 % \subsubsection{Visible spaces}
@@ -1317,11 +3405,11 @@
 % \end{macro}
 %
 % \begin{macro}{\FV@TrueTab@Group}
-% If in a group, a tab should start collecting whitespace characters for later tab expansion, beginning with itself.  The collected whitespace will use |\FV@Tab@ifx| and |\FV@Space@ifx| so that any |\ifx| comparisons performed later will behave as expected.  This shouldn't be strictly necessary, because |\FancyVerbBreakStart| operates with saved tab widths rather than using the tab expansion code directly.  But it is safer in case any other unanticipated scanning is going on.
+% If in a group, a tab should start collecting whitespace characters for later tab expansion, beginning with itself.  The collected whitespace will use |\FV@FVTabToken| and |\FV@FVSpaceToken| so that any |\ifx| comparisons performed later will behave as expected.  This shouldn't be strictly necessary, because |\FancyVerbBreakStart| operates with saved tab widths rather than using the tab expansion code directly.  But it is safer in case any other unanticipated scanning is going on.
 %    \begin{macrocode}
 \def\FV@TrueTab@Group{%
   \booltrue{FV@ObeyTabs@Whitespace@Tab}%
-  \gdef\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \gdef\FV@TmpWhitespace{\FV@FVTabToken}%
   \FV@ObeyTabs@ScanWhitespace}
 %    \end{macrocode}
 % \end{macro}
@@ -1351,29 +3439,29 @@
 %    \begin{macrocode}
 \def\FV@Space@ObeyTabs@Group{%
   \boolfalse{FV@ObeyTabs@Whitespace@Tab}%
-  \gdef\FV@TmpWhitespace{\FV@Space@ifx}%
+  \gdef\FV@TmpWhitespace{\FV@FVSpaceToken}%
   \FV@ObeyTabs@ScanWhitespace}
 %    \end{macrocode}
 % \end{macro}
 %
 %
 % \begin{macro}{\FV@ObeyTabs@ScanWhitespace}
-% Collect whitespace until the end of the run, then process it.  Proper lookahead comparison requires |\FV@Space@ifx| and |\FV@Tab@ifx|.
+% Collect whitespace until the end of the run, then process it.  Proper lookahead comparison requires |\FV@FVSpaceToken| and |\FV@FVTabToken|.
 %    \begin{macrocode}
 \def\FV@ObeyTabs@ScanWhitespace{%
-  \@ifnextchar\FV@Space@ifx%
+  \@ifnextchar\FV@FVSpaceToken%
    {\FV@TrueTab@CaptureWhitespace@Space}%
-   {\ifx\@let@token\FV@Tab@ifx
+   {\ifx\@let@token\FV@FVTabToken
       \expandafter\FV@TrueTab@CaptureWhitespace@Tab
     \else
       \expandafter\FV@ObeyTabs@ResolveWhitespace
     \fi}}
 \def\FV@TrueTab@CaptureWhitespace@Space#1{%
-  \g@addto@macro\FV@TmpWhitespace{\FV@Space@ifx}%
+  \g@addto@macro\FV@TmpWhitespace{\FV@FVSpaceToken}%
   \FV@ObeyTabs@ScanWhitespace}
 \def\FV@TrueTab@CaptureWhitespace@Tab#1{%
   \booltrue{FV@ObeyTabs@Whitespace@Tab}%
-  \g@addto@macro\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \g@addto@macro\FV@TmpWhitespace{\FV@FVTabToken}%
   \FV@ObeyTabs@ScanWhitespace}
 %    \end{macrocode}
 % \end{macro}
@@ -1685,6 +3773,7 @@
 \fvset{fontencoding=none}
 %    \end{macrocode}
 % \end{macro}
+%
 %
 %
 %
@@ -2542,18 +4631,12 @@
 % Now that |\FV@BreakBeforePrep| and |\FV@BreakAfterPrep| are defined, add them to |\FV@FormattingPrep@PreHook|, which is the \fvextra\ extension to |\FV@FormattingPrep|.  The ordering here is important, since |\FV@BreakAfterPrep| contains compatibility checks with |\FV@BreakBeforePrep|, and thus must be used after it.  Also, we have to check for the pdfTeX engine with \pkg{inputenc} using UTF-8, and use the |UTF| macros instead when that is the case.
 %    \begin{macrocode}
 \g@addto@macro\FV@FormattingPrep@PreHook{%
-  \ifcsname pdfmatch\endcsname
-  \ifx\pdfmatch\relax
-  \else
-    \ifcsname inputencodingname\endcsname
-    \ifx\inputencodingname\relax
-    \else
-      \ifdefstring{\inputencodingname}{utf8}%
-       {\let\FV@BreakBeforePrep\FV@BreakBeforePrep@UTF
-        \let\FV@BreakAfterPrep\FV@BreakAfterPrep@UTF}%
-       {}%
-    \fi\fi
-  \fi\fi
+  \ifFV@pdfTeXinputenc
+    \ifdefstring{\inputencodingname}{utf8}%
+     {\let\FV@BreakBeforePrep\FV@BreakBeforePrep@UTF
+      \let\FV@BreakAfterPrep\FV@BreakAfterPrep@UTF}%
+     {}%
+  \fi
   \FV@BreakBeforePrep\FV@BreakAfterPrep}
 %    \end{macrocode}
 %
@@ -2687,12 +4770,12 @@
   \ifx\FV@NextChar\FV@Undefined\relax
     \let\FV@Next=\relax
   \else
-    \ifx\FV@NextChar\FV@Space@ifx\relax
-      \g@addto@macro{\FV@LineIndentChars}{\FV@Space@ifx}%
+    \ifx\FV@NextChar\FV@FVSpaceToken\relax
+      \g@addto@macro{\FV@LineIndentChars}{\FV@FVSpaceToken}%
       \let\FV@Next=\FV@GetLineIndent
     \else
-      \ifx\FV@NextChar\FV@Tab@ifx\relax
-        \g@addto@macro{\FV@LineIndentChars}{\FV@Tab@ifx}%
+      \ifx\FV@NextChar\FV@FVTabToken\relax
+        \g@addto@macro{\FV@LineIndentChars}{\FV@FVTabToken}%
         \let\FV@Next=\FV@GetLineIndent
       \else
         \let\FV@Next=\FV@CleanRemainingChars
@@ -2733,28 +4816,22 @@
 % \begin{macro}{\FV@Break}
 % The entry macro for breaking lines, either anywhere or before/after specified characters.  The current line (or argument) will be scanned token by token/group by group, and accumulated (with added potential breaks) in |\FV@TmpLine|.  After scanning is complete, |\FV@TmpLine| will be inserted.  It would be possible to insert each token/group into the document immediately after it is scanned, instead of accumulating them in a ``buffer.''  But that would interfere with macros.  Even in the current approach, macros that take optional arguments are problematic.\footnote{Through a suitable definition that tracks the current state and looks for square brackets, this might be circumvented.  Then again, in verbatim contexts, macro use should be minimal, so the restriction to macros without optional arguments should generally not be an issue.}  The last token is tracked with |\FV@LastToken|, to allow lookbehind when breaking by groups of identical characters.  |\FV@LastToken| is |\let| to |\FV@Undefined| any time the last token was something that shouldn't be compared against (for example, a non-empty group), and it is not reset whenever the last token may be ignored (for example, |{}|).  When setting |\FV@LastToken|, it is vital always to use |\let\FV@LastToken=...| so that |\let\FV@LastToken==| will work (so that the equals sign |=| won't break things).
 %
-% The current definition of |\FV@Break@Token| is swapped for a UTF-8 compatible one under pdfTeX when necessary.  The standard macros are defined next, since they make the algorithms simpler to understand.  The more complex |UTF| variants are defined later.  When swapping for the |UTF| macros, it is important to make sure that pdfTeX is indeed in use, that \pkg{inputenc} is indeed in use, and that the current encoding is UTF-8.  The checks take into account the possibility of an errant |\ifx| test creating a previously non-existent macro and then |\let|ting it to |\relax|.
+% The current definition of |\FV@Break@Token| is swapped for a UTF-8 compatible one under pdfTeX when necessary.  The standard macros are defined next, since they make the algorithms simpler to understand.  The more complex |UTF| variants are defined later.
 %    \begin{macrocode}
 \def\FV@Break{%
   \def\FV@TmpLine{}%
   \let\FV@LastToken=\FV@Undefined
-  \ifcsname pdfmatch\endcsname
-  \ifx\pdfmatch\relax
-  \else
-    \ifcsname inputencodingname\endcsname
-    \ifx\inputencodingname\relax
-    \else
-      \ifdefstring{\inputencodingname}{utf8}%
-       {\ifx\FV@Break@Token\FV@Break@AnyToken
-          \let\FV@Break@Token\FV@Break@AnyToken@UTF
-        \else
-          \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
-            \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTF
-          \fi
-        \fi}%
-       {}%
-    \fi\fi
-  \fi\fi
+  \ifFV@pdfTeXinputenc
+    \ifdefstring{\inputencodingname}{utf8}%
+     {\ifx\FV@Break@Token\FV@Break@AnyToken
+        \let\FV@Break@Token\FV@Break@AnyToken@UTF
+      \else
+         \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
+           \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTF
+         \fi
+      \fi}%
+     {}%
+  \fi
   \FV@Break@Scan
 }
 %    \end{macrocode}
@@ -2899,7 +4976,7 @@
   \expandafter\FV@Break@AfterTokenBreak\FV@RescanToken}
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
-  \@ifnextchar\FV@Space@ifx%
+  \@ifnextchar\FV@FVSpaceToken%
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\ifx\@let@token#1\relax
@@ -2936,82 +5013,10 @@
 % \paragraph{Line scanning and break insertion macros for pdfTeX with UTF-8}\hfill\\
 % The macros above work with the XeTeX and LuaTeX engines and are also fine for pdfTeX with 8-bit character encodings.  Unfortunately, pdfTeX works with multi-byte UTF-8 code points at the byte level, making things significantly trickier.  The code below re-implements the macros in a manner compatible with the \pkg{inputenc} package with option |utf8|.  Note that there is no attempt for compatibility with |utf8x|; |utf8| has been significantly improved in recent years and should be sufficient in the vast majority of cases.  And implementing variants for |utf8| was already sufficiently painful.
 %
-% All of the |UTF| macros are only needed with pdfTeX, so they are created conditionally, inspired by the approach of the \pkg{iftex} package.  The pdfTeX test deals with the possibility that a previous test using |\ifx| rather than the cleaner |\ifcsname| has already been performed.
+% Create macros conditionally:
 %    \begin{macrocode}
-\ifcsname pdfmatch\endcsname
-\ifx\pdfmatch\relax
-\else
+\ifFV@pdfTeXinputenc
 %    \end{macrocode}
-%
-%
-% \begin{macro}{\FV@UTF@two@octets}%
-% \begin{macro}{\FV@UTF@three@octets}%
-% \begin{macro}{\FV@UTF@four@octets}
-% These are variants of the |utf8.def| macros that capture all bytes of a multi-byte code point and then pass them on as a single argument for further processing.  The current |\FV@Break| (or other invoking macro) will have |\let| |\FV@Break@NextNext| to an appropriate macro that performs further processing.  All code points are checked for validity here so as to raise errors as early as possible.  Otherwise an invalid terminal byte sequence might gobble |\FV@EndBreak|, |\FV@Undefined|, or another delimiting macro, potentially making debugging much more difficult.  It would be possible to use |\UTFviii@defined{|\meta{bytes}|}| to trigger an error directly, but the current approach is to attempt to typeset invalid code points, which should trigger errors without relying on the details of the |utf8.def| implementation.
-%    \begin{macrocode}
-\def\FV@UTF@two@octets#1#2{%
-  \ifcsname u8:\detokenize{#1#2}\endcsname
-  \else
-    #1#2%
-  \fi
-  \FV@Break@NextNext{#1#2}}
-\def\FV@UTF@three@octets#1#2#3{%
-  \ifcsname u8:\detokenize{#1#2#3}\endcsname
-  \else
-    #1#2#3%
-  \fi
-  \FV@Break@NextNext{#1#2#3}}
-\def\FV@UTF@four@octets#1#2#3#4{%
-  \ifcsname u8:\detokenize{#1#2#3#4}\endcsname
-  \else
-    #1#2#3#4%
-  \fi
-  \FV@Break@NextNext{#1#2#3#4}}
-%    \end{macrocode}
-% \end{macro}\end{macro}\end{macro}
-%
-% \begin{macro}{\FV@U8:<byte>}
-% Define macros for each active byte.  These are used for determining whether the current token is the first byte in a multi-byte sequence, and if so, invoking the necessary macro to capture the remaining bytes.  The code is adapted from the beginning of |utf8.def|.  Completely capitalized macro names are used to avoid having to worry about |\uppercase|.
-%    \begin{macrocode}
-\begingroup
-\catcode`\~=13
-\catcode`\"=12
-\def\FV@UTFviii@loop{%
-  \uccode`\~\count@
-  \uppercase\expandafter{\FV@UTFviii@Tmp}%
-  \advance\count@\@ne
-  \ifnum\count@<\@tempcnta
-  \expandafter\FV@UTFviii@loop
-  \fi}
-%    \end{macrocode}
-% Setting up 2-byte UTF-8:
-%    \begin{macrocode}
-\count@"C2
-\@tempcnta"E0
-\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
-  \FV@UTF@two@octets}}
-\FV@UTFviii@loop
-%    \end{macrocode}
-% Setting up 3-byte UTF-8:
-%    \begin{macrocode}
-\count@"E0
-\@tempcnta"F0
-\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
-  \FV@UTF@three@octets}}
-\FV@UTFviii@loop
-%    \end{macrocode}
-% Setting up 4-byte UTF-8:
-%    \begin{macrocode}
-\count@"F0
-\@tempcnta"F4
-\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
-  \FV@UTF@four@octets}}
-\FV@UTFviii@loop
-\endgroup
-%    \end{macrocode}
-% \end{macro}
-%
-%
 %
 % \begin{macro}{\FV@BreakBeforePrep@UTF}
 % We need |UTF| variants of the |breakbefore| and |breakafter| prep macros.  These are only ever used with \pkg{inputenc} with UTF-8.  There is no need for encoding checks here; checks are performed in |\FV@FormattingPrep@PreHook| (checks are inserted into it after the non-|UTF| macro definitions).
@@ -3024,7 +5029,7 @@
     \def\FV@BreakBefore@Process##1{%
       \ifcsname FV@U8:\detokenize{##1}\endcsname
         \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{##1}\endcsname
-        \let\FV@Break@NextNext\FV@BreakBefore@Process@ii
+        \let\FV@UTF@octets@after\FV@BreakBefore@Process@ii
       \else
         \ifx##1\FV@Undefined
           \let\FV@Break@Next\@gobble
@@ -3062,7 +5067,7 @@
     \def\FV@BreakAfter@Process##1{%
       \ifcsname FV@U8:\detokenize{##1}\endcsname
         \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{##1}\endcsname
-        \let\FV@Break@NextNext\FV@BreakAfter@Process@ii
+        \let\FV@UTF@octets@after\FV@BreakAfter@Process@ii
       \else
         \ifx##1\FV@Undefined
           \let\FV@Break@Next\@gobble
@@ -3110,7 +5115,7 @@
 \def\FV@Break@AnyToken@UTF#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@Break@NextNext\FV@Break@AnyToken@UTF@i
+    \let\FV@UTF@octets@after\FV@Break@AnyToken@UTF@i
   \else
     \let\FV@Break@Next\FV@Break@AnyToken@UTF@i
   \fi
@@ -3130,7 +5135,7 @@
 \def\FV@Break@BeforeAfterToken@UTF#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@Break@NextNext\FV@Break@BeforeAfterToken@UTF@i
+    \let\FV@UTF@octets@after\FV@Break@BeforeAfterToken@UTF@i
   \else
     \let\FV@Break@Next\FV@Break@BeforeAfterToken@UTF@i
   \fi
@@ -3189,7 +5194,7 @@
   \expandafter\FV@Break@AfterTokenBreak@UTF\expandafter{\FV@RescanToken}}
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
-  \@ifnextchar\FV@Space@ifx%
+  \@ifnextchar\FV@FVSpaceToken%
    {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
    {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
      {\g@addto@macro{\FV@TmpLine}{#1}%
@@ -3205,7 +5210,7 @@
 \def\FV@Break@AfterTokenBreak@UTF@i#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@Break@NextNext\FV@Break@AfterTokenBreak@UTF@i
+    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@UTF@i
   \else
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
@@ -3228,7 +5233,7 @@
 \def\FV@Break@AfterTokenBreak@Group@UTF@ii#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@Break@NextNext\FV@Break@AfterTokenBreak@Group@UTF@ii
+    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@Group@UTF@ii
   \else
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
@@ -3244,7 +5249,7 @@
 %
 % End the conditional creation of the pdfTeX |UTF| macros:
 %    \begin{macrocode}
-\fi\fi
+\fi
 %    \end{macrocode}
 %
 %
