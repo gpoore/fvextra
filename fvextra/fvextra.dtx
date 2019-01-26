@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2019/01/25 v1.4dev fvextra - extensions and patches for fancyvrb]
+    [2019/01/26 v1.4dev fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{4729}
+% \CheckSum{4882}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -250,11 +250,12 @@
 %
 %
 % \begin{changelog}{v1.4}{2019/01/??}
-% \item Reimplemented \texttt{\string\Verb}.  It now works as expected inside other commands (with a few limitations), including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.
-% \item Added \texttt{extra} option for switching between the reimplemented  \texttt{\string\Verb} and the original \texttt{fancyvrb} definition.  This option will apply to any future reimplemented commands and environments.
-% \item New command \texttt{\string\fvinlineset} only applies options to commands that typeset verbatim inline, like \texttt{\string\Verb}.  It overrides options from \texttt{\string\fvset}.
-% \item Patched \texttt{fancyvrb} so that \texttt{\string\Verb} (either reimplemented version or original) can use characters like \texttt{\%} for delimiters when used outside any commands.
+% \item Reimplemented \texttt{\string\Verb}.  It now works as expected inside other commands (with a few limitations), including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.  It now supports \texttt{breaklines} and relevant line-breaking options.
+% \item Reimplemented \texttt{\string\SaveVerb} and \texttt{\string\UseVerb} to be equivalent to the new \texttt{\string\Verb}.  The new option \texttt{retokenize} allows saved verbatim material to be retokenized under new \texttt{commandchars} and \texttt{codes} when it is inserted with \texttt{\string\UseVerb}.
 % \item New command \texttt{\string\EscVerb} works like the reimplemented \texttt{\string\Verb}, except that special characters can be escaped with a backslash.  It works inside other commands without any limitations, including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.
+% \item Added \texttt{extra} option for switching between the reimplemented  \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb} and the original \texttt{fancyvrb} definitions.  Reimplemented versions are used by default.  This option will apply to any future reimplemented commands and environments.
+% \item New command \texttt{\string\fvinlineset} only applies options to commands related to typesetting verbatim inline, like \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb}.  It overrides options from \texttt{\string\fvset}.
+% \item Patched \texttt{fancyvrb} so that \texttt{\string\Verb} (either reimplemented version or original) can use characters like \texttt{\%} for delimiters when used outside any commands.
 % \item \texttt{obeytabs} now works with the \texttt{calc} package's redefined \texttt{\string\setcounter}.  Since \texttt{minted} loads \texttt{calc}, this also fixes \texttt{minted} compatibility (\texttt{minted} \#221).
 % \item Added new option \texttt{fontencoding} (\texttt{minted} \#208).
 % \item \texttt{highlightlines} now works correctly with \texttt{frame} (\#7).
@@ -478,6 +479,12 @@
 % \endgroup
 %
 %
+% \item[retokenize (boolean) (false)]
+% By default, \cmd{\UseVerb} inserts saved verbatim material with the catcodes (|commandchars|, |codes|, etc.\@) under which it was originally saved with \cmd{\SaveVerb}.  When |retokenize| is used, the saved verbatim material is retokenized under the settings in place at \cmd{\UseVerb}.
+%
+% This only applies to the reimplemented \cmd{\UseVerb}, when paired with the reimplemented \cmd{\SaveVerb}.  It may be extended to environments (\cmd{\UseVerbatim}, etc.\@) in the future, if the relevant commands and environments are reimplemented.
+%
+%
 % \item[space (macro) (\string\textvisiblespace, \textvisiblespace)]
 % Redefine the visible space character.  Note that this is only used if |showspaces=true|.  The color of the character may be set with |spacecolor|.
 %
@@ -613,7 +620,7 @@
 %
 % Like the original \fancyvrb\ implementation, the new \cmd{\Verb} can be starred (|*|) as a shortcut for |showspaces|, and accepts optional arguments.
 % \begin{description}
-% \item[Delimiters]  A repeated character like normal \cmd{\verb}, or a pair of curly braces |{...}|.  Note that curly braces should be preferred when using \cmd{\Verb} inside other commands, and curly braces are \emph{required} when \cmd{\Verb} is in a movable argument, such as in a \cmd{\section}.  Non-ASCII characters now work as delimiters under pdfTeX with \pkg{inputenc} using UTF-8.\footnote{Under pdfTeX, non-ASCII code points are processed at the byte rather than code point level, so \cmd{\Verb} must treat a sequence of multiple bytes as the delimiter.}  For example, \Verb{\Verb§verb§} now works as expected.
+% \item[Delimiters]  A repeated character like normal \cmd{\verb}, or a pair of curly braces |{...}|.  If curly braces are used, then \meta{text} cannot contain unpaired curly braces.  Note that curly braces should be preferred when using \cmd{\Verb} inside other commands, and curly braces are \emph{required} when \cmd{\Verb} is in a movable argument, such as in a \cmd{\section}.  Non-ASCII characters now work as delimiters under pdfTeX with \pkg{inputenc} using UTF-8.\footnote{Under pdfTeX, non-ASCII code points are processed at the byte rather than code point level, so \cmd{\Verb} must treat a sequence of multiple bytes as the delimiter.}  For example, \Verb{\Verb§verb§} now works as expected.
 % \item[Limitations inside other commands]  While the new \cmd{\Verb} does work inside arbitrary other commands, there are a few limitations.
 %     \begin{itemize}
 %     \item |#| and |%| cannot be used.  If you need them, consider \cmd{\EscVerb} or perhaps \cmd{\SaveVerb} plus \cmd{\UseVerb}.
@@ -623,9 +630,36 @@
 %     \item A single |^| is fine, but avoid |^^| because it will serve as an escape sequence for an ASCII command character.
 %     \end{itemize}
 % \item[Using in movable arguments]  \cmd{\Verb} works automatically in movable arguments, such as in a \cmd{\section}.  \cmd{\protect} or similar measures are not needed for \cmd{\Verb} itself, or for any of its arguments, and should not be used.  \cmd{\Verb} performs operations that amount to applying \cmd{\protect} to all of these automatically.
-% \item[\pkg{hyperref} PDF strings] \cmd{\Verb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  If you need options to be applied to obtain desired PDF strings, consider \cmd{\SaveVerb} plus \cmd{\UseVerb} or a custom approach.
+% \item[\pkg{hyperref} PDF strings] \cmd{\Verb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  If you need options to be applied to obtain desired PDF strings, consider a custom approach, perhaps using \cmd{\texorpdfstring}.
 % \item[Line breaking]  |breaklines| allows breaks at spaces.  |breakbefore|, |breakafter|, and |breakanywhere| function as expected, as do things like |breakaftersymbolpre| and |breakaftersymbolpost|.  Break options that are only applicable to block text like a |Verbatim| environment do not have any effect.  For example, |breakindent| and |breaksymbol| do nothing.
 % \end{description}
+%
+%
+% \subsection{\cmd{\SaveVerb}}
+%
+% \DescribeMacro{\SaveVerb*\oarg{options}\marg{name}\meta{delim~char~or~\{}\meta{text}\meta{delim~char~or~\}}}
+%
+% \cmd{\SaveVerb} is reimplemented so that it is equivalent to the reimplemented \cmd{\Verb}.  Like the new \cmd{\Verb}, it accepts \meta{text} delimited by a pair of curly braces |{...}|.  It supports \cmd{\fvinlineset}.  It also adds support for the new |retokenize| option for \cmd{\UseVerb}.
+%
+%
+% \subsection{\cmd{\UseVerb}}
+%
+% \DescribeMacro{\UseVerb*\oarg{options}\marg{name}}
+%
+% \cmd{\UseVerb} is reimplemented so that it is equivalent to the reimplemented \cmd{\Verb}.  It supports \cmd{\fvinlineset} and |breaklines|.
+%
+% Like \cmd{\Verb}, \cmd{\UseVerb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  The new option |retokenize| also has no effect.  If you need options to be applied to obtain desired PDF strings, consider a custom approach, perhaps using \cmd{\texorpdfstring}
+%
+% There is a new option |retokenize| for \cmd{\UseVerb}.  By default, \cmd{\UseVerb} inserts saved verbatim material with the catcodes (|commandchars|, |codes|, etc.\@) under which it was originally saved with \cmd{\SaveVerb}.  When |retokenize| is used, the saved verbatim material is retokenized under the settings in place at \cmd{\UseVerb}.
+%
+% For example, consider |\SaveVerb{save}{\textcolor{red}{#%}}|:
+% \SaveVerb{save}{\textcolor{red}{#%}}
+% \begin{itemize}
+% \item |\UseVerb{save}| $\Rightarrow$ \UseVerb{save}
+% \item |\UseVerb[commandchars=\\\{\}]{save}| $\Rightarrow$ \UseVerb[commandchars=\\\{\}]{save}
+% \item |\UseVerb[retokenize, commandchars=\\\{\}]{save}| $\Rightarrow$ \UseVerb[retokenize, commandchars=\\\{\}]{save}
+% \end{itemize}
+%
 % 
 %
 %
@@ -650,7 +684,7 @@
 %     \item Additional symbols or punctuation characters may require escaping if they are made \cmd{\active}, depending on their definitions.
 %     \end{itemize}
 % \item[Using in movable arguments]  \cmd{\EscVerb} works automatically in movable arguments, such as in a \cmd{\section}.  \cmd{\protect} or similar measures are not needed for \cmd{\EscVerb} itself, or for any of its arguments, and should not be used.  \cmd{\EscVerb} performs operations that amount to applying \cmd{\protect} to all of these automatically.
-% \item[\pkg{hyperref} PDF strings] \cmd{\EscVerb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text after backslash escapes have been applied, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  If you need options to be applied to obtain desired PDF strings, consider \cmd{\SaveVerb} plus \cmd{\UseVerb} or a custom approach.
+% \item[\pkg{hyperref} PDF strings] \cmd{\EscVerb} is compatible with \pkg{hyperref} for generating PDF strings such as PDF bookmarks.  Note that the PDF strings are \emph{always} a literal rendering of the verbatim text after backslash escapes have been applied, with all \fancyvrb\ options ignored.  For example, things like |showspaces| and |commandchars| have no effect.  If you need options to be applied to obtain desired PDF strings, consider a custom approach, perhaps using \cmd{\texorpdfstring}.
 % \end{description}
 %
 %
@@ -1728,8 +1762,8 @@
 %    \begin{macrocode}
 \def\FVExtrapdfstringdef#1#2{%
   \AfterPreamble{%
-    \ifcsname pdfstringdefDisableCommands\endcsname
-    \ifx\pdfstringdefDisableCommands\relax
+    \ifcsname pdfstringdef\endcsname
+    \ifx\pdfstringdef\relax
     \else
     \pdfstringdef#1{#2}%
     \fi\fi}}
@@ -1801,6 +1835,30 @@
 \FVExtrapdfstringdefDisableCommands{%
   \makeatletter
   \def\FV@UnexpandedReadStarOArgMArg@i#1#2{#2}%
+  \makeatother}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraUseVerbUnexpandedReadStarOArgMArg}
+% This is a variant of \cmd{\FVExtraUnexpandedReadStarOArgMArg} customized for \cmd{\UseVerb}.  It would be tempting to use \cmd{\pdfstringdef} to define a PDF string based on the final tokenization in \cmd{\UseVerb}, rather than applying \cmd{\FVExtraPDFStringVerbatimDetokenize} to the original raw (read) tokenization.  Unfortunately, \cmd{\pdfstringdef} apparently can't handle catcode 12 |\| and |%|.  Since the final tokenization could contain arbitrary catcodes, that approach might fail even if the |\| and |%| issue were resolved.  It may be worth considering more sophisticated approaches in the future.
+%    \begin{macrocode}
+\def\FVExtraUseVerbUnexpandedReadStarOArgMArg#1#{%
+  \FV@UseVerbUnexpandedReadStarOArgMArg@i{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@UseVerbUnexpandedReadStarOArgMArg@i}
+%    \begin{macrocode}
+\def\FV@UseVerbUnexpandedReadStarOArgMArg@i#1#2{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUseVerbUnexpandedReadStarOArgMArg#1{#2}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \makeatletter
+  \def\FV@UseVerbUnexpandedReadStarOArgMArg@i#1#2{%
+    \ifcsname FV@SVRaw@#2\endcsname
+      \expandafter\expandafter\expandafter\FVExtraPDFStringVerbatimDetokenize
+      \expandafter\expandafter\expandafter{\csname FV@SVRaw@#2\endcsname}%
+    \fi}%
   \makeatother}
 %    \end{macrocode}
 % \end{macro}
@@ -3145,8 +3203,8 @@
 \def\FVC@Verb@Extra@i{%
   \begingroup
   \FVExtraReadVArg{%
+    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
     \FVExtraDetokenizeVArg{%
-      \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
       \FVExtraRetokenizeVArg{\FVC@Verb@Extra@ii}{\FV@CatCodes}}}}
 %    \end{macrocode}
 % \end{macro}
@@ -3154,6 +3212,156 @@
 % \begin{macro}{\FVC@Verb@Extra@ii}
 %    \begin{macrocode}
 \def\FVC@Verb@Extra@ii#1{%
+  \ifFV@BreakLines
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\mbox{#1}}%
+  \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\cmd{\SaveVerb}}
+%
+% This is reimplemented, following \cmd{\Verb} as a template, so that both \cmd{\Verb} and \cmd{\SaveVerb} are using the same reading and tokenization macros.  This also adds support for \cmd{\fvinlineset}.  Since the definition in \fancyvrb\ is
+%\begin{verbatim}
+%\def\SaveVerb{\FV@Command{}{SaveVerb}}
+%\end{verbatim}
+% only the internal macros need to be reimplemented.
+%
+% \begin{macro}{\FVC@SaveVerb@FV}
+%    \begin{macrocode}
+\let\FVC@SaveVerb@FV\FVC@SaveVerb
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@SaveVerb}
+%    \begin{macrocode}
+\def\FVC@SaveVerb{%
+  \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues
+  \ifFV@extra
+    \expandafter\endgroup\expandafter\FVC@SaveVerb@Extra
+  \else
+    \expandafter\endgroup\expandafter\FVC@SaveVerb@FV
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@SaveVerb@Extra}
+% In addition to following the \cmd{\Verb} implementation, this saves a raw version of the text to allow |retokenize| with \cmd{\UseVerb}.  The raw version is also used for conversion to a PDF string if that is needed.
+%    \begin{macrocode}
+\def\FVC@SaveVerb@Extra#1{%
+  \@namedef{FV@SV@#1}{}%
+  \@namedef{FV@SVRaw@#1}{}%
+  \begingroup
+  \FVExtraReadVArg{%
+    \FVC@SaveVerb@Extra@i{#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@SaveVerb@Extra@i}
+%    \begin{macrocode}
+\def\FVC@SaveVerb@Extra@i#1#2{%
+  \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+  \FVExtraDetokenizeVArg{%
+    \FVExtraRetokenizeVArg{\FVC@SaveVerb@Extra@ii{#1}{#2}}{\FV@CatCodes}}{#2}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@SaveVerb@Extra@ii}
+%    \begin{macrocode}
+\def\FVC@SaveVerb@Extra@ii#1#2#3{%
+  \global\let\FV@AfterSave\FancyVerbAfterSave
+  \endgroup
+  \@namedef{FV@SV@#1}{#3}%
+  \@namedef{FV@SVRaw@#1}{#2}%
+  \FV@AfterSave}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\cmd{\UseVerb}}
+%
+% This adds support for \cmd{\fvinlineset} and line breaking.  It also adds movable argument and PDF string support.  A new option |retokenize| is defined that determines whether the typeset output is based on the |commandchars| and |codes| in place when \cmd{\SaveVerb} was used (default), or is retokenized under current |commandchars| and |codes|.
+%
+% \begin{macro}{FV@retokenize}
+% \begin{macro}{retokenize}
+% Whether \cmd{\UseVerb} uses saved verbatim with its original tokenization, or retokenizes under current |commandchars| and |codes|.
+%    \begin{macrocode}
+\newbool{FV@retokenize}
+\define@booleankey{FV}{retokenize}%
+ {\booltrue{FV@retokenize}}{\boolfalse{FV@retokenize}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\UseVerb}
+%    \begin{macrocode}
+\def\UseVerb{%
+  \FVExtraRobustCommand\RobustUseVerb\FVExtraUseVerbUnexpandedReadStarOArgMArg}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\RobustUseVerb}
+%    \begin{macrocode}
+\protected\def\RobustUseVerb{\FV@Command{}{UseVerb}}
+\FVExtrapdfstringdefDisableCommands{%
+  \def\RobustUseVerb{}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FVC@UseVerb@FV}
+%    \begin{macrocode}
+\let\FVC@UseVerb@FV\FVC@UseVerb
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVC@UseVerb}
+%    \begin{macrocode}
+\def\FVC@UseVerb{%
+  \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues
+  \ifFV@extra
+    \expandafter\endgroup\expandafter\FVC@UseVerb@Extra
+  \else
+    \expandafter\endgroup\expandafter\FVC@UseVerb@FV
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%             
+%
+% \begin{macro}{\FVC@UseVerb@Extra}
+%    \begin{macrocode}
+\def\FVC@UseVerb@Extra#1{%
+  \@ifundefined{FV@SV@#1}%
+   {\FV@Error{Short verbatim text never saved to name `#1'}\FV@eha}%
+   {\begingroup
+    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+    \ifbool{FV@retokenize}%
+     {\expandafter\let\expandafter\FV@Tmp\csname FV@SVRaw@#1\endcsname
+      \expandafter\FV@UseVerb@Extra@Retok\expandafter{\FV@Tmp}}%
+     {\expandafter\let\expandafter\FV@Tmp\csname FV@SV@#1\endcsname
+      \expandafter\FV@UseVerb@Extra\expandafter{\FV@Tmp}}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@UseVerb@Extra@Retok}
+%    \begin{macrocode}
+\def\FV@UseVerb@Extra@Retok#1{%
+  \FVExtraDetokenizeVArg{%
+    \FVExtraRetokenizeVArg{\FV@UseVerb@Extra}{\FV@CatCodes}}{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@UseVerb@Extra}
+%    \begin{macrocode}
+\def\FV@UseVerb@Extra#1{%
   \ifFV@BreakLines
     \expandafter\@firstoftwo
   \else
@@ -3208,8 +3416,8 @@
 %    \begin{macrocode}  
 \def\FVC@EscVerb@i#1{%
   \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
   \FVExtraDetokenizeREscVArg{%
-    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
     \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
 %    \end{macrocode}
 % \end{macro}

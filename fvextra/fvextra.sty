@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2019/01/25 v1.4dev fvextra - extensions and patches for fancyvrb]
+    [2019/01/26 v1.4dev fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -224,8 +224,8 @@
 \fi
 \def\FVExtrapdfstringdef#1#2{%
   \AfterPreamble{%
-    \ifcsname pdfstringdefDisableCommands\endcsname
-    \ifx\pdfstringdefDisableCommands\relax
+    \ifcsname pdfstringdef\endcsname
+    \ifx\pdfstringdef\relax
     \else
     \pdfstringdef#1{#2}%
     \fi\fi}}
@@ -259,6 +259,18 @@
 \FVExtrapdfstringdefDisableCommands{%
   \makeatletter
   \def\FV@UnexpandedReadStarOArgMArg@i#1#2{#2}%
+  \makeatother}
+\def\FVExtraUseVerbUnexpandedReadStarOArgMArg#1#{%
+  \FV@UseVerbUnexpandedReadStarOArgMArg@i{#1}}
+\def\FV@UseVerbUnexpandedReadStarOArgMArg@i#1#2{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUseVerbUnexpandedReadStarOArgMArg#1{#2}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \makeatletter
+  \def\FV@UseVerbUnexpandedReadStarOArgMArg@i#1#2{%
+    \ifcsname FV@SVRaw@#2\endcsname
+      \expandafter\expandafter\expandafter\FVExtraPDFStringVerbatimDetokenize
+      \expandafter\expandafter\expandafter{\csname FV@SVRaw@#2\endcsname}%
+    \fi}%
   \makeatother}
 \def\FVExtraUnexpandedReadStarOArgBVArg#1#{%
   \FV@UnexpandedReadStarOArgBVArg@i{#1}}
@@ -930,10 +942,74 @@
 \def\FVC@Verb@Extra@i{%
   \begingroup
   \FVExtraReadVArg{%
+    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
     \FVExtraDetokenizeVArg{%
-      \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
       \FVExtraRetokenizeVArg{\FVC@Verb@Extra@ii}{\FV@CatCodes}}}}
 \def\FVC@Verb@Extra@ii#1{%
+  \ifFV@BreakLines
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\mbox{#1}}%
+  \endgroup}
+\let\FVC@SaveVerb@FV\FVC@SaveVerb
+\def\FVC@SaveVerb{%
+  \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues
+  \ifFV@extra
+    \expandafter\endgroup\expandafter\FVC@SaveVerb@Extra
+  \else
+    \expandafter\endgroup\expandafter\FVC@SaveVerb@FV
+  \fi}
+\def\FVC@SaveVerb@Extra#1{%
+  \@namedef{FV@SV@#1}{}%
+  \@namedef{FV@SVRaw@#1}{}%
+  \begingroup
+  \FVExtraReadVArg{%
+    \FVC@SaveVerb@Extra@i{#1}}}
+\def\FVC@SaveVerb@Extra@i#1#2{%
+  \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+  \FVExtraDetokenizeVArg{%
+    \FVExtraRetokenizeVArg{\FVC@SaveVerb@Extra@ii{#1}{#2}}{\FV@CatCodes}}{#2}}
+\def\FVC@SaveVerb@Extra@ii#1#2#3{%
+  \global\let\FV@AfterSave\FancyVerbAfterSave
+  \endgroup
+  \@namedef{FV@SV@#1}{#3}%
+  \@namedef{FV@SVRaw@#1}{#2}%
+  \FV@AfterSave}%
+\newbool{FV@retokenize}
+\define@booleankey{FV}{retokenize}%
+ {\booltrue{FV@retokenize}}{\boolfalse{FV@retokenize}}
+\def\UseVerb{%
+  \FVExtraRobustCommand\RobustUseVerb\FVExtraUseVerbUnexpandedReadStarOArgMArg}
+\protected\def\RobustUseVerb{\FV@Command{}{UseVerb}}
+\FVExtrapdfstringdefDisableCommands{%
+  \def\RobustUseVerb{}}
+\let\FVC@UseVerb@FV\FVC@UseVerb
+\def\FVC@UseVerb{%
+  \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues
+  \ifFV@extra
+    \expandafter\endgroup\expandafter\FVC@UseVerb@Extra
+  \else
+    \expandafter\endgroup\expandafter\FVC@UseVerb@FV
+  \fi}
+\def\FVC@UseVerb@Extra#1{%
+  \@ifundefined{FV@SV@#1}%
+   {\FV@Error{Short verbatim text never saved to name `#1'}\FV@eha}%
+   {\begingroup
+    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+    \ifbool{FV@retokenize}%
+     {\expandafter\let\expandafter\FV@Tmp\csname FV@SVRaw@#1\endcsname
+      \expandafter\FV@UseVerb@Extra@Retok\expandafter{\FV@Tmp}}%
+     {\expandafter\let\expandafter\FV@Tmp\csname FV@SV@#1\endcsname
+      \expandafter\FV@UseVerb@Extra\expandafter{\FV@Tmp}}}}
+\def\FV@UseVerb@Extra@Retok#1{%
+  \FVExtraDetokenizeVArg{%
+    \FVExtraRetokenizeVArg{\FV@UseVerb@Extra}{\FV@CatCodes}}{#1}}
+\def\FV@UseVerb@Extra#1{%
   \ifFV@BreakLines
     \expandafter\@firstoftwo
   \else
@@ -955,8 +1031,8 @@
     {Delimit argument with curly braces}}}
 \def\FVC@EscVerb@i#1{%
   \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
   \FVExtraDetokenizeREscVArg{%
-    \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
     \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
 \def\FVC@EscVerb@ii#1{%
   \ifFV@BreakLines
