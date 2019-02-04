@@ -1,6 +1,45 @@
 # Changes
 
 
+## v1.4 (2019/02/04)
+*  Reimplemented `\Verb`.  It now works as expected inside other commands
+   (with a few limitations), including in movable arguments, and is compatible
+   with `hyperref` for things like PDF bookmarks.  It now supports
+   `breaklines` and relevant line-breaking options.
+
+*  Reimplemented `\SaveVerb` and `\UseVerb` to be equivalent to the new
+   `\Verb`.  The new option `retokenize` allows saved verbatim material to be
+   retokenized under new `commandchars` and `codes` when it is inserted with
+   `\UseVerb`.
+
+*  New command `\EscVerb` works like the reimplemented `\Verb`, except that
+   special characters can be escaped with a backslash.  It works inside other
+   commands without any limitations, including in movable arguments, and is
+   compatible with `hyperref` for things like PDF bookmarks.
+
+*  Added `extra` option for switching between the reimplemented  `\Verb`,
+   `\SaveVerb`, `\UseVerb` and the original `fancyvrb` definitions.
+   Reimplemented versions are used by default.  This option will apply to any
+   future reimplemented commands and environments.
+
+*  New command `\fvinlineset` only applies options to commands related to
+   typesetting verbatim inline, like `\Verb`, `\SaveVerb`, `\UseVerb`.  It
+   only works with commands that are defined or reimplemented by `fvextra`.
+   It overrides options from `\fvset`.
+
+*  Patched `fancyvrb` so that `\Verb` (either reimplemented version or
+   original) can use characters like `%` for delimiters when used outside any
+   commands.
+
+*  `obeytabs` now works with the `calc` package's redefined `\setcounter`.
+    Since `minted` loads `calc`, this also fixes `minted` compatibility
+    (`minted` #221).
+
+*  Added new option `fontencoding` (`minted` #208).
+
+*  `highlightlines` now works correctly with `frame` (#7).
+
+
 ## v1.3.1 (2017/07/08)
 
 * `beameroverlays` now works with `VerbatimOut`.

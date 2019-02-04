@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2019/01/26 v1.4dev fvextra - extensions and patches for fancyvrb]
+    [2019/02/04 v1.4 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -249,12 +249,12 @@
 %   Right brace   \}     Tilde         \~}
 %
 %
-% \begin{changelog}{v1.4}{2019/01/??}
+% \begin{changelog}{v1.4}{2019/02/04}
 % \item Reimplemented \texttt{\string\Verb}.  It now works as expected inside other commands (with a few limitations), including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.  It now supports \texttt{breaklines} and relevant line-breaking options.
 % \item Reimplemented \texttt{\string\SaveVerb} and \texttt{\string\UseVerb} to be equivalent to the new \texttt{\string\Verb}.  The new option \texttt{retokenize} allows saved verbatim material to be retokenized under new \texttt{commandchars} and \texttt{codes} when it is inserted with \texttt{\string\UseVerb}.
 % \item New command \texttt{\string\EscVerb} works like the reimplemented \texttt{\string\Verb}, except that special characters can be escaped with a backslash.  It works inside other commands without any limitations, including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.
 % \item Added \texttt{extra} option for switching between the reimplemented  \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb} and the original \texttt{fancyvrb} definitions.  Reimplemented versions are used by default.  This option will apply to any future reimplemented commands and environments.
-% \item New command \texttt{\string\fvinlineset} only applies options to commands related to typesetting verbatim inline, like \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb}.  It overrides options from \texttt{\string\fvset}.
+% \item New command \texttt{\string\fvinlineset} only applies options to commands related to typesetting verbatim inline, like \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb}.  It only works with commands that are defined or reimplemented by \texttt{fvextra}.  It overrides options from \texttt{\string\fvset}.
 % \item Patched \texttt{fancyvrb} so that \texttt{\string\Verb} (either reimplemented version or original) can use characters like \texttt{\%} for delimiters when used outside any commands.
 % \item \texttt{obeytabs} now works with the \texttt{calc} package's redefined \texttt{\string\setcounter}.  Since \texttt{minted} loads \texttt{calc}, this also fixes \texttt{minted} compatibility (\texttt{minted} \#221).
 % \item Added new option \texttt{fontencoding} (\texttt{minted} \#208).
