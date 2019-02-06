@@ -19,6 +19,23 @@ computer code.  Parts of `fvextra` were originally developed as part of the
 [`minted`](https://github.com/gpoore/minted) packages.
 
 
+## Installation
+
+The easiest option with an up-to-date LaTeX distribution like
+[TeX Live](https://tug.org/texlive/) or [MiKTeX](https://miktex.org/)
+is to use the package manager.  Depending on how LaTeX is configured,
+you may already have `fvextra` installed, and can update it
+with the package manager if necessary.
+
+To try the development version, simply download `fvextra.sty` and put it in
+the same directory as your document.
+
+There are many resources online for manual package installation. The
+[LaTeX Wikibook](https://en.wikibooks.org/wiki/LaTeX/Installing_Extra_Packages#Manual_installation)
+might be one place to start.  Note that for manual installation, the style
+file `fvextra.sty` is pre-generated and available for download.
+
+
 ## License
 
 This work may be distributed and/or modified under the conditions of the
