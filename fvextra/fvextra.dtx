@@ -1,6 +1,6 @@
 % \iffalse meta-comment
 %
-% Copyright (C) 2016-2019 by Geoffrey M. Poore <gpoore@gmail.com>
+% Copyright (C) 2016-2022 by Geoffrey M. Poore <gpoore@gmail.com>
 % ---------------------------------------------------------------------------
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3
@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2019/02/04 v1.4 fvextra - extensions and patches for fancyvrb]
+    [2022/11/08 v1.5dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{4882}
+% \CheckSum{5029}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -248,6 +248,11 @@
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
 %
+%
+% \begin{changelog}{v1.5}{2022/11/??}
+% \item Added \cmd{\FancyVerbFormatInline} for customizing the formatting of inline verbatim, such as \cmd{\Verb}.  This parallels \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}.
+% \item Added line breaking option \Verb{breaknonspaceingroup}.  When \cmd{commandchars} is used to allow macros within verbatim, this inserts breaks within groups \Verb{{...}}.
+% \end{changelog}
 %
 % \begin{changelog}{v1.4}{2019/02/04}
 % \item Reimplemented \texttt{\string\Verb}.  It now works as expected inside other commands (with a few limitations), including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.  It now supports \texttt{breaklines} and relevant line-breaking options.
@@ -571,7 +576,7 @@
 %
 % \section{General commands}
 %
-% \subsection{Inline formatting with \cmd{\fvinlineset}}
+% \subsection{Inline-only settings with \cmd{\fvinlineset}}
 % \DescribeMacro{\fvinlineset\marg{options}}
 %
 % This is like \cmd{\fvset}, except that options only apply to commands that typeset inline verbatim, like \cmd{\Verb} and \cmd{\EscVerb}.  Settings from \cmd{\fvinlineset} override those from \cmd{\fvset}.
@@ -579,12 +584,21 @@
 % Note that \cmd{\fvinlineset} only works with commands that are reimplemented, patched, or defined by \fvextra; it is not compatible with the original \fancyvrb\ definitions.  
 %
 %
-% \subsection{Line and text formatting}
+% \subsection{Custom formatting for inline commands like \cmd{\Verb} with \cmd{\FancyVerbFormatInline}}
+%
+% \DescribeMacro{\FancyVerbFormatInline}
+% 
+% This can be used to apply custom formatting to inline verbatim text created with commands like \cmd{\Verb}.  It only works with commands that are reimplemented, patched, or defined by \fvextra; it is not compatible with the original \fancyvrb\ definitions.  The default definition does nothing; it is equivalent to |\newcommand{\FancyVerbFormatInline}[1]{#1}|.
+%
+% This is the inline equivalent of \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}.  In the inline context, there is no need to distinguish between entire line formatting and only text formatting, so only \cmd{\FancyVerbFormatInline} exists.
+%
+%
+% \subsection{Custom formatting for environments like \cmd{Verbatim} with \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}}
 %
 % \DescribeMacro{\FancyVerbFormatLine}
 % \DescribeMacro{\FancyVerbFormatText}
 %
-% \fancyvrb\ defines |\FancyVerbFormatLine|, which can be used to apply custom formatting to each individual line of text.  By default, it takes a line as an argument and inserts it with no modification.  This is equivalent to |\newcommand{\FancyVerbFormatLine}[1]{#1}|.\footnote{The actual definition in \fancyvrb\ is |\def\FancyVerbFormatLine#1{\FV@ObeyTabs{#1}}|.  This is problematic because redefining the macro could easily eliminate |\FV@ObeyTabs|, which governs tab expansion.  \fvextra\ redefines the macro to |\def\FancyVerbFormatLine#1{#1}| and patches all parts of \fancyvrb\ that use |\FancyVerbFormatLine| so that |\FV@ObeyTabs| is explicitly inserted at the appropriate points.}
+% \fancyvrb\ defines |\FancyVerbFormatLine|, which can be used to apply custom formatting to each individual line of text in environments like \cmd{Verbatim}.  By default, it takes a line as an argument and inserts it with no modification.  This is equivalent to |\newcommand{\FancyVerbFormatLine}[1]{#1}|.\footnote{The actual definition in \fancyvrb\ is |\def\FancyVerbFormatLine#1{\FV@ObeyTabs{#1}}|.  This is problematic because redefining the macro could easily eliminate |\FV@ObeyTabs|, which governs tab expansion.  \fvextra\ redefines the macro to |\def\FancyVerbFormatLine#1{#1}| and patches all parts of \fancyvrb\ that use |\FancyVerbFormatLine| so that |\FV@ObeyTabs| is explicitly inserted at the appropriate points.}
 %
 % \fvextra\ introduces line breaking, which complicates line formatting.  We might want to apply formatting to the entire line, including line breaks, line continuation symbols, and all indentation, including any extra indentation provided by line breaking.  Or we might want to apply formatting only to the actual text of the line.  \fvextra\ leaves |\FancyVerbFormatLine| as applying to the entire line, and introduces a new command |\FancyVerbFormatText| that only applies to the text part of the line.\footnote{When |breaklines=true|, each line is wrapped in a |\parbox|.  |\FancyVerbFormatLine| is outside the |\parbox|, and |\FancyVerbFormatText| is inside.}   By default, |\FancyVerbFormatText| inserts the text unmodified.  When it is customized, it should not use boxes that do not allow line breaks to avoid conflicts with line breaking code.
 %
@@ -829,6 +843,12 @@
 %   some_string = 'Some Text That Goes On And On For So Long That It Could Never Fit'
 %   \end{Verbatim}
 % \end{longexample}
+%
+%
+% \item[breaknonspaceingroup (boolean) (false)]
+% By using |commandchars|, it is possible to include \LaTeX\ commands within otherwise verbatim text.  In these cases, there can be groups (typically |{...}| but depends on |commandchars|) within verbatim.  Spaces within groups are treated as potential line break locations when |breaklines=true|, but by default no other break locations are inserted (|breakbefore|, |breakafter|, |breakanywhere|).  This is because inserting non-space break locations can interfere with command functionality.  For example, in |\textcolor{red}{text}|, breaks shouldn't be inserted within |red|. 
+%
+% |breaknonspaceingroup| allows non-space breaks to be inserted within groups.  This option should only be used when |commandchars| is including \LaTeX\ commands that do not take optional arguments and only take mandatory arguments that are typeset.  Something like |\textit{text}| is fine, but |\textcolor{red}{text}| is not because one of the mandatory arguments is not typeset but rather provides a setting.  For more complex commands, it is typically better to redefine them to insert breaks in appropriate locations using |\FancyVerbBreakStart...\FancyVerbBreakStop|.
 %
 %
 % \item[breaksymbol (string) (breaksymbolleft)]
@@ -3136,6 +3156,15 @@
 % \end{macro}
 %
 %
+% \subsubsection{\cmd{\FancyVerbFormatInline}}
+% This allows customization of inline verbatim material.  It is the inline equivalent of \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}.
+% \begin{macro}{\FancyVerbFormatInline}
+%    \begin{macrocode}
+\def\FancyVerbFormatInline#1{#1}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \subsubsection{\texttt{\textbackslash Verb}}
 %
 % \cmd{\Verb} is reimplemented so that it functions as well as possible when used within other commands.
@@ -3212,12 +3241,12 @@
 % \begin{macro}{\FVC@Verb@Extra@ii}
 %    \begin{macrocode}
 \def\FVC@Verb@Extra@ii#1{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
 %    \end{macrocode}
@@ -3362,12 +3391,12 @@
 % \begin{macro}{\FV@UseVerb@Extra}
 %    \begin{macrocode}
 \def\FV@UseVerb@Extra#1{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
 %    \end{macrocode}
@@ -3425,12 +3454,12 @@
 % \begin{macro}{\FVC@EscVerb@ii}
 %    \begin{macrocode}
 \def\FVC@EscVerb@ii#1{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
 %    \end{macrocode}
@@ -4470,15 +4499,15 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{FV@BreakLines}
+% \begin{macro}{FV@breaklines}
 % Turn line breaking on or off.  The |\FV@ListProcessLine| from \fancyvrb\ is |\let| to a (patched) version of the original or a version that supports line breaks.
 %    \begin{macrocode}
-\newboolean{FV@BreakLines}
+\newbool{FV@breaklines}
 \define@booleankey{FV}{breaklines}%
-  {\FV@BreakLinestrue
-    \let\FV@ListProcessLine\FV@ListProcessLine@Break}%
-  {\FV@BreakLinesfalse
-    \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
+ {\booltrue{FV@breaklines}%
+  \let\FV@ListProcessLine\FV@ListProcessLine@Break}%
+ {\boolfalse{FV@breaklines}%
+  \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
 \AtEndOfPackage{\fvset{breaklines=false}}
 %    \end{macrocode}
 % \end{macro}
@@ -4489,7 +4518,7 @@
 %    \begin{macrocode}
 \def\FV@BreakLinesIndentationHook{}
 \g@addto@macro\FV@FormattingPrep@PostHook{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \FV@BreakLinesIndentationHook
   \fi}
 %    \end{macrocode}
@@ -4675,10 +4704,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\FV@Break@Token}
-% Macro that controls token handling between |\FancyVerbBreakStart| and |\FancyVerbBreakStop|.  Initially |\let| to |\relax|; later |\let| to |\FV@Break@AnyToken| or |\FV@Break@BeforeAfterToken| as appropriate.  There is no need to |\let\FV@Break@Token\relax| when |breakanywhere|, |breakbefore|, and |breakafter| are not in use.  In that case, |\FancyVerbBreakStart| and |\FancyVerbBreakStop| are |\let| to |\relax|, and |\FV@Break@Token| is never invoked.
+% \begin{macro}{\FV@Break@DefaultToken}
+% Macro that controls default token handling between |\FancyVerbBreakStart| and |\FancyVerbBreakStop|.  Initially |\let| to |\FV@Break@NBToken|, which does not insert breaks.  Later |\let| to |\FV@Break@AnyToken| or |\FV@Break@BeforeAfterToken| if |breakanywhere| or |breakbefore|/|breakafter| are in use.
 %    \begin{macrocode}
-\let\FV@Break@Token\relax
+\let\FV@Break@DefaultToken\FV@Break@NBToken
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4690,10 +4719,11 @@
   {\FV@BreakAnywheretrue
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
-    \let\FV@Break@Token\FV@Break@AnyToken}%
+    \let\FV@Break@DefaultToken\FV@Break@AnyToken}%
   {\FV@BreakAnywherefalse
     \let\FancyVerbBreakStart\relax
-    \let\FancyVerbBreakStop\relax}
+    \let\FancyVerbBreakStop\relax
+    \let\FV@Break@DefaultToken\FV@Break@NBToken}
 \fvset{breakanywhere=false}
 %    \end{macrocode}
 % \end{macro}
@@ -4706,23 +4736,24 @@
   \ifstrempty{#1}%
    {\let\FV@BreakBefore\@empty
     \let\FancyVerbBreakStart\relax
-    \let\FancyVerbBreakStop\relax}%
+    \let\FancyVerbBreakStop\relax
+    \let\FV@Break@DefaultToken\FV@Break@NBToken}%
    {\def\FV@BreakBefore{#1}%
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
-    \let\FV@Break@Token\FV@Break@BeforeAfterToken}%
+    \let\FV@Break@DefaultToken\FV@Break@BeforeAfterToken}%
 }
 \fvset{breakbefore={}}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{FV@BreakBeforeGroup}
+% \begin{macro}{FV@breakbeforegroup}
 % Determine whether breaking before specified characters is always allowed before each individual character, or is only allowed before the first in a group of identical characters.
 %    \begin{macrocode}
-\newboolean{FV@BreakBeforeGroup}
+\newbool{FV@breakbeforegroup}
 \define@booleankey{FV}{breakbeforegroup}%
- {\FV@BreakBeforeGrouptrue}%
- {\FV@BreakBeforeGroupfalse}%
+ {\booltrue{FV@breakbeforegroup}}%
+ {\boolfalse{FV@breakbeforegroup}}%
 \fvset{breakbeforegroup=true}
 %    \end{macrocode}
 % \end{macro}
@@ -4770,23 +4801,24 @@
   \ifstrempty{#1}%
    {\let\FV@BreakAfter\@empty
     \let\FancyVerbBreakStart\relax
-    \let\FancyVerbBreakStop\relax}%
+    \let\FancyVerbBreakStop\relax
+    \let\FV@Break@DefaultToken\FV@Break@NBToken}%
    {\def\FV@BreakAfter{#1}%
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
-    \let\FV@Break@Token\FV@Break@BeforeAfterToken}%
+    \let\FV@Break@DefaultToken\FV@Break@BeforeAfterToken}%
 }
 \fvset{breakafter={}}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{FV@BreakAfterGroup}
+% \begin{macro}{FV@breakaftergroup}
 % Determine whether breaking after specified characters is always allowed after each individual character, or is only allowed after groups of identical characters.
 %    \begin{macrocode}
-\newboolean{FV@BreakAfterGroup}
+\newbool{FV@breakaftergroup}
 \define@booleankey{FV}{breakaftergroup}%
- {\FV@BreakAfterGrouptrue}%
- {\FV@BreakAfterGroupfalse}%
+ {\booltrue{FV@breakaftergroup}}%
+ {\boolfalse{FV@breakaftergroup}}%
 \fvset{breakaftergroup=true}
 %    \end{macrocode}
 % \end{macro}
@@ -4810,13 +4842,13 @@
     }%
     \def\FV@BreakAfter@Process@i##1{%
       \ifcsname FV@BreakBefore@Token\detokenize{##1}\endcsname
-        \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+        \ifbool{FV@breakbeforegroup}%
+         {\ifbool{FV@breakaftergroup}%
            {}%
            {\PackageError{fvextra}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+         {\ifbool{FV@breakaftergroup}%
            {\PackageError{fvextra}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}%
@@ -4944,6 +4976,20 @@
 % \end{macro}
 %
 %
+% \begin{macro}{breaknonspaceingroup}
+% \begin{macro}{FV@breaknonspaceingroup}
+% When inserting breaks, insert breaks within groups (typically |{...}| but depends on |commandchars|) instead of skipping over them.  This isn't the default because it is incompabile with many macros since it inserts breaks into all arguments.  For those cases, redefining macros to use |\FancyVerbBreakStart...\FancyVerbBreakStop| to insert breaks is better.
+%    \begin{macrocode}
+\newbool{FV@breaknonspaceingroup}
+\define@booleankey{FV}{breaknonspaceingroup}%
+ {\booltrue{FV@breaknonspaceingroup}}%
+ {\boolfalse{FV@breaknonspaceingroup}}
+\fvset{breaknonspaceingroup=false}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
 % \subsubsection{Line breaking implementation}
 %
 % \paragraph{Helper macros}
@@ -5019,82 +5065,228 @@
 %
 % \paragraph{Line scanning and break insertion macros}\hfill\\
 %
-% \noindent The strategy here is to scan a line token-by-token, and insert breaks at appropriate points.  An alternative would be to make characters active, and have them expand to literal versions of themselves plus appropriate breaks.  Both approaches have advantages and drawbacks.  A catcode-based approach could work, but in general would require redefining some existing active characters to insert both appropriate breaks and their original definitions.  The current approach works regardless of catcodes.  It is also convenient for working with macros that expand to single characters, such as those created in highlighting code with Pygments (which is used by \pkg{minted} and \pkg{pythontex}).  In that case, working with active characters would not be enough, and scanning for macros (or redefining them) is necessary.  With the current approach, working with more complex macros is also straightforward.  Adding support for line breaks within a macro simply requires wrapping macro contents with |\FancyVerbBreakStart...\FancyVerbBreakStop|.  A catcode-based approach could require |\scantokens| or a similar retokenization in some cases, but would have the advantage that in other cases no macro redefinition would be needed.
+% \noindent The strategy here is to scan through text token by token, inserting potential breaks at appropriate points.  The final text with breaks inserted is stored in |\FV@BreakBuffer|, which is ultimately passed on to a wrapper macro like |\FancyVerbFormatText| or |\FancyVerbFormatInline|.
+%
+% If user macros insert breaks via |\FancyVerbBreakStart...\FancyVerbBreakStop|, this invokes an additional scanning/insertion pass within each macro after expansion.  The scanning/insertion only applies to the part of the expanded macros wrapped in |\FancyVerbBreakStart...\FancyVerbBreakStop|.  At the time this occurs, during macro processing, text will already be wrapped in a wrapper macro like |\FancyVerbFormatText| or |\FancyVerbFormatInline|.  That is, the built-in break insertion occurs before any typesetting, but user macro break insertion occurs during typesetting.
+%
+% Token comparison is currently based on |\ifx|.  This is sufficient for verbatim text but a comparison based on |\detokenize| might be better for cases when |commandchars| is in use.  For example, with |commandchars| characters other than the curly braces |{}| might be the group tokens.
+%
+% It would be possible to insert each token/group into the document immediately after it is scanned, instead of accumulating them in a ``buffer.''  But that would interfere with macros.  Even in the current approach, macros that take optional arguments are problematic, since with some settings breaks will interference with optional arguments.\footnote{Through a suitable definition that tracks the current state and looks for square brackets, this might be circumvented.  Then again, in verbatim contexts, macro use should be minimal, so the restriction to macros without optional arguments should generally not be an issue.}
+%
+% The last token is tracked with |\FV@LastToken|, to allow lookbehind when breaking by groups of identical characters.  |\FV@LastToken| is |\let| to |\FV@Undefined| any time the last token was something that shouldn't be compared against (for example, a non-empty group), and it is not reset whenever the last token may be ignored (for example, |{}|).  When setting |\FV@LastToken|, it is vital always to use |\let\FV@LastToken=...| so that |\let\FV@LastToken==| will work (so that the equals sign |=| won't break things).
+%
+% \begin{macro}{FV@BreakBufferDepth}
+% Track buffer depth while inserting breaks.  Some macros and command sequences require recursive processing.  For example, groups |{...}| (with |commandchars| and |breaknonspaceingroup|), math, and nested |\FancyVerbBreakStart...\FancyVerbBreakStop|.  Depth starts at zero.  The current buffer at depth $n$ is always |\FV@BreakBuffer|, with other buffers |\FV@BreakBuffer<n>| etc.\ named via |\csname| to allow for the integer.
+%    \begin{macrocode}
+\newcounter{FV@BreakBufferDepth}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@BreakBuffer@Append}
+% Append to |\FV@BreakBuffer|.
+%    \begin{macrocode}
+\def\FV@BreakBuffer@Append#1{%
+  \expandafter\def\expandafter\FV@BreakBuffer\expandafter{\FV@BreakBuffer#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@BreakBufferStart}
+% Create a new buffer, either at the beginning of scanning or during recursion.  The single mandatory argument is the macro for handling tokens, which is |\let| to |\FV@Break@Token|.  An intermediate |\FV@BreakBufferStart@i| is used to optimize |\ifx| comparisons for |\FV@BreakBufferStart| during scanning.
+%
+% For recursion, |\FV@BreakBuffer<n>| and |\FV@Break@Token<n>| store the state (buffer and token handling macro) immediately prior to recusion with depth |<n>|.
+%    \begin{macrocode}
+\def\FV@BreakBufferStart{%
+  \FV@BreakBufferStart@i}
+\def\FV@BreakBufferStart@i#1{%
+  \ifnum\value{FV@BreakBufferDepth}>0\relax
+    \expandafter\let\csname FV@BreakBuffer\arabic{FV@BreakBufferDepth}\endcsname
+      \FV@BreakBuffer
+    \expandafter\let\csname FV@Break@Token\arabic{FV@BreakBufferDepth}\endcsname
+      \FV@Break@Token
+  \fi
+  \def\FV@BreakBuffer{}%
+  \let\FV@Break@Token=#1%
+  \stepcounter{FV@BreakBufferDepth}%
+  \let\FV@LastToken=\FV@Undefined
+  \FV@Break@Scan}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{FV@UserMacroBreaks}
+% Whether a user macro is inserting breaks, as opposed to \pkg{fvextra}'s standard scanning routine.  When breaks come from \pkg{fvextra}, |\FV@BreakBufferStop| does nothing with |\FV@BreakBuffer| at buffer depth 0, since |\FV@InsertBreaks| handles buffer insertion.  When breaks come from user macros, |\FV@BreakBufferStop| needs to insert |\FV@BreakBuffer| at buffer depth 0.
+%    \begin{macrocode}
+\newbool{FV@UserMacroBreaks}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@BreakBufferStop}
+% Complete the current buffer.  The single mandatory argument is a wrapper macro for |\FV@BreakBuffer|'s contents (for example, insert recursively scanned group into braces |{...}|).  If the mandatory argument is empty, no wrapper is used.
+%
+% For \pkg{fvextra}'s standard scanning:  If this is the main buffer (depth 0), stop scanning---which ultimately allows |\FV@BreakBuffer| to be handled by |\FV@InsertBreaks|.  For user macros:  Insert |\FV@BreakBuffer| at buffer depth 0.  Otherwise for both cases:  Append the current buffer to the previous buffer, and continue scanning.
+%
+% An intermediate |\FV@BreakBufferStop@i| is used to optimize |\ifx| comparisons for |\FV@BreakBufferStop| during scanning. 
+%    \begin{macrocode}
+\def\FV@BreakBufferStop{%
+  \FV@BreakBufferStop@i}
+\def\FV@BreakBufferStop@i#1{%
+  \addtocounter{FV@BreakBufferDepth}{-1}%
+  \let\FV@LastToken=\FV@Undefined
+  \ifnum\value{FV@BreakBufferDepth}<0\relax
+    \PackageError{fvextra}%
+     {Line break insertion error (extra \string\FancyVerbBreakStop?)}%
+     {Line break insertion error (extra \string\FancyVerbBreakStop?)}%
+    \def\FV@BreakBuffer{}%
+  \fi
+  \ifnum\value{FV@BreakBufferDepth}>0\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {\expandafter\FV@BreakBufferStop@ii\expandafter{\FV@BreakBuffer}{#1}}%
+   {\ifbool{FV@UserMacroBreaks}%
+     {\expandafter\let\expandafter\FV@BreakBuffer\expandafter\FV@Undefined\FV@BreakBuffer}%
+     {}}}
+\def\FV@BreakBufferStop@ii#1#2{%
+  \ifstrempty{#2}%
+   {\FV@BreakBufferStop@iii{#1}}%
+   {\expandafter\FV@BreakBufferStop@iii\expandafter{#2{#1}}}}
+\def\FV@BreakBufferStop@iii#1{%
+  \expandafter\let\expandafter\FV@BreakBufferUpLevel
+    \csname FV@BreakBuffer\arabic{FV@BreakBufferDepth}\endcsname
+  \expandafter\def\expandafter\FV@BreakBuffer\expandafter{\FV@BreakBufferUpLevel#1}%
+  \expandafter\let\expandafter\FV@Break@Token
+    \csname FV@Break@Token\arabic{FV@BreakBufferDepth}\endcsname
+  \FV@Break@Scan}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@InsertBreaks}
+% This inserts breaks within text (|#2|) and stores the result in |\FV@BreakBuffer|.  Then it invokes a macro (|#1|) on the result.  That allows |\FancyVerbFormatInline| and |\FancyVerbFormatText| to operate on the final text (with breaks) directly, rather than being given text without breaks or text wrapped with macros that will (potentially recursively) insert breaks.  (Breaks inserted by user macros are not yet present, though, since they are only inserted---potentially recursively---during macro processing.)
+%
+% The initial |\ifx| skips break insertion when break insertion is turned off (|\FancyVerbBreakStart| is |\relax|).
+%
+% The current definition of |\FV@Break@Token| is swapped for a UTF-8 compatible one under pdfTeX when necessary.  In what follows, the default macros are defined after |\FV@Break|, since they make the algorithms simpler to understand.  The more complex |UTF| variants are defined afterward.
+%    \begin{macrocode}
+\def\FV@InsertBreaks#1#2{%
+  \ifx\FancyVerbBreakStart\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {#1{#2}}%
+   {\ifFV@pdfTeXinputenc
+      \ifdefstring{\inputencodingname}{utf8}%
+       {\ifx\FV@Break@DefaultToken\FV@Break@AnyToken
+          \let\FV@Break@DefaultToken\FV@Break@AnyToken@UTF
+        \else
+           \ifx\FV@Break@DefaultToken\FV@Break@BeforeAfterToken
+             \let\FV@Break@DefaultToken\FV@Break@BeforeAfterToken@UTF
+           \fi
+        \fi}%
+       {}%
+    \fi
+    \setcounter{FV@BreakBufferDepth}{0}%
+    \boolfalse{FV@UserMacroBreaks}%
+    \FancyVerbBreakStart#2\FancyVerbBreakStop
+    \setcounter{FV@BreakBufferDepth}{0}%
+    \booltrue{FV@UserMacroBreaks}%
+    \expandafter\FV@InsertBreaks@i\expandafter{\FV@BreakBuffer}{#1}}}
+\def\FV@InsertBreaks@i#1#2{%
+  \let\FV@BreakBuffer\FV@Undefined
+  #2{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
 %
 % \begin{macro}{\FV@Break}
-% The entry macro for breaking lines, either anywhere or before/after specified characters.  The current line (or argument) will be scanned token by token/group by group, and accumulated (with added potential breaks) in |\FV@TmpLine|.  After scanning is complete, |\FV@TmpLine| will be inserted.  It would be possible to insert each token/group into the document immediately after it is scanned, instead of accumulating them in a ``buffer.''  But that would interfere with macros.  Even in the current approach, macros that take optional arguments are problematic.\footnote{Through a suitable definition that tracks the current state and looks for square brackets, this might be circumvented.  Then again, in verbatim contexts, macro use should be minimal, so the restriction to macros without optional arguments should generally not be an issue.}  The last token is tracked with |\FV@LastToken|, to allow lookbehind when breaking by groups of identical characters.  |\FV@LastToken| is |\let| to |\FV@Undefined| any time the last token was something that shouldn't be compared against (for example, a non-empty group), and it is not reset whenever the last token may be ignored (for example, |{}|).  When setting |\FV@LastToken|, it is vital always to use |\let\FV@LastToken=...| so that |\let\FV@LastToken==| will work (so that the equals sign |=| won't break things).
-%
-% The current definition of |\FV@Break@Token| is swapped for a UTF-8 compatible one under pdfTeX when necessary.  The standard macros are defined next, since they make the algorithms simpler to understand.  The more complex |UTF| variants are defined later.
+% The entry macro for break insertion.  Whatever is delimited (after expansion) by |\FV@Break...\FV@EndBreak| will be scanned token by token/group by group, and accumulated (with any added breaks) in |\FV@BreakBuffer|.  After scanning is complete, |\FV@BreakBuffer| will be inserted.
 %    \begin{macrocode}
 \def\FV@Break{%
-  \def\FV@TmpLine{}%
-  \let\FV@LastToken=\FV@Undefined
-  \ifFV@pdfTeXinputenc
-    \ifdefstring{\inputencodingname}{utf8}%
-     {\ifx\FV@Break@Token\FV@Break@AnyToken
-        \let\FV@Break@Token\FV@Break@AnyToken@UTF
-      \else
-         \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
-           \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTF
-         \fi
-      \fi}%
-     {}%
-  \fi
-  \FV@Break@Scan
-}
+  \FV@BreakBufferStart{\FV@Break@DefaultToken}}
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\FV@EndBreak}
 %    \begin{macrocode}
-\def\FV@EndBreak{\FV@TmpLine}
+\def\FV@EndBreak{%
+  \FV@BreakBufferStop{}}
 %    \end{macrocode}
 % \end{macro}
+%
 %
 % \begin{macro}{\FV@Break@Scan}
 % Look ahead via |\@ifnextchar|.  Don't do anything if we're at the end of the region to be scanned.  Otherwise, invoke a macro to deal with what's next based on whether it is math, or a group, or something else.
 %
-% This and some following macros are defined inside of groups, to ensure proper catcodes.
+% This and some following macros are defined inside of groups to ensure proper catcodes.
+%
+% The check against |\FV@BreakBufferStart| should typically not be necessary; it is included for completeness and to allow for future extensions and customization.  |\FV@BreakBufferStart| is only inserted raw (rather than wrapped in |\FancyVerbBreakStart|) in token processing macros, where it initiates (or restarts) scanning and is not itself scanned.
+%
+% The |\csname @let@token\endcsname| here and in later macros prevents potential issues if |\@let@token| is ever |\else| or |\fi|.
 %    \begin{macrocode}
 \begingroup
-\catcode`\$=3%
+\catcode`\$=3
 \gdef\FV@Break@Scan{%
-  \@ifnextchar\FV@EndBreak%
+  \@ifnextchar\FancyVerbBreakStart%
    {}%
-   {\ifx\@let@token$\relax
+   {\ifx\@let@token\FancyVerbBreakStop
+      \let\FV@Break@Next\relax
+    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStart
+      \let\FV@Break@Next\relax
+    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStop
+      \let\FV@Break@Next\relax
+    \else\expandafter\ifx\csname @let@token\endcsname$
       \let\FV@Break@Next\FV@Break@Math
+    \else\expandafter\ifx\csname @let@token\endcsname\bgroup
+      \let\FV@Break@Next\FV@Break@Group
     \else
-      \ifx\@let@token\bgroup\relax
-        \let\FV@Break@Next\FV@Break@Group
-      \else
-        \let\FV@Break@Next\FV@Break@Token
-      \fi
-    \fi
-    \FV@Break@Next}%
-}
+      \let\FV@Break@Next\FV@Break@Token
+    \fi\fi\fi\fi\fi
+    \FV@Break@Next}}
 \endgroup
 %    \end{macrocode}
 % \end{macro}
 %
+%
 % \begin{macro}{\FV@Break@Math}
-% Grab an entire math span, and insert it into |\FV@TmpLine|.  Due to grouping, this works even when math contains things like |\text{$x$}|.  After dealing with the math span, continue scanning.
+% Grab an entire math span, and insert it into |\FV@BreakBuffer|.  Due to grouping, this works even when math contains things like |\text{$x$}|.  After dealing with the math span, continue scanning.
 %    \begin{macrocode}
 \begingroup
 \catcode`\$=3%
 \gdef\FV@Break@Math$#1${%
-  \g@addto@macro{\FV@TmpLine}{$#1$}%
-  \let\FV@LastToken=\FV@Undefined
-  \FV@Break@Scan}
+  \FV@BreakBufferStart{\FV@Break@NBToken}#1\FV@BreakBufferStop{\FV@Break@MathTemplate}}
+\gdef\FV@Break@MathTemplate#1{$#1$}
 \endgroup
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\FV@Break@Group}
-% Grab the group, and insert it into |\FV@TmpLine| (as a group) before continuing scanning.
+% Grab the group, and insert it into |\FV@BreakBuffer| (as a group) before continuing scanning.
 %    \begin{macrocode}
 \def\FV@Break@Group#1{%
-  \g@addto@macro{\FV@TmpLine}{{#1}}%
-  \ifstrempty{#1}{}{\let\FV@LastToken=\FV@Undefined}%
+  \ifstrempty{#1}%
+   {\FV@BreakBuffer@Append{{}}%
+    \FV@Break@Scan}%
+   {\ifbool{FV@breaknonspaceingroup}%
+     {\FV@BreakBufferStart{\FV@Break@DefaultToken}%
+        #1\FV@BreakBufferStop{\FV@Break@GroupTemplate}}%
+     {\FV@BreakBufferStart{\FV@Break@NBToken}%
+        #1\FV@BreakBufferStop{\FV@Break@GroupTemplate}}}}
+\def\FV@Break@GroupTemplate#1{{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@Break@NBToken}
+% Append token to buffer while adding no breaks (|NB|) and reset last token.
+%    \begin{macrocode}
+\def\FV@Break@NBToken#1{%
+  \FV@BreakBuffer@Append{#1}%
+  \let\FV@Break@LastToken=\FV@Undefined
   \FV@Break@Scan}
 %    \end{macrocode}
 % \end{macro}
@@ -5113,7 +5305,7 @@
 %\catcode`\+=12%
 %\gdef\FV@Break...
 %  \ifcat\noexpand#1a%
-%    \g@addto@macro{\FV@TmpLine}...
+%    \FV@BreakBuffer@Append...
 %  \else
 %...
 %\endgroup
@@ -5122,7 +5314,7 @@
 %
 %    \begin{macrocode}
 \def\FV@Break@AnyToken#1{%
-  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
   \FV@Break@Scan}
 %    \end{macrocode}
 % \end{macro}
@@ -5145,37 +5337,37 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@BeforeAfterTokenNoBreak#1{%
-  \g@addto@macro{\FV@TmpLine}{#1}%
+  \FV@BreakBuffer@Append{#1}%
   \let\FV@LastToken=#1%
   \FV@Break@Scan}
 \def\FV@Break@BeforeTokenBreak#1{%
-  \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+  \ifbool{FV@breakbeforegroup}%
    {\ifx#1\FV@LastToken\relax
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{#1}%
+        \FV@BreakBuffer@Append{#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \let\FV@LastToken=#1%
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \let\FV@LastToken=#1%
       \fi
     \fi}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
       \def\FV@RescanToken{#1}%
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
       \let\FV@Break@Next\FV@Break@Scan
       \let\FV@LastToken=#1%
     \fi}%
@@ -5185,35 +5377,32 @@
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
   \@ifnextchar\FV@FVSpaceToken%
-   {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
-   {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifbool{FV@breakaftergroup}%
      {\ifx\@let@token#1\relax
-        \g@addto@macro{\FV@TmpLine}{#1}%
+        \FV@BreakBuffer@Append{#1}%
         \let\FV@Break@Next\FV@Break@Scan
       \else
-        \ifx\@let@token\bgroup\relax
-          \g@addto@macro{\FV@TmpLine}{#1}%
+        \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
+          \FV@BreakBuffer@Append{#1}%
           \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
         \else
-          \g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+          \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
           \let\FV@Break@Next\FV@Break@Scan
         \fi
       \fi}%
-     {\g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
       \let\FV@Break@Next\FV@Break@Scan}%
     \FV@Break@Next}%
 }
 \def\FV@Break@AfterTokenBreak@Group#1{%
-  \g@addto@macro{\FV@TmpLine}{{#1}}%
   \ifstrempty{#1}%
-   {\let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@i}%
-   {\let\FV@Break@Next\FV@Break@Scan\let\FV@LastToken=\FV@Undefined}%
-  \FV@Break@Next}
-\def\FV@Break@AfterTokenBreak@Group@i{%
-  \@ifnextchar\FV@LastToken%
-   {\FV@Break@Scan}%
-   {\g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
-    \FV@Break@Scan}}
+   {\FV@BreakBuffer@Append{{}}%
+    \@ifnextchar\FV@LastToken%
+     {\FV@Break@Scan}%
+     {\FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \FV@Break@Scan}}%
+   {\FV@Break@Group{#1}}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5289,13 +5478,13 @@
       \expandafter\FV@BreakAfter@Process@ii\expandafter{##1}}%
     \def\FV@BreakAfter@Process@ii##1{%
       \ifcsname FV@BreakBefore@Token\detokenize{##1}\endcsname
-        \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+        \ifbool{FV@breakbeforegroup}%
+         {\ifbool{FV@breakaftergroup}%
            {}%
            {\PackageError{fvextra}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+         {\ifbool{FV@breakaftergroup}%
            {\PackageError{fvextra}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}%
@@ -5318,7 +5507,7 @@
 %
 %
 % \begin{macro}{\FV@Break@AnyToken@UTF}
-% Instead of just adding each token to |\FV@TmpLine| with a preceding break, also check for multi-byte code points and capture the remaining bytes when they are encountered.
+% Instead of just adding each token to |\FV@BreakBuffer| with a preceding break, also check for multi-byte code points and capture the remaining bytes when they are encountered.
 %    \begin{macrocode}
 \def\FV@Break@AnyToken@UTF#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
@@ -5330,7 +5519,7 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@AnyToken@UTF@i#1{%
-  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
   \FV@Break@Scan}
 %    \end{macrocode}
 % \end{macro}
@@ -5362,38 +5551,38 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@BeforeAfterTokenNoBreak@UTF#1{%
-  \g@addto@macro{\FV@TmpLine}{#1}%
+  \FV@BreakBuffer@Append{#1}%
   \def\FV@LastToken{#1}%
   \FV@Break@Scan}
 \def\FV@Break@BeforeTokenBreak@UTF#1{%
   \def\FV@CurrentToken{#1}%
-  \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+  \ifbool{FV@breakbeforegroup}%
    {\ifx\FV@CurrentToken\FV@LastToken\relax
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{#1}%
+        \FV@BreakBuffer@Append{#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \def\FV@LastToken{#1}%
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \def\FV@LastToken{#1}%
       \fi
     \fi}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
       \def\FV@RescanToken{#1}%
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
       \let\FV@Break@Next\FV@Break@Scan
       \def\FV@LastToken{#1}%
     \fi}%
@@ -5403,15 +5592,15 @@
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
   \@ifnextchar\FV@FVSpaceToken%
-   {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
-   {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
-     {\g@addto@macro{\FV@TmpLine}{#1}%
+   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifbool{FV@breakaftergroup}%
+     {\FV@BreakBuffer@Append{#1}%
       \ifx\@let@token\bgroup\relax
         \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
       \else
         \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@i
       \fi}%
-     {\g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
       \let\FV@Break@Next\FV@Break@Scan}%
     \FV@Break@Next}%
 }
@@ -5423,30 +5612,27 @@
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
   \FV@Break@Next#1}
 \def\FV@Break@AfterTokenBreak@Group@UTF#1{%
-  \g@addto@macro{\FV@TmpLine}{{#1}}%
   \ifstrempty{#1}%
-   {\let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF@i}%
-   {\let\FV@Break@Next\FV@Break@Scan\let\FV@LastToken=\FV@Undefined}%
-  \FV@Break@Next}
-\def\FV@Break@AfterTokenBreak@Group@UTF@i{%
-  \@ifnextchar\bgroup%
-   {\FV@Break@Scan}%
-   {\FV@Break@AfterTokenBreak@Group@UTF@ii}}
-\def\FV@Break@AfterTokenBreak@Group@UTF@ii#1{%
+   {\FV@BreakBuffer@Append{{}}%
+    \@ifnextchar\bgroup
+     {\FV@Break@Group}%
+     {\FV@Break@AfterTokenBreak@Group@UTF@i}}%
+   {\FV@Break@Group{#1}}}
+\def\FV@Break@AfterTokenBreak@Group@UTF@i#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@Group@UTF@ii
+    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@Group@UTF@i
   \else
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
@@ -5533,8 +5719,7 @@
        {\hspace*{-\wd\FV@LineIndentBox}}%
        {}%
       \FV@BreakByTokenAnywhereHook
-      \strut\FancyVerbFormatText{%
-        \FancyVerbBreakStart #1\FancyVerbBreakStop}\nobreak\strut
+      \strut\FV@InsertBreaks{\FancyVerbFormatText}{#1}\nobreak\strut
       \end{internallinenumbers*}
     }%
     \ifdefempty{\FancyVerbBreakSymbolRight}{}%
@@ -5569,6 +5754,8 @@
     \setcounter{FV@TrueTabCounter}{0}%
   \fi
   \sbox{\FV@LineBox}{%
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax
     \FancyVerbFormatLine{%
       %\FancyVerbHighlightLine  %<-- Default definition using \rlap breaks breaking
        {\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}%
@@ -5596,6 +5783,8 @@
       \let\FV@Tab\FV@TrueTab
     \fi
   \else
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax
     \FV@LeftListNumber
     \FV@LeftListFrame
     \FancyVerbFormatLine{%

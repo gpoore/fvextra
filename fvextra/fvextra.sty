@@ -8,7 +8,7 @@
 %% 
 %% This is a generated file.
 %% 
-%% Copyright (C) 2016-2017 by Geoffrey M. Poore <gpoore@gmail.com>
+%% Copyright (C) 2016-2022 by Geoffrey M. Poore <gpoore@gmail.com>
 %% --------------------------------------------------------------------------
 %% This work may be distributed and/or modified under the
 %% conditions of the LaTeX Project Public License, either version 1.3
@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2019/02/04 v1.4 fvextra - extensions and patches for fancyvrb]
+    [2022/11/08 v1.5dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -917,6 +917,7 @@
  {\booltrue{FV@extra}}%
  {\boolfalse{FV@extra}}
 \fvset{extra=true}
+\def\FancyVerbFormatInline#1{#1}
 \def\Verb{%
   \FVExtraRobustCommand\RobustVerb\FVExtraUnexpandedReadStarOArgBVArg}
 \protected\def\RobustVerb{\FV@Command{}{Verb}}
@@ -946,12 +947,12 @@
     \FVExtraDetokenizeVArg{%
       \FVExtraRetokenizeVArg{\FVC@Verb@Extra@ii}{\FV@CatCodes}}}}
 \def\FVC@Verb@Extra@ii#1{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
 \let\FVC@SaveVerb@FV\FVC@SaveVerb
@@ -1010,12 +1011,12 @@
   \FVExtraDetokenizeVArg{%
     \FVExtraRetokenizeVArg{\FV@UseVerb@Extra}{\FV@CatCodes}}{#1}}
 \def\FV@UseVerb@Extra#1{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
 \def\EscVerb{%
@@ -1035,12 +1036,12 @@
   \FVExtraDetokenizeREscVArg{%
     \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
 \def\FVC@EscVerb@ii#1{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FancyVerbBreakStart#1\FancyVerbBreakStop}%
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
 \def\FV@Command#1#2{%
@@ -1587,16 +1588,16 @@
     #1=0pt\relax
   \fi
 }
-\newboolean{FV@BreakLines}
+\newbool{FV@breaklines}
 \define@booleankey{FV}{breaklines}%
-  {\FV@BreakLinestrue
-    \let\FV@ListProcessLine\FV@ListProcessLine@Break}%
-  {\FV@BreakLinesfalse
-    \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
+ {\booltrue{FV@breaklines}%
+  \let\FV@ListProcessLine\FV@ListProcessLine@Break}%
+ {\boolfalse{FV@breaklines}%
+  \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
 \AtEndOfPackage{\fvset{breaklines=false}}
 \def\FV@BreakLinesIndentationHook{}
 \g@addto@macro\FV@FormattingPrep@PostHook{%
-  \ifFV@BreakLines
+  \ifFV@breaklines
     \FV@BreakLinesIndentationHook
   \fi}
 \newdimen\FV@BreakIndent
@@ -1676,32 +1677,34 @@
   \ifnum\value{linenumber}=\value{FancyVerbLineBreakLast}\relax\else{#1}\fi}
 \let\FancyVerbBreakStart\relax
 \let\FancyVerbBreakStop\relax
-\let\FV@Break@Token\relax
+\let\FV@Break@DefaultToken\FV@Break@NBToken
 \newboolean{FV@BreakAnywhere}
 \define@booleankey{FV}{breakanywhere}%
   {\FV@BreakAnywheretrue
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
-    \let\FV@Break@Token\FV@Break@AnyToken}%
+    \let\FV@Break@DefaultToken\FV@Break@AnyToken}%
   {\FV@BreakAnywherefalse
     \let\FancyVerbBreakStart\relax
-    \let\FancyVerbBreakStop\relax}
+    \let\FancyVerbBreakStop\relax
+    \let\FV@Break@DefaultToken\FV@Break@NBToken}
 \fvset{breakanywhere=false}
 \define@key{FV}{breakbefore}{%
   \ifstrempty{#1}%
    {\let\FV@BreakBefore\@empty
     \let\FancyVerbBreakStart\relax
-    \let\FancyVerbBreakStop\relax}%
+    \let\FancyVerbBreakStop\relax
+    \let\FV@Break@DefaultToken\FV@Break@NBToken}%
    {\def\FV@BreakBefore{#1}%
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
-    \let\FV@Break@Token\FV@Break@BeforeAfterToken}%
+    \let\FV@Break@DefaultToken\FV@Break@BeforeAfterToken}%
 }
 \fvset{breakbefore={}}
-\newboolean{FV@BreakBeforeGroup}
+\newbool{FV@breakbeforegroup}
 \define@booleankey{FV}{breakbeforegroup}%
- {\FV@BreakBeforeGrouptrue}%
- {\FV@BreakBeforeGroupfalse}%
+ {\booltrue{FV@breakbeforegroup}}%
+ {\boolfalse{FV@breakbeforegroup}}%
 \fvset{breakbeforegroup=true}
 \def\FV@BreakBeforePrep{%
   \ifx\FV@BreakBefore\@empty\relax
@@ -1731,17 +1734,18 @@
   \ifstrempty{#1}%
    {\let\FV@BreakAfter\@empty
     \let\FancyVerbBreakStart\relax
-    \let\FancyVerbBreakStop\relax}%
+    \let\FancyVerbBreakStop\relax
+    \let\FV@Break@DefaultToken\FV@Break@NBToken}%
    {\def\FV@BreakAfter{#1}%
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
-    \let\FV@Break@Token\FV@Break@BeforeAfterToken}%
+    \let\FV@Break@DefaultToken\FV@Break@BeforeAfterToken}%
 }
 \fvset{breakafter={}}
-\newboolean{FV@BreakAfterGroup}
+\newbool{FV@breakaftergroup}
 \define@booleankey{FV}{breakaftergroup}%
- {\FV@BreakAfterGrouptrue}%
- {\FV@BreakAfterGroupfalse}%
+ {\booltrue{FV@breakaftergroup}}%
+ {\boolfalse{FV@breakaftergroup}}%
 \fvset{breakaftergroup=true}
 \def\FV@BreakAfterPrep{%
   \ifx\FV@BreakAfter\@empty\relax
@@ -1757,13 +1761,13 @@
     }%
     \def\FV@BreakAfter@Process@i##1{%
       \ifcsname FV@BreakBefore@Token\detokenize{##1}\endcsname
-        \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+        \ifbool{FV@breakbeforegroup}%
+         {\ifbool{FV@breakaftergroup}%
            {}%
            {\PackageError{fvextra}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+         {\ifbool{FV@breakaftergroup}%
            {\PackageError{fvextra}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}%
@@ -1827,6 +1831,11 @@
 \newcommand{\FancyVerbBreakAfterBreak}{%
   \discretionary{\FancyVerbBreakAfterSymbolPre}%
    {\FancyVerbBreakAfterSymbolPost}{}}
+\newbool{FV@breaknonspaceingroup}
+\define@booleankey{FV}{breaknonspaceingroup}%
+ {\booltrue{FV@breaknonspaceingroup}}%
+ {\boolfalse{FV@breaknonspaceingroup}}
+\fvset{breaknonspaceingroup=false}
 \newsavebox{\FV@LineBox}
 \newsavebox{\FV@LineIndentBox}
 \let\FV@LineIndentChars\@empty
@@ -1854,53 +1863,128 @@
   \@tempdima=\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
   \stepcounter{FV@TrueTabCounter}%
   \hbox to\@tempdima{\hss\FV@TabChar}}
-\def\FV@Break{%
-  \def\FV@TmpLine{}%
-  \let\FV@LastToken=\FV@Undefined
-  \ifFV@pdfTeXinputenc
-    \ifdefstring{\inputencodingname}{utf8}%
-     {\ifx\FV@Break@Token\FV@Break@AnyToken
-        \let\FV@Break@Token\FV@Break@AnyToken@UTF
-      \else
-         \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
-           \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTF
-         \fi
-      \fi}%
-     {}%
+\newcounter{FV@BreakBufferDepth}
+\def\FV@BreakBuffer@Append#1{%
+  \expandafter\def\expandafter\FV@BreakBuffer\expandafter{\FV@BreakBuffer#1}}
+\def\FV@BreakBufferStart{%
+  \FV@BreakBufferStart@i}
+\def\FV@BreakBufferStart@i#1{%
+  \ifnum\value{FV@BreakBufferDepth}>0\relax
+    \expandafter\let\csname FV@BreakBuffer\arabic{FV@BreakBufferDepth}\endcsname
+      \FV@BreakBuffer
+    \expandafter\let\csname FV@Break@Token\arabic{FV@BreakBufferDepth}\endcsname
+      \FV@Break@Token
   \fi
-  \FV@Break@Scan
-}
-\def\FV@EndBreak{\FV@TmpLine}
-\begingroup
-\catcode`\$=3%
-\gdef\FV@Break@Scan{%
-  \@ifnextchar\FV@EndBreak%
-   {}%
-   {\ifx\@let@token$\relax
-      \let\FV@Break@Next\FV@Break@Math
-    \else
-      \ifx\@let@token\bgroup\relax
-        \let\FV@Break@Next\FV@Break@Group
-      \else
-        \let\FV@Break@Next\FV@Break@Token
-      \fi
+  \def\FV@BreakBuffer{}%
+  \let\FV@Break@Token=#1%
+  \stepcounter{FV@BreakBufferDepth}%
+  \let\FV@LastToken=\FV@Undefined
+  \FV@Break@Scan}
+\newbool{FV@UserMacroBreaks}
+\def\FV@BreakBufferStop{%
+  \FV@BreakBufferStop@i}
+\def\FV@BreakBufferStop@i#1{%
+  \addtocounter{FV@BreakBufferDepth}{-1}%
+  \let\FV@LastToken=\FV@Undefined
+  \ifnum\value{FV@BreakBufferDepth}<0\relax
+    \PackageError{fvextra}%
+     {Line break insertion error (extra \string\FancyVerbBreakStop?)}%
+     {Line break insertion error (extra \string\FancyVerbBreakStop?)}%
+    \def\FV@BreakBuffer{}%
+  \fi
+  \ifnum\value{FV@BreakBufferDepth}>0\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {\expandafter\FV@BreakBufferStop@ii\expandafter{\FV@BreakBuffer}{#1}}%
+   {\ifbool{FV@UserMacroBreaks}%
+     {\expandafter\let\expandafter\FV@BreakBuffer\expandafter\FV@Undefined\FV@BreakBuffer}%
+     {}}}
+\def\FV@BreakBufferStop@ii#1#2{%
+  \ifstrempty{#2}%
+   {\FV@BreakBufferStop@iii{#1}}%
+   {\expandafter\FV@BreakBufferStop@iii\expandafter{#2{#1}}}}
+\def\FV@BreakBufferStop@iii#1{%
+  \expandafter\let\expandafter\FV@BreakBufferUpLevel
+    \csname FV@BreakBuffer\arabic{FV@BreakBufferDepth}\endcsname
+  \expandafter\def\expandafter\FV@BreakBuffer\expandafter{\FV@BreakBufferUpLevel#1}%
+  \expandafter\let\expandafter\FV@Break@Token
+    \csname FV@Break@Token\arabic{FV@BreakBufferDepth}\endcsname
+  \FV@Break@Scan}
+\def\FV@InsertBreaks#1#2{%
+  \ifx\FancyVerbBreakStart\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {#1{#2}}%
+   {\ifFV@pdfTeXinputenc
+      \ifdefstring{\inputencodingname}{utf8}%
+       {\ifx\FV@Break@DefaultToken\FV@Break@AnyToken
+          \let\FV@Break@DefaultToken\FV@Break@AnyToken@UTF
+        \else
+           \ifx\FV@Break@DefaultToken\FV@Break@BeforeAfterToken
+             \let\FV@Break@DefaultToken\FV@Break@BeforeAfterToken@UTF
+           \fi
+        \fi}%
+       {}%
     \fi
-    \FV@Break@Next}%
-}
+    \setcounter{FV@BreakBufferDepth}{0}%
+    \boolfalse{FV@UserMacroBreaks}%
+    \FancyVerbBreakStart#2\FancyVerbBreakStop
+    \setcounter{FV@BreakBufferDepth}{0}%
+    \booltrue{FV@UserMacroBreaks}%
+    \expandafter\FV@InsertBreaks@i\expandafter{\FV@BreakBuffer}{#1}}}
+\def\FV@InsertBreaks@i#1#2{%
+  \let\FV@BreakBuffer\FV@Undefined
+  #2{#1}}
+\def\FV@Break{%
+  \FV@BreakBufferStart{\FV@Break@DefaultToken}}
+\def\FV@EndBreak{%
+  \FV@BreakBufferStop{}}
+\begingroup
+\catcode`\$=3
+\gdef\FV@Break@Scan{%
+  \@ifnextchar\FancyVerbBreakStart%
+   {}%
+   {\ifx\@let@token\FancyVerbBreakStop
+      \let\FV@Break@Next\relax
+    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStart
+      \let\FV@Break@Next\relax
+    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStop
+      \let\FV@Break@Next\relax
+    \else\expandafter\ifx\csname @let@token\endcsname$
+      \let\FV@Break@Next\FV@Break@Math
+    \else\expandafter\ifx\csname @let@token\endcsname\bgroup
+      \let\FV@Break@Next\FV@Break@Group
+    \else
+      \let\FV@Break@Next\FV@Break@Token
+    \fi\fi\fi\fi\fi
+    \FV@Break@Next}}
 \endgroup
 \begingroup
 \catcode`\$=3%
 \gdef\FV@Break@Math$#1${%
-  \g@addto@macro{\FV@TmpLine}{$#1$}%
-  \let\FV@LastToken=\FV@Undefined
-  \FV@Break@Scan}
+  \FV@BreakBufferStart{\FV@Break@NBToken}#1\FV@BreakBufferStop{\FV@Break@MathTemplate}}
+\gdef\FV@Break@MathTemplate#1{$#1$}
 \endgroup
 \def\FV@Break@Group#1{%
-  \g@addto@macro{\FV@TmpLine}{{#1}}%
-  \ifstrempty{#1}{}{\let\FV@LastToken=\FV@Undefined}%
+  \ifstrempty{#1}%
+   {\FV@BreakBuffer@Append{{}}%
+    \FV@Break@Scan}%
+   {\ifbool{FV@breaknonspaceingroup}%
+     {\FV@BreakBufferStart{\FV@Break@DefaultToken}%
+        #1\FV@BreakBufferStop{\FV@Break@GroupTemplate}}%
+     {\FV@BreakBufferStart{\FV@Break@NBToken}%
+        #1\FV@BreakBufferStop{\FV@Break@GroupTemplate}}}}
+\def\FV@Break@GroupTemplate#1{{#1}}
+\def\FV@Break@NBToken#1{%
+  \FV@BreakBuffer@Append{#1}%
+  \let\FV@Break@LastToken=\FV@Undefined
   \FV@Break@Scan}
 \def\FV@Break@AnyToken#1{%
-  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
   \FV@Break@Scan}
 \def\FV@Break@BeforeAfterToken#1{%
   \ifcsname FV@BreakBefore@Token\detokenize{#1}\endcsname
@@ -1915,37 +1999,37 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@BeforeAfterTokenNoBreak#1{%
-  \g@addto@macro{\FV@TmpLine}{#1}%
+  \FV@BreakBuffer@Append{#1}%
   \let\FV@LastToken=#1%
   \FV@Break@Scan}
 \def\FV@Break@BeforeTokenBreak#1{%
-  \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+  \ifbool{FV@breakbeforegroup}%
    {\ifx#1\FV@LastToken\relax
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{#1}%
+        \FV@BreakBuffer@Append{#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \let\FV@LastToken=#1%
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \let\FV@LastToken=#1%
       \fi
     \fi}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
       \def\FV@RescanToken{#1}%
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
       \let\FV@Break@Next\FV@Break@Scan
       \let\FV@LastToken=#1%
     \fi}%
@@ -1955,35 +2039,32 @@
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
   \@ifnextchar\FV@FVSpaceToken%
-   {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
-   {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifbool{FV@breakaftergroup}%
      {\ifx\@let@token#1\relax
-        \g@addto@macro{\FV@TmpLine}{#1}%
+        \FV@BreakBuffer@Append{#1}%
         \let\FV@Break@Next\FV@Break@Scan
       \else
-        \ifx\@let@token\bgroup\relax
-          \g@addto@macro{\FV@TmpLine}{#1}%
+        \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
+          \FV@BreakBuffer@Append{#1}%
           \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
         \else
-          \g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+          \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
           \let\FV@Break@Next\FV@Break@Scan
         \fi
       \fi}%
-     {\g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
       \let\FV@Break@Next\FV@Break@Scan}%
     \FV@Break@Next}%
 }
 \def\FV@Break@AfterTokenBreak@Group#1{%
-  \g@addto@macro{\FV@TmpLine}{{#1}}%
   \ifstrempty{#1}%
-   {\let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@i}%
-   {\let\FV@Break@Next\FV@Break@Scan\let\FV@LastToken=\FV@Undefined}%
-  \FV@Break@Next}
-\def\FV@Break@AfterTokenBreak@Group@i{%
-  \@ifnextchar\FV@LastToken%
-   {\FV@Break@Scan}%
-   {\g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
-    \FV@Break@Scan}}
+   {\FV@BreakBuffer@Append{{}}%
+    \@ifnextchar\FV@LastToken%
+     {\FV@Break@Scan}%
+     {\FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \FV@Break@Scan}}%
+   {\FV@Break@Group{#1}}}
 \ifFV@pdfTeXinputenc
 \def\FV@BreakBeforePrep@UTF{%
   \ifx\FV@BreakBefore\@empty\relax
@@ -2039,13 +2120,13 @@
       \expandafter\FV@BreakAfter@Process@ii\expandafter{##1}}%
     \def\FV@BreakAfter@Process@ii##1{%
       \ifcsname FV@BreakBefore@Token\detokenize{##1}\endcsname
-        \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+        \ifbool{FV@breakbeforegroup}%
+         {\ifbool{FV@breakaftergroup}%
            {}%
            {\PackageError{fvextra}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}}%
-         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+         {\ifbool{FV@breakaftergroup}%
            {\PackageError{fvextra}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
              {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}%
@@ -2072,7 +2153,7 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@AnyToken@UTF@i#1{%
-  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
   \FV@Break@Scan}
 \def\FV@Break@BeforeAfterToken@UTF#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
@@ -2096,38 +2177,38 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@BeforeAfterTokenNoBreak@UTF#1{%
-  \g@addto@macro{\FV@TmpLine}{#1}%
+  \FV@BreakBuffer@Append{#1}%
   \def\FV@LastToken{#1}%
   \FV@Break@Scan}
 \def\FV@Break@BeforeTokenBreak@UTF#1{%
   \def\FV@CurrentToken{#1}%
-  \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+  \ifbool{FV@breakbeforegroup}%
    {\ifx\FV@CurrentToken\FV@LastToken\relax
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{#1}%
+        \FV@BreakBuffer@Append{#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \def\FV@LastToken{#1}%
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
         \def\FV@RescanToken{#1}%
       \else
-        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
         \let\FV@Break@Next\FV@Break@Scan
         \def\FV@LastToken{#1}%
       \fi
     \fi}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
       \def\FV@RescanToken{#1}%
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
       \let\FV@Break@Next\FV@Break@Scan
       \def\FV@LastToken{#1}%
     \fi}%
@@ -2137,15 +2218,15 @@
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
   \@ifnextchar\FV@FVSpaceToken%
-   {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
-   {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
-     {\g@addto@macro{\FV@TmpLine}{#1}%
+   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifbool{FV@breakaftergroup}%
+     {\FV@BreakBuffer@Append{#1}%
       \ifx\@let@token\bgroup\relax
         \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
       \else
         \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@i
       \fi}%
-     {\g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
       \let\FV@Break@Next\FV@Break@Scan}%
     \FV@Break@Next}%
 }
@@ -2157,30 +2238,27 @@
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
   \FV@Break@Next#1}
 \def\FV@Break@AfterTokenBreak@Group@UTF#1{%
-  \g@addto@macro{\FV@TmpLine}{{#1}}%
   \ifstrempty{#1}%
-   {\let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF@i}%
-   {\let\FV@Break@Next\FV@Break@Scan\let\FV@LastToken=\FV@Undefined}%
-  \FV@Break@Next}
-\def\FV@Break@AfterTokenBreak@Group@UTF@i{%
-  \@ifnextchar\bgroup%
-   {\FV@Break@Scan}%
-   {\FV@Break@AfterTokenBreak@Group@UTF@ii}}
-\def\FV@Break@AfterTokenBreak@Group@UTF@ii#1{%
+   {\FV@BreakBuffer@Append{{}}%
+    \@ifnextchar\bgroup
+     {\FV@Break@Group}%
+     {\FV@Break@AfterTokenBreak@Group@UTF@i}}%
+   {\FV@Break@Group{#1}}}
+\def\FV@Break@AfterTokenBreak@Group@UTF@i#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@Group@UTF@ii
+    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@Group@UTF@i
   \else
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
@@ -2229,8 +2307,7 @@
        {\hspace*{-\wd\FV@LineIndentBox}}%
        {}%
       \FV@BreakByTokenAnywhereHook
-      \strut\FancyVerbFormatText{%
-        \FancyVerbBreakStart #1\FancyVerbBreakStop}\nobreak\strut
+      \strut\FV@InsertBreaks{\FancyVerbFormatText}{#1}\nobreak\strut
       \end{internallinenumbers*}
     }%
     \ifdefempty{\FancyVerbBreakSymbolRight}{}%
@@ -2256,6 +2333,8 @@
     \setcounter{FV@TrueTabCounter}{0}%
   \fi
   \sbox{\FV@LineBox}{%
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax
     \FancyVerbFormatLine{%
       %\FancyVerbHighlightLine  %<-- Default definition using \rlap breaks breaking
        {\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}%
@@ -2283,6 +2362,8 @@
       \let\FV@Tab\FV@TrueTab
     \fi
   \else
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax
     \FV@LeftListNumber
     \FV@LeftListFrame
     \FancyVerbFormatLine{%

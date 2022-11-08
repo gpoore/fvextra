@@ -1,7 +1,19 @@
 # Changes
 
 
+## v1.5 (dev)
+
+*  Added `\FancyVerbFormatInline` for customizing the formatting of inline
+   verbatim, such as `\Verb`.  This parallels `\FancyVerbFormatLine` and
+   `\FancyVerbFormatText`.
+
+*  Added line breaking option `breaknonspaceingroup`.  When `commandchars` is
+   used to allow macros within verbatim, this inserts breaks within groups
+   `{...}`.
+
+
 ## v1.4 (2019/02/04)
+
 *  Reimplemented `\Verb`.  It now works as expected inside other commands
    (with a few limitations), including in movable arguments, and is compatible
    with `hyperref` for things like PDF bookmarks.  It now supports
