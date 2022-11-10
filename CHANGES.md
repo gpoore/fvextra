@@ -17,6 +17,8 @@
 *  Added `VerbEnv` environment, which is an environment variant of `\Verb`.
    This supports reimplementation of `\mintinline` for `minted`.
 
+*  `breakbefore` and `breakafter` now support the escaped comma `\,` (#15).
+
 
 ## v1.4 (2019/02/04)
 
