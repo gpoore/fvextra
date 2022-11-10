@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2022/11/09 v1.5dev2 fvextra - extensions and patches for fancyvrb]
+    [2022/11/10 v1.5dev3 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
@@ -1028,6 +1028,31 @@
   {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
+\def\EscVerb{%
+  \FVExtraRobustCommand\RobustEscVerb\FVExtraUnexpandedReadStarOArgBEscVArg}
+\protected\def\RobustEscVerb{\FV@Command{}{EscVerb}}
+\FVExtrapdfstringdefDisableCommands{%
+  \def\RobustEscVerb{}}
+\def\FVC@EscVerb{%
+  \@ifnextchar\bgroup
+   {\FVC@EscVerb@i}%
+   {\PackageError{fvextra}%
+    {Invalid argument; argument must be delimited by paired curly braces}%
+    {Delimit argument with curly braces}}}
+\def\FVC@EscVerb@i#1{%
+  \begingroup
+  \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
+  \FVExtraDetokenizeREscVArg{%
+    \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
+\def\FVC@EscVerb@ii#1{%
+  \ifFV@breaklines
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
+  {\mbox{#1}}%
+  \endgroup}
 \def\VerbEnv{%
   \ifcsname @currenvir\endcsname
     \ifx\@currenvir\@empty
@@ -1061,31 +1086,6 @@
   \Verb[#1]{#2}%
   \expandafter\end\expandafter{\@currenvir}}
 \def\endVerbEnv{}
-\def\EscVerb{%
-  \FVExtraRobustCommand\RobustEscVerb\FVExtraUnexpandedReadStarOArgBEscVArg}
-\protected\def\RobustEscVerb{\FV@Command{}{EscVerb}}
-\FVExtrapdfstringdefDisableCommands{%
-  \def\RobustEscVerb{}}
-\def\FVC@EscVerb{%
-  \@ifnextchar\bgroup
-   {\FVC@EscVerb@i}%
-   {\PackageError{fvextra}%
-    {Invalid argument; argument must be delimited by paired curly braces}%
-    {Delimit argument with curly braces}}}
-\def\FVC@EscVerb@i#1{%
-  \begingroup
-  \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
-  \FVExtraDetokenizeREscVArg{%
-    \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
-\def\FVC@EscVerb@ii#1{%
-  \ifFV@breaklines
-    \expandafter\@firstoftwo
-  \else
-    \expandafter\@secondoftwo
-  \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
-  \endgroup}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces}\FV@@Command{#2}}%

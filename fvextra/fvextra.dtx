@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/09 v1.5dev2 fvextra - extensions and patches for fancyvrb]
+    [2022/11/10 v1.5dev3 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -3425,46 +3425,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{VerbEnv}
-% Environment variant of \cmd{\Verb}.  Depending on how this is used in the future, it may be worth improving error message and error recovery functionality, using techniques from \pkg{fancyvrb}.
-%    \begin{macrocode}
-\def\VerbEnv{%
-  \ifcsname @currenvir\endcsname
-    \ifx\@currenvir\@empty
-      \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
-    \else
-    \fi
-  \else
-    \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
-  \fi
-  \FVExtraReadOArgBeforeVEnv{\VerbEnv@i}}
-\def\VerbEnv@i#1{%
-  \expandafter\VerbEnv@ii\expandafter{\@currenvir}{#1}}
-\begingroup
-\catcode`\!=0
-\catcode`\<=1
-\catcode`\>=2
-!catcode`!\=12
-!catcode`!{=12
-!catcode`!}=12
-!catcode`!^^M=!active%
-!gdef!VerbEnv@ii#1#2<%
-  !begingroup%
-  !let!do!@makeother!FVExtraDoSpecials%
-  !catcode`!^^M=!active%
-  !def!VerbEnv@iii##1^^M##2^^M\end{#1}^^M<%
-    !endgroup%
-    !VerbEnv@iv<##1><##2>>%
-  !VerbEnv@iii<#2>>%
-!endgroup%
-\def\VerbEnv@iv#1#2{%
-  \Verb[#1]{#2}%
-  \expandafter\end\expandafter{\@currenvir}}
-\def\endVerbEnv{}
-%    \end{macrocode}
-% \end{macro}
-%
-%
 %
 %
 % \subsection{New commands and environments}
@@ -3524,6 +3484,51 @@
   {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\cmd{VerbEnv}}
+% Environment variant of \cmd{\Verb}.  Depending on how this is used in the future, it may be worth improving error message and error recovery functionality, using techniques from \pkg{fancyvrb}.
+% \begin{macro}{\VerbEnv}
+%    \begin{macrocode}
+\def\VerbEnv{%
+  \ifcsname @currenvir\endcsname
+    \ifx\@currenvir\@empty
+      \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
+    \else
+    \fi
+  \else
+    \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
+  \fi
+  \FVExtraReadOArgBeforeVEnv{\VerbEnv@i}}
+\def\VerbEnv@i#1{%
+  \expandafter\VerbEnv@ii\expandafter{\@currenvir}{#1}}
+\begingroup
+\catcode`\!=0
+\catcode`\<=1
+\catcode`\>=2
+!catcode`!\=12
+!catcode`!{=12
+!catcode`!}=12
+!catcode`!^^M=!active%
+!gdef!VerbEnv@ii#1#2<%
+  !begingroup%
+  !let!do!@makeother!FVExtraDoSpecials%
+  !catcode`!^^M=!active%
+  !def!VerbEnv@iii##1^^M##2^^M\end{#1}^^M<%
+    !endgroup%
+    !VerbEnv@iv<##1><##2>>%
+  !VerbEnv@iii<#2>>%
+!endgroup%
+\def\VerbEnv@iv#1#2{%
+  \Verb[#1]{#2}%
+  \expandafter\end\expandafter{\@currenvir}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\endVerbEnv}
+%    \begin{macrocode}
+\def\endVerbEnv{}
 %    \end{macrocode}
 % \end{macro}
 %
