@@ -11,6 +11,12 @@
    used to allow macros within verbatim, this inserts breaks within groups
    `{...}`.
 
+*  Added `\FVExtraUnexpandedReadStarOArgMArgBVArg` to support reimplementation
+   of `\mintinline` for `minted`.
+
+*  Added `VerbEnv` environment, which is an environment variant of `\Verb`.
+   This supports reimplementation of `\mintinline` for `minted`.
+
 
 ## v1.4 (2019/02/04)
 

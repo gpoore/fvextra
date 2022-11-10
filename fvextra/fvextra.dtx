@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/08 v1.5dev1 fvextra - extensions and patches for fancyvrb]
+    [2022/11/09 v1.5dev2 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5029}
+% \CheckSum{5081}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -252,6 +252,8 @@
 % \begin{changelog}{v1.5}{2022/11/??}
 % \item Added \cmd{\FancyVerbFormatInline} for customizing the formatting of inline verbatim, such as \cmd{\Verb}.  This parallels \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}.
 % \item Added line breaking option \Verb{breaknonspaceingroup}.  When \cmd{commandchars} is used to allow macros within verbatim, this inserts breaks within groups \Verb{{...}}.
+% \item Added \cmd{\FVExtraUnexpandedReadStarOArgMArgBVArg} to support reimplementation of \cmd{\mintinline} for \pkg{minted}.
+% \item Added \cmd{VerbEnv} environment, which is an environment variant of \cmd{\Verb}.  This supports reimplementation of \cmd{\mintinline} for \pkg{minted}.
 % \end{changelog}
 %
 % \begin{changelog}{v1.4}{2019/02/04}
@@ -702,8 +704,12 @@
 % \end{description}
 %
 %
+% \subsection{\cmd{VerbEnv}}
+% \DescribeMacro{\begin\{VerbEnv\}\oarg{options}\\$\langle$\textit{single line}$\rangle$\\\cmd{\end{VerbEnv}}}
 %
+% This is an environment variant of \cmd{\Verb}.  The environment must contain only a single line of text, and the closing \cmd{\end{VerbEnv}} must be on a line by itself.  The $\langle$\textit{options}$\rangle$ and $\langle$\textit{single line}$\rangle$ are read and then passed on to \cmd{\Verb} internally for actual typesetting.
 %
+% While \cmd{VerbEnv} can be used by document authors, it is primarily intended for package creators.  For example, it is used in \pkg{minted} to implement \cmd{\mintinline}.  In that case, highlighted code is always generated within a \cmd{Verbatim} environment.  It is possible to process this as inline rather than block verbatim by \cmd{\let}ting \cmd{\Verbatim} to \cmd{\VerbEnv}.  Because \cmd{VerbEnv} is primarily intended for package creators working with auto-generated content, the implementation currently provides limited error message and error recovery functionality.
 %
 %
 % \section{Line breaking}
@@ -1921,6 +1927,22 @@
   \makeatletter
   \def\FV@UnexpandedReadStarOArgBEscVArg@i#1#2{%
     \FVExtraPDFStringEscapedVerbatimDetokenize{#2}}%
+  \makeatother}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FVExtraUnexpandedReadStarOArgMArgBVArg}
+% Read arguments for a command that has a mandatory argument before a verbatim argument, such as \pkg{minted}'s \cmd{\mintinline}.
+%    \begin{macrocode}
+\def\FVExtraUnexpandedReadStarOArgMArgBVArg#1#{%
+  \FV@UnexpandedReadStarOArgMArgBVArg@i{#1}}
+\def\FV@UnexpandedReadStarOArgMArgBVArg@i#1#2#3{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUnexpandedReadStarOArgMArgBVArg#1{#2}{#3}}}
+\FVExtrapdfstringdefDisableCommands{%
+  \makeatletter
+  \def\FV@UnexpandedReadStarOArgMArgBVArg@i#1#2#3{%
+    \FVExtraPDFStringVerbatimDetokenize{#3}}%
   \makeatother}
 %    \end{macrocode}
 % \end{macro}
@@ -3399,6 +3421,46 @@
   {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
   {\mbox{#1}}%
   \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{VerbEnv}
+% Environment variant of \cmd{\Verb}.  Depending on how this is used in the future, it may be worth improving error message and error recovery functionality, using techniques from \pkg{fancyvrb}.
+%    \begin{macrocode}
+\def\VerbEnv{%
+  \ifcsname @currenvir\endcsname
+    \ifx\@currenvir\@empty
+      \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
+    \else
+    \fi
+  \else
+    \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
+  \fi
+  \FVExtraReadOArgBeforeVEnv{\VerbEnv@i}}
+\def\VerbEnv@i#1{%
+  \expandafter\VerbEnv@ii\expandafter{\@currenvir}{#1}}
+\begingroup
+\catcode`\!=0
+\catcode`\<=1
+\catcode`\>=2
+!catcode`!\=12
+!catcode`!{=12
+!catcode`!}=12
+!catcode`!^^M=!active%
+!gdef!VerbEnv@ii#1#2<%
+  !begingroup%
+  !let!do!@makeother!FVExtraDoSpecials%
+  !catcode`!^^M=!active%
+  !def!VerbEnv@iii##1^^M##2^^M\end{#1}^^M<%
+    !endgroup%
+    !VerbEnv@iv<##1><##2>>%
+  !VerbEnv@iii<#2>>%
+!endgroup%
+\def\VerbEnv@iv#1#2{%
+  \Verb[#1]{#2}%
+  \expandafter\end\expandafter{\@currenvir}}
+\def\endVerbEnv{}
 %    \end{macrocode}
 % \end{macro}
 %
