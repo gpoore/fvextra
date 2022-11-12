@@ -719,6 +719,8 @@
 %
 % Automatic line breaking may be turned on with |breaklines=true|.  By default, breaks only occur at spaces.  Breaks may be allowed anywhere with |breakanywhere|, or only before or after specified characters with |breakbefore| and |breakafter|.  Many options are provided for customizing breaks.  A good place to start is the description of |breaklines|.
 %
+% When a line is broken, the result must fit on a single page.  There is no support for breaking a line across multiple pages.
+%
 %
 % \subsection{Line breaking options}
 %
@@ -810,7 +812,7 @@
 %
 %
 % \item[breaklines (boolean) (false)]
-% Automatically break long lines.
+% Automatically break long lines.  When a line is broken, the result must fit on a single page.  There is no support for breaking a line across multiple pages.\footnote{Following the implementation in \pkg{fancyvrb}, each line is typeset within an |\hbox|, so page breaks are not possible.}
 %
 % By default, automatic breaks occur at spaces.  Use |breakanywhere| to enable breaking anywhere; use |breakbefore| and |breakafter| for more fine-tuned breaking.
 %
