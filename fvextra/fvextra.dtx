@@ -256,6 +256,7 @@
 % \item Added \cmd{VerbEnv} environment, which is an environment variant of \cmd{\Verb}.  This supports reimplementation of \cmd{\mintinline} for \pkg{minted}.
 % \item \cmd{breakbefore} and \cmd{breakafter} now support the escaped comma \cmd{\,} (\#15).
 % \item Fixed unintended line breaks after hyphens under LuaTeX (\#14).
+% \item Added documentation on Pandoc compatibility (\#11).
 % \end{changelog}
 %
 % \begin{changelog}{v1.4}{2019/02/04}
@@ -365,6 +366,34 @@
 % The \pkg{upquote} package is loaded to give correct backticks (\texttt{\textasciigrave}) and typewriter single quotation marks (\texttt{\textquotesingle}).  When this is not desirable within a given environment, use the option |curlyquotes|.  \fvextra\ modifies the behavior of these and other symbols in typeset math within verbatim, so that they will behave as expected (\cref{sec:patch:math}).  \fvextra\ uses the \pkg{lineno} package for working with automatic line breaks.  \pkg{lineno} gives a warning when the \pkg{csquotes} package is loaded before it, so \fvextra\ should be loaded before \pkg{csquotes}.  The \pkg{ifthen} and \pkg{etoolbox} packages are required.  \pkg{color} or \pkg{xcolor} should be loaded manually to use color-dependent features.
 %
 % While \fvextra\ attempts to minimize changes to the \fancyvrb\ internals, in some cases it completely overwrites \fancyvrb\ macros with new definitions.  New definitions typically follow the original definitions as much as possible, but code that depends on the details of the original \fancyvrb\ implementation may be incompatible with \fvextra.
+%
+%
+% \subsection{Pandoc compatibility}
+% 
+% \pkg{fvextra} supports line breaking in \href{https://pandoc.org/}{Pandoc} \LaTeX\ output that includes highlighted source code.  Enabling basic line breaking at spaces is as simple as adding |\usepackage{fvextra}| and |\fvset{breaklines}| to the Pandoc Markdown |header-includes|.
+%
+% By default, more advanced line breaking features such as |breakanywhere|, |breakbefore|, and |breakafter| will not work with Pandoc highlighted output, due to the presence of the syntax highlighting macros.  This can be fixed by using |breaknonspaceingroup|, which enables all line breaking features within macros.  For example, the following YAML metadata in a Markdown document would redefine the Pandoc |Highlighting| environment to enable line breaking anywhere.
+%
+%\vspace{2ex}
+%\hrule
+%\vspace{2ex}
+%\noindent\begin{minipage}{\linewidth}
+%\begin{Verbatim}[gobble=1]
+%---
+%header-includes:
+% -  |
+%    ```{=latex}
+%    \usepackage{fvextra}
+%    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+%      commandchars=\\\{\},
+%      breaklines, breaknonspaceingroup, breakanywhere}
+%    ```
+%---
+%\end{Verbatim}
+%\end{minipage}
+%\vspace{2ex}
+%\hrule
+%\vspace{2ex}
 %
 %
 %
