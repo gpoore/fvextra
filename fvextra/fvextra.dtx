@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/10 v1.5dev4 fvextra - extensions and patches for fancyvrb]
+    [2022/11/12 v1.5dev5 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5093}
+% \CheckSum{5123}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -255,6 +255,7 @@
 % \item Added \cmd{\FVExtraUnexpandedReadStarOArgMArgBVArg} to support reimplementation of \cmd{\mintinline} for \pkg{minted}.
 % \item Added \cmd{VerbEnv} environment, which is an environment variant of \cmd{\Verb}.  This supports reimplementation of \cmd{\mintinline} for \pkg{minted}.
 % \item \cmd{breakbefore} and \cmd{breakafter} now support the escaped comma \cmd{\,} (\#15).
+% \item Fixed unintended line breaks after hyphens under LuaTeX (\#14).
 % \end{changelog}
 %
 % \begin{changelog}{v1.4}{2019/02/04}
@@ -4581,6 +4582,23 @@
  {\boolfalse{FV@breaklines}%
   \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
 \AtEndOfPackage{\fvset{breaklines=false}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@BreakLinesLuaTeXHook}
+% Fix hyphen handling under LuaTeX.  |\automatichyphenmode=2| would work for environments, but doesn't seem to work inline.  Instead, the active hyphen is redefined to |\mbox{-}|.
+%
+% This is needed before |\@noligs| is ever used, so it is placed in |\FV@FormattingPrep@PreHook|.
+%    \begin{macrocode}
+\def\FV@BreakLinesLuaTeXHook{%
+   \expandafter\def\expandafter\@noligs\expandafter{\@noligs
+     \begingroup\lccode`\~=`\-\lowercase{\endgroup\def~}{\leavevmode\kern\z@\mbox{-}}}}
+\ifcsname directlua\endcsname
+  \ifx\directlua\relax
+  \else
+    \FV@AddToHook\FV@FormattingPrep@PreHook\FV@BreakLinesLuaTeXHook
+  \fi  
+\fi
 %    \end{macrocode}
 % \end{macro}
 %

@@ -19,6 +19,8 @@
 
 *  `breakbefore` and `breakafter` now support the escaped comma `\,` (#15).
 
+*  Fixed unintended line breaks after hyphens under LuaTeX (#14).
+
 
 ## v1.4 (2019/02/04)
 
