@@ -21,6 +21,13 @@
 
 *  Fixed unintended line breaks after hyphens under LuaTeX (#14).
 
+*  Added documentation on Pandoc compatibility (#11).
+
+*  Replaced `breakbeforegroup` with `breakbeforeinrun`, and replaced
+   `breakaftergroup` with `breakafterinrun`.  With the introduction of
+   `breaknonspaceingroup`, "`group`" is now reserved for referring to TeX
+   groups `{...}`.
+
 
 ## v1.4 (2019/02/04)
 
