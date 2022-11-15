@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/14 v1.5dev6 fvextra - extensions and patches for fancyvrb]
+    [2022/11/14 v1.5dev7 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5123}
+% \CheckSum{5120}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -258,6 +258,7 @@
 % \item Fixed unintended line breaks after hyphens under LuaTeX (\#14).
 % \item Added documentation on Pandoc compatibility (\#11).
 % \item Replaced \Verb{breakbeforegroup} with \Verb{breakbeforeinrun}, and replaced \Verb{breakaftergroup} with \Verb{breakafterinrun}.  With the introduction of \Verb{breaknonspaceingroup}, ``\Verb{group}'' is now reserved for referring to TeX groups \Verb{{...}}.
+% \item Removed dependency on \Verb{ifthen} package.
 % \end{changelog}
 %
 % \begin{changelog}{v1.4}{2019/02/04}
@@ -364,7 +365,7 @@
 %
 % \fvextra\ may be used as a drop-in replacement for \fancyvrb.  It will load \fancyvrb\ if it has not yet been loaded, and then proceeds to patch \fancyvrb\ and define additional features.
 %
-% The \pkg{upquote} package is loaded to give correct backticks (\texttt{\textasciigrave}) and typewriter single quotation marks (\texttt{\textquotesingle}).  When this is not desirable within a given environment, use the option |curlyquotes|.  \fvextra\ modifies the behavior of these and other symbols in typeset math within verbatim, so that they will behave as expected (\cref{sec:patch:math}).  \fvextra\ uses the \pkg{lineno} package for working with automatic line breaks.  \pkg{lineno} gives a warning when the \pkg{csquotes} package is loaded before it, so \fvextra\ should be loaded before \pkg{csquotes}.  The \pkg{ifthen} and \pkg{etoolbox} packages are required.  \pkg{color} or \pkg{xcolor} should be loaded manually to use color-dependent features.
+% The \pkg{upquote} package is loaded to give correct backticks (\texttt{\textasciigrave}) and typewriter single quotation marks (\texttt{\textquotesingle}).  When this is not desirable within a given environment, use the option |curlyquotes|.  \fvextra\ modifies the behavior of these and other symbols in typeset math within verbatim, so that they will behave as expected (\cref{sec:patch:math}).  \fvextra\ uses the \pkg{lineno} package for working with automatic line breaks.  \pkg{lineno} gives a warning when the \pkg{csquotes} package is loaded before it, so \fvextra\ should be loaded before \pkg{csquotes}.  The \pkg{etoolbox} package is required.  \pkg{color} or \pkg{xcolor} should be loaded manually to use color-dependent features.
 %
 % While \fvextra\ attempts to minimize changes to the \fancyvrb\ internals, in some cases it completely overwrites \fancyvrb\ macros with new definitions.  New definitions typically follow the original definitions as much as possible, but code that depends on the details of the original \fancyvrb\ implementation may be incompatible with \fvextra.
 %
@@ -1315,7 +1316,6 @@
 % \subsection{Required packages}
 % The \pkg{upquote} package performs some font checks when it is loaded to determine whether \pkg{textcomp} is needed, but errors can result if the font is changed later in the preamble, so duplicate the package's font check at the end of the preamble.  Also check for a package order issue with \pkg{lineno} and \pkg{csquotes}.
 %    \begin{macrocode}
-\RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -3742,7 +3742,7 @@
 % \begin{macro}{FV@ObeyTabs@Whitespace@Tab}
 % In a group where runs of whitespace characters are collected, we need to keep track of whether a tab has been found, so we can avoid expansion and the associated |\hbox| for spaces without tabs.
 %    \begin{macrocode}
-\newboolean{FV@ObeyTabs@Whitespace@Tab}
+\newbool{FV@ObeyTabs@Whitespace@Tab}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4667,12 +4667,12 @@
 % \end{macro}
 %
 %
-% \begin{macro}{FV@BreakAutoIndent}
+% \begin{macro}{FV@breakautoindent}
 % Auto indentation of continuation lines to indentation of original line.  Adds to |\FV@BreakIndent|.
 %    \begin{macrocode}
-\newboolean{FV@BreakAutoIndent}
+\newbool{FV@breakautoindent}
 \define@booleankey{FV}{breakautoindent}%
-  {\FV@BreakAutoIndenttrue}{\FV@BreakAutoIndentfalse}
+  {\booltrue{FV@breakautoindent}}{\boolfalse{FV@breakautoindent}}
 \fvset{breakautoindent=true}
 %    \end{macrocode}
 % \end{macro}
@@ -4833,16 +4833,16 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{FV@BreakAnywhere}
+% \begin{macro}{FV@breakanywhere}
 % Allow line breaking (almost) anywhere.  Set |\FV@Break| and |\FV@EndBreak| to be used, and |\let| |\FV@Break@Token| to the appropriate macro.
 %    \begin{macrocode}
-\newboolean{FV@BreakAnywhere}
+\newbool{FV@breakanywhere}
 \define@booleankey{FV}{breakanywhere}%
-  {\FV@BreakAnywheretrue
+  {\booltrue{FV@breakanywhere}%
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
     \let\FV@Break@DefaultToken\FV@Break@AnyToken}%
-  {\FV@BreakAnywherefalse
+  {\boolfalse{FV@breakanywhere}%
     \let\FancyVerbBreakStart\relax
     \let\FancyVerbBreakStop\relax
     \let\FV@Break@DefaultToken\FV@Break@NBToken}
@@ -5816,7 +5816,7 @@
   \savebox{\FV@LineBox}{%
     \advance\FV@LineWidth by -\FV@BreakIndent
     \hbox to \FV@BreakIndent{\hfill}%
-    \ifthenelse{\boolean{FV@BreakAutoIndent}}%
+    \ifbool{FV@breakautoindent}%
      {\let\FV@LineIndentChars\@empty
       \FV@GetLineIndent#1\FV@Undefined
       \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
@@ -5837,7 +5837,7 @@
       \noindent\hspace*{-\FV@BreakIndent}%
       \ifdefempty{\FancyVerbBreakSymbolLeft}{}{%
         \hspace*{-\FV@BreakSymbolIndentLeft}}%
-      \ifthenelse{\boolean{FV@BreakAutoIndent}}%
+      \ifbool{FV@breakautoindent}%
        {\hspace*{-\wd\FV@LineIndentBox}}%
        {}%
       \FV@BreakByTokenAnywhereHook

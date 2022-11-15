@@ -21,7 +21,6 @@
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
     [2022/11/14 v1.5dev6 fvextra - extensions and patches for fancyvrb]
-\RequirePackage{ifthen}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1150,7 +1149,7 @@
   \FV@TrueTabSaveWidth
   \setbox\FV@TabBox=\hbox\bgroup
     \unhbox\FV@TabBox\hbox to\@tempdima{\hss\FV@TabChar}}
-\newboolean{FV@ObeyTabs@Whitespace@Tab}
+\newbool{FV@ObeyTabs@Whitespace@Tab}
 \def\FV@TrueTab@Group{%
   \booltrue{FV@ObeyTabs@Whitespace@Tab}%
   \gdef\FV@TmpWhitespace{\FV@FVTabToken}%
@@ -1666,9 +1665,9 @@
     \FV@SetToWidthNChars{\FV@BreakIndent}{\FV@BreakIndentNChars}%
   \fi}
 \fvset{breakindentnchars=0}
-\newboolean{FV@BreakAutoIndent}
+\newbool{FV@breakautoindent}
 \define@booleankey{FV}{breakautoindent}%
-  {\FV@BreakAutoIndenttrue}{\FV@BreakAutoIndentfalse}
+  {\booltrue{FV@breakautoindent}}{\boolfalse{FV@breakautoindent}}
 \fvset{breakautoindent=true}
 \define@key{FV}{breaksymbolleft}{\def\FancyVerbBreakSymbolLeft{#1}}
 \define@key{FV}{breaksymbol}{\fvset{breaksymbolleft=#1}}
@@ -1733,13 +1732,13 @@
 \let\FancyVerbBreakStart\relax
 \let\FancyVerbBreakStop\relax
 \let\FV@Break@DefaultToken\FV@Break@NBToken
-\newboolean{FV@BreakAnywhere}
+\newbool{FV@breakanywhere}
 \define@booleankey{FV}{breakanywhere}%
-  {\FV@BreakAnywheretrue
+  {\booltrue{FV@breakanywhere}%
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
     \let\FV@Break@DefaultToken\FV@Break@AnyToken}%
-  {\FV@BreakAnywherefalse
+  {\boolfalse{FV@breakanywhere}
     \let\FancyVerbBreakStart\relax
     \let\FancyVerbBreakStop\relax
     \let\FV@Break@DefaultToken\FV@Break@NBToken}
@@ -2337,7 +2336,7 @@
   \savebox{\FV@LineBox}{%
     \advance\FV@LineWidth by -\FV@BreakIndent
     \hbox to \FV@BreakIndent{\hfill}%
-    \ifthenelse{\boolean{FV@BreakAutoIndent}}%
+    \ifbool{FV@breakautoindent}%
      {\let\FV@LineIndentChars\@empty
       \FV@GetLineIndent#1\FV@Undefined
       \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
@@ -2358,7 +2357,7 @@
       \noindent\hspace*{-\FV@BreakIndent}%
       \ifdefempty{\FancyVerbBreakSymbolLeft}{}{%
         \hspace*{-\FV@BreakSymbolIndentLeft}}%
-      \ifthenelse{\boolean{FV@BreakAutoIndent}}%
+      \ifbool{FV@breakautoindent}%
        {\hspace*{-\wd\FV@LineIndentBox}}%
        {}%
       \FV@BreakByTokenAnywhereHook

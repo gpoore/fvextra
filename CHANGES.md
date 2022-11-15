@@ -28,6 +28,8 @@
    `breaknonspaceingroup`, "`group`" is now reserved for referring to TeX
    groups `{...}`.
 
+*  Removed dependency on `ifthen` package.
+
 
 ## v1.4 (2019/02/04)
 
