@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/14 v1.5dev7 fvextra - extensions and patches for fancyvrb]
+    [2022/11/15 v1.5dev8 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5120}
+% \CheckSum{5132}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -259,6 +259,7 @@
 % \item Added documentation on Pandoc compatibility (\#11).
 % \item Replaced \Verb{breakbeforegroup} with \Verb{breakbeforeinrun}, and replaced \Verb{breakaftergroup} with \Verb{breakafterinrun}.  With the introduction of \Verb{breaknonspaceingroup}, ``\Verb{group}'' is now reserved for referring to TeX groups \Verb{{...}}.
 % \item Removed dependency on \Verb{ifthen} package.
+% \item \Verb{breakautoindent} now works correctly with Pygments output that treats leading whitespace as a separate token or as part of a token.
 % \end{changelog}
 %
 % \begin{changelog}{v1.4}{2019/02/04}
@@ -5140,26 +5141,29 @@
 % \begin{macro}{\FV@GetLineIndent}
 % A macro that takes a line and determines the indentation, storing the indentation chars in |\FV@LineIndentChars|.
 %    \begin{macrocode}
-\def\FV@CleanRemainingChars#1\FV@Undefined{}
-\def\FV@GetLineIndent{\afterassignment\FV@CheckIndentChar\let\FV@NextChar=}
-\def\FV@CheckIndentChar{%
-  \ifx\FV@NextChar\FV@Undefined\relax
-    \let\FV@Next=\relax
-  \else
-    \ifx\FV@NextChar\FV@FVSpaceToken\relax
-      \g@addto@macro{\FV@LineIndentChars}{\FV@FVSpaceToken}%
-      \let\FV@Next=\FV@GetLineIndent
-    \else
-      \ifx\FV@NextChar\FV@FVTabToken\relax
-        \g@addto@macro{\FV@LineIndentChars}{\FV@FVTabToken}%
-        \let\FV@Next=\FV@GetLineIndent
+\def\FV@GetLineIndent{%
+  \@ifnextchar\FV@Sentinel
+   {\FV@GetLineIndent@End}%
+   {\ifx\@let@token\FV@FVSpaceToken
+      \let\FV@Next\FV@GetLineIndent@Whitespace
+    \else\ifx\@let@token\FV@FVTabToken
+      \let\FV@Next\FV@GetLineIndent@Whitespace
+    \else\ifcsname FV@PYG@Redefed\endcsname
+      \ifx\@let@token\FV@PYG@Redefed
+        \let\FV@Next\FV@GetLineIndent@Pygments
       \else
-        \let\FV@Next=\FV@CleanRemainingChars
+        \let\FV@Next\FV@GetLineIndent@End
       \fi
-    \fi
-  \fi
-  \FV@Next
-}
+    \else
+      \let\FV@Next\FV@GetLineIndent@End
+    \fi\fi\fi
+    \FV@Next}}
+\def\FV@GetLineIndent@End#1\FV@Sentinel{}
+\def\FV@GetLineIndent@Whitespace#1{%
+  \expandafter\def\expandafter\FV@LineIndentChars\expandafter{\FV@LineIndentChars#1}%
+  \FV@GetLineIndent}
+\def\FV@GetLineIndent@Pygments#1#2#3{%
+  \FV@GetLineIndent#3}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5818,7 +5822,7 @@
     \hbox to \FV@BreakIndent{\hfill}%
     \ifbool{FV@breakautoindent}%
      {\let\FV@LineIndentChars\@empty
-      \FV@GetLineIndent#1\FV@Undefined
+      \FV@GetLineIndent#1\FV@Sentinel
       \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
       \hbox to \wd\FV@LineIndentBox{\hfill}%
       \advance\FV@LineWidth by -\wd\FV@LineIndentBox
@@ -6101,6 +6105,8 @@
 % In the |breakbytoken| cases, an |\hbox| is used to prevent breaks within the macro (breaks could occur at spaces even without |\FancyVerbBreakStart|).  The |breakbytokenanywhere| case is similar but a little tricky.  |\FV@BreakByTokenAnywhereHook|, which is inside |\FV@SaveLineBox| where line breaking occurs, is used to define |\FV@BreakByTokenAnywhereBreak| so that it will ``do nothing'' the first time it is used and on subsequent invocations become |\FancyVerbBreakByTokenAnywhereBreak|.  Because the hook is within the |internallinenumbers*| environment, the redefinition doesn't escape, and the default global definition of |\FV@BreakByTokenAnywhereBreak| as |\relax| is not affected.  We don't want the actual break to appear before the first Pygments macro in case it might cause a spurious break after leading whitespace.  But we must have breaks \emph{before} Pygments macros because otherwise lookahead would be necessary.
 %
 % An intermediate variable |\FV@PYG| is defined to avoid problems in case |#1|$=$|#2|.  There is also a check for a non-existant |#2| (|\PYG|\meta{style\_name} may not be created until a later compile in the \pkg{pythontex} case); if |#2| does not exist, fall back to |#1|.  For the existance check, |\ifx...\relax| must be used instead of |\ifcsname|, because |#2| will be a macro, and will typically be created with |\csname...\endcsname| which will |\let| the macro to |\relax| if it doesn't already exist.
+%
+% |\FV@PYG@Redefed| is |\let| to the Pygments macro that appears literally (after redefinition), so that it can be detected elsewhere to allow for special processing, such as in |breakautoindent|.
 %    \begin{macrocode}
 \def\FV@VerbatimPygments#1#2{%
   \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
@@ -6109,9 +6115,9 @@
   \def\FV@BreakAfterPrep@PygmentsHook{%
     \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}%
   \ifx#2\relax
-    \let\FV@PYG#1%
+    \let\FV@PYG=#1\relax
   \else
-    \let\FV@PYG#2%
+    \let\FV@PYG=#2\relax
   \fi
   \ifbool{FV@breakbytoken}%
    {\ifbool{FV@breakbytokenanywhere}%
@@ -6125,6 +6131,7 @@
         \leavevmode\hbox{\FV@PYG{##1}{##2}}}}}%
    {\def#1##1##2{%
      \FV@PYG{##1}{\FancyVerbBreakStart##2\FancyVerbBreakStop}}}%
+  \let\FV@PYG@Redefed=#1\relax
 }
 \let\FV@BreakByTokenAnywhereBreak\relax
 \def\FV@DetokMacro@StripSpace#1 {#1}

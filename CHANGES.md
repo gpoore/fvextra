@@ -30,6 +30,9 @@
 
 *  Removed dependency on `ifthen` package.
 
+*  `breakautoindent` now works correctly with Pygments output that treats
+   leading whitespace as a separate token or as part of a token.
+
 
 ## v1.4 (2019/02/04)
 

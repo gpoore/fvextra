@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2022/11/14 v1.5dev6 fvextra - extensions and patches for fancyvrb]
+    [2022/11/15 v1.5dev8 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1738,7 +1738,7 @@
     \let\FancyVerbBreakStart\FV@Break
     \let\FancyVerbBreakStop\FV@EndBreak
     \let\FV@Break@DefaultToken\FV@Break@AnyToken}%
-  {\boolfalse{FV@breakanywhere}
+  {\boolfalse{FV@breakanywhere}%
     \let\FancyVerbBreakStart\relax
     \let\FancyVerbBreakStop\relax
     \let\FV@Break@DefaultToken\FV@Break@NBToken}
@@ -1893,26 +1893,29 @@
 \newsavebox{\FV@LineBox}
 \newsavebox{\FV@LineIndentBox}
 \let\FV@LineIndentChars\@empty
-\def\FV@CleanRemainingChars#1\FV@Undefined{}
-\def\FV@GetLineIndent{\afterassignment\FV@CheckIndentChar\let\FV@NextChar=}
-\def\FV@CheckIndentChar{%
-  \ifx\FV@NextChar\FV@Undefined\relax
-    \let\FV@Next=\relax
-  \else
-    \ifx\FV@NextChar\FV@FVSpaceToken\relax
-      \g@addto@macro{\FV@LineIndentChars}{\FV@FVSpaceToken}%
-      \let\FV@Next=\FV@GetLineIndent
-    \else
-      \ifx\FV@NextChar\FV@FVTabToken\relax
-        \g@addto@macro{\FV@LineIndentChars}{\FV@FVTabToken}%
-        \let\FV@Next=\FV@GetLineIndent
+\def\FV@GetLineIndent{%
+  \@ifnextchar\FV@Sentinel
+   {\FV@GetLineIndent@End}%
+   {\ifx\@let@token\FV@FVSpaceToken
+      \let\FV@Next\FV@GetLineIndent@Whitespace
+    \else\ifx\@let@token\FV@FVTabToken
+      \let\FV@Next\FV@GetLineIndent@Whitespace
+    \else\ifcsname FV@PYG@Redefed\endcsname
+      \ifx\@let@token\FV@PYG@Redefed
+        \let\FV@Next\FV@GetLineIndent@Pygments
       \else
-        \let\FV@Next=\FV@CleanRemainingChars
+        \let\FV@Next\FV@GetLineIndent@End
       \fi
-    \fi
-  \fi
-  \FV@Next
-}
+    \else
+      \let\FV@Next\FV@GetLineIndent@End
+    \fi\fi\fi
+    \FV@Next}}
+\def\FV@GetLineIndent@End#1\FV@Sentinel{}
+\def\FV@GetLineIndent@Whitespace#1{%
+  \expandafter\def\expandafter\FV@LineIndentChars\expandafter{\FV@LineIndentChars#1}%
+  \FV@GetLineIndent}
+\def\FV@GetLineIndent@Pygments#1#2#3{%
+  \FV@GetLineIndent#3}
 \def\FV@TrueTab@UseWidth{%
   \@tempdima=\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
   \stepcounter{FV@TrueTabCounter}%
@@ -2338,7 +2341,7 @@
     \hbox to \FV@BreakIndent{\hfill}%
     \ifbool{FV@breakautoindent}%
      {\let\FV@LineIndentChars\@empty
-      \FV@GetLineIndent#1\FV@Undefined
+      \FV@GetLineIndent#1\FV@Sentinel
       \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
       \hbox to \wd\FV@LineIndentBox{\hfill}%
       \advance\FV@LineWidth by -\wd\FV@LineIndentBox
@@ -2558,9 +2561,9 @@
   \def\FV@BreakAfterPrep@PygmentsHook{%
     \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}%
   \ifx#2\relax
-    \let\FV@PYG#1%
+    \let\FV@PYG=#1\relax
   \else
-    \let\FV@PYG#2%
+    \let\FV@PYG=#2\relax
   \fi
   \ifbool{FV@breakbytoken}%
    {\ifbool{FV@breakbytokenanywhere}%
@@ -2574,6 +2577,7 @@
         \leavevmode\hbox{\FV@PYG{##1}{##2}}}}}%
    {\def#1##1##2{%
      \FV@PYG{##1}{\FancyVerbBreakStart##2\FancyVerbBreakStop}}}%
+  \let\FV@PYG@Redefed=#1\relax
 }
 \let\FV@BreakByTokenAnywhereBreak\relax
 \def\FV@DetokMacro@StripSpace#1 {#1}
