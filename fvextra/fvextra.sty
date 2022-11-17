@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2022/11/15 v1.5dev8 fvextra - extensions and patches for fancyvrb]
+    [2022/11/17 v1.5dev9 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -2007,13 +2007,13 @@
    {}%
    {\ifx\@let@token\FancyVerbBreakStop
       \let\FV@Break@Next\relax
-    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStart
+    \else\ifx\@let@token\FV@BreakBufferStart
       \let\FV@Break@Next\relax
-    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStop
+    \else\ifx\@let@token\FV@BreakBufferStop
       \let\FV@Break@Next\relax
-    \else\expandafter\ifx\csname @let@token\endcsname$
+    \else\ifx\@let@token$
       \let\FV@Break@Next\FV@Break@Math
-    \else\expandafter\ifx\csname @let@token\endcsname\bgroup
+    \else\ifx\@let@token\bgroup
       \let\FV@Break@Next\FV@Break@Group
     \else
       \let\FV@Break@Next\FV@Break@Token

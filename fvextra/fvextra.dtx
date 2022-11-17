@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/15 v1.5dev8 fvextra - extensions and patches for fancyvrb]
+    [2022/11/17 v1.5dev9 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5132}
+% \CheckSum{5124}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -5352,7 +5352,6 @@
 %
 % The check against |\FV@BreakBufferStart| should typically not be necessary; it is included for completeness and to allow for future extensions and customization.  |\FV@BreakBufferStart| is only inserted raw (rather than wrapped in |\FancyVerbBreakStart|) in token processing macros, where it initiates (or restarts) scanning and is not itself scanned.
 %
-% The |\csname @let@token\endcsname| here and in later macros prevents potential issues if |\@let@token| is ever |\else| or |\fi|.
 %    \begin{macrocode}
 \begingroup
 \catcode`\$=3
@@ -5361,13 +5360,13 @@
    {}%
    {\ifx\@let@token\FancyVerbBreakStop
       \let\FV@Break@Next\relax
-    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStart
+    \else\ifx\@let@token\FV@BreakBufferStart
       \let\FV@Break@Next\relax
-    \else\expandafter\ifx\csname @let@token\endcsname\FV@BreakBufferStop
+    \else\ifx\@let@token\FV@BreakBufferStop
       \let\FV@Break@Next\relax
-    \else\expandafter\ifx\csname @let@token\endcsname$
+    \else\ifx\@let@token$
       \let\FV@Break@Next\FV@Break@Math
-    \else\expandafter\ifx\csname @let@token\endcsname\bgroup
+    \else\ifx\@let@token\bgroup
       \let\FV@Break@Next\FV@Break@Group
     \else
       \let\FV@Break@Next\FV@Break@Token
@@ -5449,6 +5448,8 @@
 % Deal with breaking around only specified tokens.  This is a bit trickier.  We only break if a macro corresponding to the token exists.  We also need to check whether the specified token should be grouped, that is, whether breaks are allowed between identical characters.  All of this has to be written carefully so that nothing is accidentally inserted into the stream for future scanning.
 %
 % Dealing with tokens followed by empty groups (for example, |\x{}|) is particularly challenging when we want to avoid breaks between identical characters.  When a token is followed by a group, we need to save the current token for later reference (|\x| in the example), then capture and save the following group, and then---only if the group was empty---see if the following token is identical to the old saved token.
+%
+% The |\csname @let@token\endcsname| prevents issues if |\@let@token| is ever |\else| or |\fi|.
 %    \begin{macrocode}
 \def\FV@Break@BeforeAfterToken#1{%
   \ifcsname FV@BreakBefore@Token\detokenize{#1}\endcsname
