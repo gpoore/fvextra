@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/17 v1.5dev9 fvextra - extensions and patches for fancyvrb]
+    [2022/11/27 v1.5dev10 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5124}
+% \CheckSum{5254}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -743,7 +743,14 @@
 %
 % This is an environment variant of \cmd{\Verb}.  The environment must contain only a single line of text, and the closing \cmd{\end{VerbEnv}} must be on a line by itself.  The $\langle$\textit{options}$\rangle$ and $\langle$\textit{single line}$\rangle$ are read and then passed on to \cmd{\Verb} internally for actual typesetting.
 %
-% While \cmd{VerbEnv} can be used by document authors, it is primarily intended for package creators.  For example, it is used in \pkg{minted} to implement \cmd{\mintinline}.  In that case, highlighted code is always generated within a \cmd{Verbatim} environment.  It is possible to process this as inline rather than block verbatim by \cmd{\let}ting \cmd{\Verbatim} to \cmd{\VerbEnv}.  Because \cmd{VerbEnv} is primarily intended for package creators working with auto-generated content, the implementation currently provides limited error message and error recovery functionality.
+% While \cmd{VerbEnv} can be used by document authors, it is primarily intended for package creators.  For example, it is used in \pkg{minted} to implement \cmd{\mintinline}.  In that case, highlighted code is always generated within a \cmd{Verbatim} environment.  It is possible to process this as inline rather than block verbatim by \cmd{\let}ting \cmd{\Verbatim} to \cmd{\VerbEnv}.
+%
+% \begin{example}
+%   BEFORE\begin{VerbEnv}
+%   _inline_
+%   \end{VerbEnv}
+%   AFTER
+% \end{example}
 %
 %
 % \section{Line breaking}
@@ -1608,6 +1615,25 @@
 %
 % \subsubsection{Tokenization and lookahead}
 %
+%
+% \begin{macro}{\FVExtra@ifnextcharAny}
+% A version of |\@ifnextchar| that can detect any character, including catcode 10 spaces.  This is an exact copy of the definition from |latex.ltx|, modified with the ``|\let\reserved@d= #1%|'' (note space!) trick from \pkg{amsgen}.
+%    \begin{macrocode}
+\long\def\FVExtra@ifnextcharAny#1#2#3{%
+  \let\reserved@d= #1%
+  \def\reserved@a{#2}%
+  \def\reserved@b{#3}%
+  \futurelet\@let@token\FVExtra@ifnchAny}
+\def\FVExtra@ifnchAny{%
+  \ifx\@let@token\reserved@d
+    \expandafter\reserved@a
+  \else
+    \expandafter\reserved@b
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+
+%
 % \begin{macro}{\FVExtra@ifnextcharVArg}
 % This is a wrapper for \cmd{\@ifnextchar} from |latex.ltx| (|ltdefns.dtx|) that tokenizes lookaheads under a mostly verbatim catcode regime rather than the current catcode regime.  This is important when looking ahead for stars |*| and optional argument delimiters~|[|, because if these are not present when looking ahead for a verbatim argument, then the first thing tokenized will be the verbatim argument's delimiting character.  Ideally, the delimiter should be tokenized under a verbatim catcode regime.  This is necessary for instance if the delimiter is \cmd{\active} and \cmd{\outer}.
 %
@@ -1658,19 +1684,9 @@
 %
 %
 % \begin{macro}{\FVExtraReadOArgBeforeVEnv}
-% Read an optional argument that comes before the contents of a verbatim environment, after the |\begin{|\meta{environment}|}| but before the start of the next line where the verbatim content begins.  Note that this is not needed when an environment takes a mandatory argument that follows the optional argument.
+% Read an optional argument at the start of a verbatim environment, after the |\begin{|\meta{environment}|}| but before the start of the next line where the verbatim content begins.  Check for extraneous content after the optional argument and discard the following newline.  Note that this is not needed when an environment takes a mandatory argument that follows the optional argument.
 %
-% The case with only an optional argument is tricky because the default behavior of \cmd{\@ifnextchar} is to read into the next line looking for the optional argument.  Setting |^^M| \cmd{\active} prevents this.  That does mean, though, that the end-of-line token will have to be read and removed later as an \cmd{\active} |^^M|.  See the definition of \cmd{\FV@BeginScanning} in \fancyvrb\ for an example of doing this:
-% \begin{quote}
-%\begin{verbatim}
-%\begingroup
-%\catcode`\^^M=\active
-%  \gdef\FV@BeginScanning#1^^M{%
-%    \def\@tempa{#1}\ifx\@tempa\@empty\else\FV@BadBeginError\fi%
-%    \FV@GetLine}%
-%\endgroup
-%\end{verbatim}
-% \end{quote}
+% The case with only an optional argument is tricky because the default behavior of \cmd{\@ifnextchar} is to read into the next line looking for the optional argument.  Setting |^^M| as \cmd{\active} prevents this.  That does mean, though, that the end-of-line token will have to be read and removed later as an \cmd{\active} |^^M|.
 %
 % \cmd{\@ifnextchar} is used instead of \cmd{\FVExtra@ifnextcharVArg} because the latter is not needed since there is an explicit, required delimiter (|^^M|) before the actual start of verbatim content.  Lookahead can never tokenize verbatim content under an incorrect catcode regime.
 %    \begin{macrocode}
@@ -1678,8 +1694,26 @@
   \begingroup
   \catcode`\^^M=\active
   \@ifnextchar[%
-   {\endgroup\FV@ReadOArgContinue{#2}}%
-   {\endgroup\FV@ReadOArgContinue{#2}[#1]}}
+   {\endgroup\FVExtraReadOArgBeforeVEnv@i{#2}}%
+   {\endgroup\FVExtraReadOArgBeforeVEnv@i{#2}[#1]}}
+\def\FVExtraReadOArgBeforeVEnv@i#1[#2]{%
+  \begingroup
+  \catcode`\^^M=\active
+  \FVExtraReadOArgBeforeVEnv@ii{#1}{#2}}
+\begingroup
+\catcode`\^^M=\active%
+\gdef\FVExtraReadOArgBeforeVEnv@ii#1#2#3^^M{%
+  \endgroup%
+  \FVExtraReadOArgBeforeVEnv@iii{#1}{#2}{#3}}%
+\endgroup%
+\def\FVExtraReadOArgBeforeVEnv@iii#1#2#3{%
+  \if\relax\detokenize{#3}\relax
+  \else
+    \PackageError{fvextra}%
+     {Discarded invalid text while checking for optional argument of verbatim environment}%
+     {Discarded invalid text while checking for optional argument of verbatim environment}%
+  \fi
+  #1{#2}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3536,13 +3570,22 @@
     \ifx\@currenvir\@empty
       \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
     \else
+      \ifx\@currenvir\relax
+        \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
+      \fi
     \fi
   \else
     \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
   \fi
-  \FVExtraReadOArgBeforeVEnv{\VerbEnv@i}}
-\def\VerbEnv@i#1{%
-  \expandafter\VerbEnv@ii\expandafter{\@currenvir}{#1}}
+  \VerbatimEnvironment
+  \FVExtraReadOArgBeforeVEnv{\expandafter\VerbEnv@i\expandafter{\FV@EnvironName}}}
+\def\VerbEnv@i#1#2{%
+  \begingroup
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\ =\active
+  \catcode`\^^I=\active
+  \catcode`\^^M=\active
+  \VerbEnv@ii{#1}{#2}}
 \begingroup
 \catcode`\!=0
 \catcode`\<=1
@@ -3551,23 +3594,78 @@
 !catcode`!{=12
 !catcode`!}=12
 !catcode`!^^M=!active%
-!gdef!VerbEnv@ii#1#2<%
-  !begingroup%
-  !let!do!@makeother!FVExtraDoSpecials%
-  !catcode`!^^M=!active%
-  !def!VerbEnv@iii##1^^M##2^^M\end{#1}^^M<%
-    !endgroup%
-    !VerbEnv@iv<##1><##2>>%
-  !VerbEnv@iii<#2>>%
+!gdef!VerbEnv@ii#1#2#3^^M<%
+  !endgroup%
+  !def!VerbEnv@CheckLine##1\end{#1}##2!FV@Sentinel<%
+    !if!relax!detokenize<##2>!relax%
+    !else%
+      !PackageError<fvextra><Missing environment contents><Missing environment contents>%
+      !let!VerbEnv@iii!VerbEnv@iii@Error%
+    !fi>%
+  !VerbEnv@CheckLine#3\end{#1}!FV@Sentinel%
+  !VerbEnv@iii<#1><#2><#3>>%
 !endgroup%
-\def\VerbEnv@iv#1#2{%
+\def\VerbEnv@iii@Error#1#2#3{}
+\def\VerbEnv@iii#1#2#3{%
+  \begingroup
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\ =10\relax
+  \catcode`\^^M=\active
+  \VerbEnv@iv{#1}{#2}{#3}}
+\begingroup
+\catcode`\!=0
+\catcode`\<=1
+\catcode`\>=2
+!catcode`!\=12
+!catcode`!{=12
+!catcode`!}=12
+!catcode`!^^M=!active%
+!gdef!VerbEnv@iv#1#2#3#4^^M<%
+  !endgroup%
+  !def!VerbEnv@CheckEndDelim##1\end{#1}##2!FV@Sentinel<%
+    !if!relax!detokenize<##2>!relax%
+      !PackageError<fvextra><Missing end for environment !FV@EnvironName><Add environment end>%
+      !let!VerbEnv@v!VerbEnv@v@Error%
+    !else%
+      !VerbEnv@CheckEndLeading##1!FV@Sentinel%
+      !VerbEnv@CheckEndTrailing##2!FV@Sentinel%
+    !fi>%
+  !def!VerbEnv@CheckEndTrailing##1\end{#1}!FV@Sentinel<%
+    !if!relax!detokenize<##1>!relax%
+    !else%
+      !PackageError<fvextra>%
+       <Discarded text after end of environment !FV@EnvironName>%
+       <Discarded text after end of environment !FV@EnvironName>%
+      !let!VerbEnv@v!VerbEnv@v@Error%
+    !fi>%
+  !VerbEnv@CheckEndDelim#4\end{#1}!FV@Sentinel%
+  !VerbEnv@v<#2><#3>>%
+!endgroup
+\def\VerbEnv@CheckEndLeading{%
+  \FVExtra@ifnextcharAny\@sptoken%
+   {\VerbEnv@CheckEndLeading@Continue}%
+   {\ifx\@let@token\FV@Sentinel
+      \expandafter\VerbEnv@CheckEndLeading@End
+    \else
+      \expandafter\VerbEnv@CheckEndLeading@EndError
+    \fi}}
+\def\VerbEnv@CheckEndLeading@Continue#1{%
+  \VerbEnv@CheckEndLeading}
+\def\VerbEnv@CheckEndLeading@End#1\FV@Sentinel{}
+\def\VerbEnv@CheckEndLeading@EndError{%
+  \PackageError{fvextra}%
+   {Discarded text before end of environment \FV@EnvironName}%
+   {Discarded text before end of environment \FV@EnvironName}%
+  \let\VerbEnv@v\VerbEnv@v@Error}
+\def\VerbEnv@v@Error#1#2{}
+\def\VerbEnv@v#1#2{%
   \Verb[#1]{#2}%
-  \expandafter\end\expandafter{\@currenvir}}
+  \expandafter\end\expandafter{\FV@EnvironName}}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\endVerbEnv}
 %    \begin{macrocode}
-\def\endVerbEnv{}
+\def\endVerbEnv{\global\let\FV@EnvironName\relax}
 %    \end{macrocode}
 % \end{macro}
 %

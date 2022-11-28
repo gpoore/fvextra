@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2022/11/17 v1.5dev9 fvextra - extensions and patches for fancyvrb]
+    [2022/11/27 v1.5dev10 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -126,6 +126,18 @@
   \fi
   \FV@UTF@octets@after{#1#2#3#4}}
 \fi
+\long\def\FVExtra@ifnextcharAny#1#2#3{%
+  \let\reserved@d= #1%
+  \def\reserved@a{#2}%
+  \def\reserved@b{#3}%
+  \futurelet\@let@token\FVExtra@ifnchAny}
+\def\FVExtra@ifnchAny{%
+  \ifx\@let@token\reserved@d
+    \expandafter\reserved@a
+  \else
+    \expandafter\reserved@b
+  \fi}
+
 \long\def\FVExtra@ifnextcharVArg#1#2#3{%
   \begingroup
   \edef\FV@TmpSpaceCat{\the\catcode` }%
@@ -147,8 +159,26 @@
   \begingroup
   \catcode`\^^M=\active
   \@ifnextchar[%
-   {\endgroup\FV@ReadOArgContinue{#2}}%
-   {\endgroup\FV@ReadOArgContinue{#2}[#1]}}
+   {\endgroup\FVExtraReadOArgBeforeVEnv@i{#2}}%
+   {\endgroup\FVExtraReadOArgBeforeVEnv@i{#2}[#1]}}
+\def\FVExtraReadOArgBeforeVEnv@i#1[#2]{%
+  \begingroup
+  \catcode`\^^M=\active
+  \FVExtraReadOArgBeforeVEnv@ii{#1}{#2}}
+\begingroup
+\catcode`\^^M=\active%
+\gdef\FVExtraReadOArgBeforeVEnv@ii#1#2#3^^M{%
+  \endgroup%
+  \FVExtraReadOArgBeforeVEnv@iii{#1}{#2}{#3}}%
+\endgroup%
+\def\FVExtraReadOArgBeforeVEnv@iii#1#2#3{%
+  \if\relax\detokenize{#3}\relax
+  \else
+    \PackageError{fvextra}%
+     {Discarded invalid text while checking for optional argument of verbatim environment}%
+     {Discarded invalid text while checking for optional argument of verbatim environment}%
+  \fi
+  #1{#2}}
 \def\FVExtraReadVArg#1{%
   \begingroup
   \ifFV@pdfTeXinputenc
@@ -1061,13 +1091,22 @@
     \ifx\@currenvir\@empty
       \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
     \else
+      \ifx\@currenvir\relax
+        \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
+      \fi
     \fi
   \else
     \PackageError{fvextra}{VerbEnv is an environment}{VerbEnv is an environment}%
   \fi
-  \FVExtraReadOArgBeforeVEnv{\VerbEnv@i}}
-\def\VerbEnv@i#1{%
-  \expandafter\VerbEnv@ii\expandafter{\@currenvir}{#1}}
+  \VerbatimEnvironment
+  \FVExtraReadOArgBeforeVEnv{\expandafter\VerbEnv@i\expandafter{\FV@EnvironName}}}
+\def\VerbEnv@i#1#2{%
+  \begingroup
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\ =\active
+  \catcode`\^^I=\active
+  \catcode`\^^M=\active
+  \VerbEnv@ii{#1}{#2}}
 \begingroup
 \catcode`\!=0
 \catcode`\<=1
@@ -1076,19 +1115,74 @@
 !catcode`!{=12
 !catcode`!}=12
 !catcode`!^^M=!active%
-!gdef!VerbEnv@ii#1#2<%
-  !begingroup%
-  !let!do!@makeother!FVExtraDoSpecials%
-  !catcode`!^^M=!active%
-  !def!VerbEnv@iii##1^^M##2^^M\end{#1}^^M<%
-    !endgroup%
-    !VerbEnv@iv<##1><##2>>%
-  !VerbEnv@iii<#2>>%
+!gdef!VerbEnv@ii#1#2#3^^M<%
+  !endgroup%
+  !def!VerbEnv@CheckLine##1\end{#1}##2!FV@Sentinel<%
+    !if!relax!detokenize<##2>!relax%
+    !else%
+      !PackageError<fvextra><Missing environment contents><Missing environment contents>%
+      !let!VerbEnv@iii!VerbEnv@iii@Error%
+    !fi>%
+  !VerbEnv@CheckLine#3\end{#1}!FV@Sentinel%
+  !VerbEnv@iii<#1><#2><#3>>%
 !endgroup%
-\def\VerbEnv@iv#1#2{%
+\def\VerbEnv@iii@Error#1#2#3{}
+\def\VerbEnv@iii#1#2#3{%
+  \begingroup
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\ =10\relax
+  \catcode`\^^M=\active
+  \VerbEnv@iv{#1}{#2}{#3}}
+\begingroup
+\catcode`\!=0
+\catcode`\<=1
+\catcode`\>=2
+!catcode`!\=12
+!catcode`!{=12
+!catcode`!}=12
+!catcode`!^^M=!active%
+!gdef!VerbEnv@iv#1#2#3#4^^M<%
+  !endgroup%
+  !def!VerbEnv@CheckEndDelim##1\end{#1}##2!FV@Sentinel<%
+    !if!relax!detokenize<##2>!relax%
+      !PackageError<fvextra><Missing end for environment !FV@EnvironName><Add environment end>%
+      !let!VerbEnv@v!VerbEnv@v@Error%
+    !else%
+      !VerbEnv@CheckEndLeading##1!FV@Sentinel%
+      !VerbEnv@CheckEndTrailing##2!FV@Sentinel%
+    !fi>%
+  !def!VerbEnv@CheckEndTrailing##1\end{#1}!FV@Sentinel<%
+    !if!relax!detokenize<##1>!relax%
+    !else%
+      !PackageError<fvextra>%
+       <Discarded text after end of environment !FV@EnvironName>%
+       <Discarded text after end of environment !FV@EnvironName>%
+      !let!VerbEnv@v!VerbEnv@v@Error%
+    !fi>%
+  !VerbEnv@CheckEndDelim#4\end{#1}!FV@Sentinel%
+  !VerbEnv@v<#2><#3>>%
+!endgroup
+\def\VerbEnv@CheckEndLeading{%
+  \FVExtra@ifnextcharAny\@sptoken%
+   {\VerbEnv@CheckEndLeading@Continue}%
+   {\ifx\@let@token\FV@Sentinel
+      \expandafter\VerbEnv@CheckEndLeading@End
+    \else
+      \expandafter\VerbEnv@CheckEndLeading@EndError
+    \fi}}
+\def\VerbEnv@CheckEndLeading@Continue#1{%
+  \VerbEnv@CheckEndLeading}
+\def\VerbEnv@CheckEndLeading@End#1\FV@Sentinel{}
+\def\VerbEnv@CheckEndLeading@EndError{%
+  \PackageError{fvextra}%
+   {Discarded text before end of environment \FV@EnvironName}%
+   {Discarded text before end of environment \FV@EnvironName}%
+  \let\VerbEnv@v\VerbEnv@v@Error}
+\def\VerbEnv@v@Error#1#2{}
+\def\VerbEnv@v#1#2{%
   \Verb[#1]{#2}%
-  \expandafter\end\expandafter{\@currenvir}}
-\def\endVerbEnv{}
+  \expandafter\end\expandafter{\FV@EnvironName}}
+\def\endVerbEnv{\global\let\FV@EnvironName\relax}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces}\FV@@Command{#2}}%
