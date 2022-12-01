@@ -1,7 +1,7 @@
 # Changes
 
 
-## v1.5 (dev)
+## v1.5 (2022/11/30)
 
 *  Added `\FancyVerbFormatInline` for customizing the formatting of inline
    verbatim, such as `\Verb`.  This parallels `\FancyVerbFormatLine` and
