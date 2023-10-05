@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2022/11/30 v1.5 fvextra - extensions and patches for fancyvrb]
+    [2023/10/04 v1.6dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -34,6 +34,11 @@
 \@ifpackageloaded{csquotes}%
  {\PackageWarning{fvextra}{csquotes should be loaded after fvextra, %
   to avoid a warning from the lineno package}}{}
+\begingroup
+\catcode`\ =\active%
+\gdef\FV@ActiveSpaceToken{ }%
+\endgroup%
+\edef\FV@SpaceCatTen{\detokenize{ }}
 \def\FV@FVSpaceToken{\FV@Space}
 \def\FV@FVTabToken{\FV@Tab}
 \def\FVExtraDoSpecials{%
@@ -1210,7 +1215,13 @@
        \expandafter\protected\expandafter\def\@tempc{\FV@Command{#4}{#3}}}%
      \expandafter\@tempb\@tempa}%
     {#1{#2}{\FV@Command{#4}{#3}}}}}
-\def\FancyVerbSpace{\textvisiblespace}
+\def\FancyVerbSpace{%
+ \makebox[0.5em]{%
+   \kern.07em
+   \vrule height.3ex
+   \hrulefill
+   \vrule height.3ex
+   \kern.07em}}
 \newcounter{FV@TrueTabGroupLevel}
 \def\FV@@ObeyTabs#1{%
   \let\FV@Space@Orig\FV@Space
@@ -1383,6 +1394,11 @@
  {\def\FV@TabChar{\FV@TabColor{\FancyVerbTab}}}%
  {\let\FV@TabChar\relax}
 \fvset{tabcolor=none, showtabs=false}
+\newbool{FV@showspaces}
+\define@booleankey{FV}{showspaces}%
+ {\booltrue{FV@showspaces}}%
+ {\boolfalse{FV@showspaces}}
+\fvset{showspaces=false}
 \define@key{FV}{space}{\def\FancyVerbSpace{#1}}
 \define@key{FV}{spacecolor}%
  {\ifstrempty{#1}%
@@ -1390,10 +1406,39 @@
    {\ifstrequal{#1}{none}%
      {\let\FV@SpaceColor\relax}%
      {\def\FV@SpaceColor{\textcolor{#1}}}}}
-\define@booleankey{FV}{showspaces}%
- {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}%
- {\def\FV@Space{\ }}
-\fvset{spacecolor=none, showspaces=false}
+\fvset{spacecolor=none}
+\define@key{FV}{spacebreak}{%
+  \def\FancyVerbSpaceBreak{#1}}
+\fvset{spacebreak=\discretionary{}{}{}}
+\newbool{FV@breakcollapsespaces}
+\define@booleankey{FV}{breakcollapsespaces}%
+ {\booltrue{FV@breakcollapsespaces}}%
+ {\boolfalse{FV@breakcollapsespaces}}%
+\fvset{breakcollapsespaces=true}
+\def\FV@DefFVSpace{%
+  \ifbool{FV@showspaces}%
+   {\ifbool{FV@breaklines}%
+     {\ifcsname FV@BreakBefore@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}%
+      \else\ifcsname FV@BreakAfter@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}%
+      \else
+        \def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}\FancyVerbSpaceBreak}%
+      \fi\fi}%
+     {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}}%
+   {\ifbool{FV@breaklines}%
+     {\ifcsname FV@BreakBefore@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\mbox{\FV@SpaceCatTen}}%
+      \else\ifcsname FV@BreakAfter@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\mbox{\FV@SpaceCatTen}}%
+      \else
+        \ifbool{FV@breakcollapsespaces}%
+         {\def\FV@Space{\FV@SpaceCatTen}}%
+         {\def\FV@Space{\mbox{\FV@SpaceCatTen}\FancyVerbSpaceBreak}}%
+      \fi\fi}%
+     {\def\FV@Space{\FV@SpaceCatTen}}}}%
+\AtEndOfPackage{%
+  \g@addto@macro\FV@FormattingPrep@PreHook{\FV@DefFVSpace}}
 \define@booleankey{FV}{mathescape}%
  {\let\FancyVerbMathEscape\FV@MathEscape}%
  {\let\FancyVerbMathEscape\relax}
@@ -2132,11 +2177,24 @@
 \def\FV@Break@GroupTemplate#1{{#1}}
 \def\FV@Break@NBToken#1{%
   \FV@BreakBuffer@Append{#1}%
-  \let\FV@Break@LastToken=\FV@Undefined
+  \let\FV@LastToken=\FV@Undefined
   \FV@Break@Scan}
 \def\FV@Break@AnyToken#1{%
-  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
-  \FV@Break@Scan}
+  \ifx\FV@FVSpaceToken#1\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {\let\FV@LastToken=#1\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifx\FV@LastToken\FV@FVSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\let\FV@LastToken=#1%
+      \FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+     {\let\FV@LastToken=#1%
+      \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}\FV@Break@Scan}}}
 \def\FV@Break@BeforeAfterToken#1{%
   \ifcsname FV@BreakBefore@Token\detokenize{#1}\endcsname
     \let\FV@Break@Next\FV@Break@BeforeTokenBreak
@@ -2156,11 +2214,19 @@
 \def\FV@Break@BeforeTokenBreak#1{%
   \ifbool{FV@breakbeforeinrun}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \ifx#1\FV@FVSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \fi
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
       \def\FV@RescanToken{#1}%
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \ifx#1\FV@FVSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \fi
       \let\FV@Break@Next\FV@Break@Scan
       \let\FV@LastToken=#1%
     \fi}%
@@ -2175,11 +2241,19 @@
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \ifx#1\FV@FVSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \fi
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
         \def\FV@RescanToken{#1}%
       \else
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \ifx#1\FV@FVSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \fi
         \let\FV@Break@Next\FV@Break@Scan
         \let\FV@LastToken=#1%
       \fi
@@ -2190,32 +2264,58 @@
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
   \@ifnextchar\FV@FVSpaceToken%
-   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
-   {\ifbool{FV@breakafterinrun}%
-     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
-      \let\FV@Break@Next\FV@Break@Scan}%
-     {\ifx\@let@token#1\relax
+   {\ifx#1\FV@FVSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\FV@Break@AfterTokenBreak@i{#1}}%
+     {\FV@BreakBuffer@Append{#1}%
+      \FV@Break@Scan}}%
+   {\FV@Break@AfterTokenBreak@i{#1}}}
+\def\FV@Break@AfterTokenBreak@i#1{%
+  \ifbool{FV@breakafterinrun}%
+   {\ifx#1\FV@FVSpaceToken
+      \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
+    \fi
+    \let\FV@Break@Next\FV@Break@Scan}%
+   {\ifx\@let@token#1\relax
+      \FV@BreakBuffer@Append{#1}%
+      \let\FV@Break@Next\FV@Break@Scan
+    \else
+      \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
         \FV@BreakBuffer@Append{#1}%
-        \let\FV@Break@Next\FV@Break@Scan
+        \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
       \else
-        \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
-          \FV@BreakBuffer@Append{#1}%
-          \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
+        \ifx#1\FV@FVSpaceToken
+          \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
         \else
           \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
-          \let\FV@Break@Next\FV@Break@Scan
         \fi
-      \fi}%
-    \FV@Break@Next}%
+        \let\FV@Break@Next\FV@Break@Scan
+      \fi
+    \fi}%
+  \FV@Break@Next
 }
 \def\FV@Break@AfterTokenBreak@Group#1{%
   \ifstrempty{#1}%
    {\FV@BreakBuffer@Append{{}}%
     \@ifnextchar\FV@LastToken%
      {\FV@Break@Scan}%
-     {\FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+     {\ifx\FV@LastToken\FV@FVSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
       \FV@Break@Scan}}%
-   {\FV@Break@Group{#1}}}
+   {\ifx\FV@LastToken\FV@FVSpaceToken
+      \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+    \fi
+    \FV@Break@Group{#1}}}
 \ifFV@pdfTeXinputenc
 \def\FV@BreakBeforePrep@UTF{%
   \ifx\FV@BreakBefore\@empty\relax
@@ -2304,8 +2404,23 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@AnyToken@UTF@i#1{%
-  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
-  \FV@Break@Scan}
+  \def\FV@CurrentToken{#1}%
+  \ifx\FV@CurrentToken\FV@ActiveSpaceToken\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {\let\FV@LastToken\FV@CurrentToken
+    \FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\let\FV@LastToken\FV@CurrentToken
+      \FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+     {\let\FV@LastToken\FV@CurrentToken
+      \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}\FV@Break@Scan}}}
 \def\FV@Break@BeforeAfterToken@UTF#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
@@ -2335,11 +2450,19 @@
   \def\FV@CurrentToken{#1}%
   \ifbool{FV@breakbeforeinrun}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \fi
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
       \def\FV@RescanToken{#1}%
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \fi
       \let\FV@Break@Next\FV@Break@Scan
       \def\FV@LastToken{#1}%
     \fi}%
@@ -2354,11 +2477,19 @@
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \fi
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
         \def\FV@RescanToken{#1}%
       \else
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \fi
         \let\FV@Break@Next\FV@Break@Scan
         \def\FV@LastToken{#1}%
       \fi
@@ -2369,27 +2500,43 @@
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
   \@ifnextchar\FV@FVSpaceToken%
-   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
-   {\ifbool{FV@breakafterinrun}%
-     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
-      \let\FV@Break@Next\FV@Break@Scan}%
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\FV@Break@AfterTokenBreak@UTF@i{#1}}%
      {\FV@BreakBuffer@Append{#1}%
-      \ifx\@let@token\bgroup\relax
-        \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
-      \else
-        \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@i
-      \fi}%
-    \FV@Break@Next}%
-}
+      \FV@Break@Scan}}%
+   {\FV@Break@AfterTokenBreak@UTF@i{#1}}}
 \def\FV@Break@AfterTokenBreak@UTF@i#1{%
+  \ifbool{FV@breakafterinrun}%
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
+    \fi
+    \let\FV@Break@Next\FV@Break@Scan}%
+   {\FV@BreakBuffer@Append{#1}%
+    \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
+      \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
+    \else
+      \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@ii
+    \fi}%
+  \FV@Break@Next}
+\def\FV@Break@AfterTokenBreak@UTF@ii#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@UTF@i
+    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@UTF@ii
   \else
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \ifx\FV@LastToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
@@ -2398,9 +2545,19 @@
   \ifstrempty{#1}%
    {\FV@BreakBuffer@Append{{}}%
     \@ifnextchar\bgroup
-     {\FV@Break@Group}%
+     {\ifx\FV@LastToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
+      \FV@Break@Group}%
      {\FV@Break@AfterTokenBreak@Group@UTF@i}}%
-   {\FV@Break@Group{#1}}}
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+    \fi
+    \FV@Break@Group{#1}}}
 \def\FV@Break@AfterTokenBreak@Group@UTF@i#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
@@ -2409,7 +2566,11 @@
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \ifx\FV@LastToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi

@@ -1,6 +1,6 @@
 % \iffalse meta-comment
 %
-% Copyright (C) 2016-2022 by Geoffrey M. Poore <gpoore@gmail.com>
+% Copyright (C) 2016-2023 by Geoffrey M. Poore <gpoore@gmail.com>
 % ---------------------------------------------------------------------------
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3
@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2022/11/30 v1.5 fvextra - extensions and patches for fancyvrb]
+    [2023/10/04 v1.6dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,7 +230,7 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5254}
+% \CheckSum{5550}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -247,6 +247,16 @@
 %   Right bracket \]     Circumflex    \^     Underscore    \_
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
+%
+%
+% \begin{changelog}{v1.6}{2023/10/??}
+% \item Redefined visible space \Verb{\FancyVerbSpace} so that it now has the correct width.  It had previously been redefined as \Verb{\textvisiblespace}, but that was slightly too narrrow.
+% \item Added option \Verb{spacebreak}.  This determines the break that is inserted around spaces when \Verb{showspaces=true} or \Verb{breakcollapsespaces=false}, by defining the new macro \Verb{\FancyVerbSpaceBreak}.
+% \item \Verb{breakbefore}, \Verb{breakafter}, and \Verb{breakanywhere} now produce plain breaks around spaces when \Verb{showspaces=true}, instead of breaks with a break symbol at the end of wrapped lines.  \Verb{\FancyVerbBreakAnywhereBreak}, \Verb{\FancyVerbBreakBeforeBreak}, and \Verb{\FancyVerbBreakAfterBreak} are no longer inserted next to spaces.  Instead, \Verb{\FancyVerbSpaceBreak} is inserted or (depending on options) \Verb{\FV@Space} is defined to include \Verb{\FancyVerbSpaceBreak}.
+% \item Added option \Verb{breakcollapsespaces}.  When \Verb{true} (default), a line break within a run of regular spaces (\Verb{showspaces=false}) replaces all spaces with a single break, and the wrapped line after the break starts with a non-space character.  When \Verb{false}, a line break within a run of regular spaces preserves all spaces, and the wrapped line after the break may start with one or more spaces.  This causes regular spaces to behave exactly like the visible spaces produced with \Verb{showspaces}; both give identical line breaks, with the only difference being the appearance of spaces.
+% \item \Verb{breaklines} now automatically enables breaks after space characters when \Verb{showspaces=true}.
+% \item Reimplemented definition of \Verb{\FV@Space} to work with new space options.
+% \end{changelog}
 %
 %
 % \begin{changelog}{v1.5}{2022/11/30}
@@ -526,8 +536,12 @@
 % This only applies to the reimplemented \cmd{\UseVerb}, when paired with the reimplemented \cmd{\SaveVerb}.  It may be extended to environments (\cmd{\UseVerbatim}, etc.\@) in the future, if the relevant commands and environments are reimplemented.
 %
 %
-% \item[space (macro) (\string\textvisiblespace, \textvisiblespace)]
+% \item[space (macro) ({\ttfamily\FancyVerbSpace})]
 % Redefine the visible space character.  Note that this is only used if |showspaces=true|.  The color of the character may be set with |spacecolor|.
+%
+%
+% \item[spacebreak (macro) (\Verb{\discretionary{}{}{}})]
+% This determines the break that is inserted around spaces when |breaklines=true| and one or more of the following conditions applies: |breakcollapsespaces=false|, |showspaces=true|, or the space is affected by |breakbefore| or |breakafter|.  If it is redefined, it should typically be similar to |\FancyVerbBreakAnywhereBreak|, |\FancyVerbBreakBeforeBreak|, and |\FancyVerbBreakAfterBreak| to obtain consistent breaks.
 %
 %
 % \item[spacecolor (string) (none)]
@@ -772,7 +786,7 @@
 %
 % For an alternative, see |breakbefore|.  When |breakbefore| and |breakafter| are used for the same character, |breakbeforeinrun| and |breakafterinrun| must both have the same setting.
 %
-% Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details.
+% Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details, and consider |breaknonspaceingroup| as a solution in simple cases.
 %
 % \begin{longexample}
 %   \begin{Verbatim}[breaklines, breakafter=d]
@@ -786,17 +800,17 @@
 %
 %
 % \item[breakaftersymbolpre (string) (\string\,\string\footnotesize\string\ensuremath\{\_\string\rfloor\}, \,\footnotesize\ensuremath{_\rfloor})]
-% The symbol inserted pre-break for breaks inserted by |breakafter|.
+% The symbol inserted pre-break for breaks inserted by |breakafter|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
 %
 %
 % \item[breakaftersymbolpost (string) (\meta{none})]
-% The symbol inserted post-break for breaks inserted by |breakafter|.
+% The symbol inserted post-break for breaks inserted by |breakafter|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
 %
 %
 % \item[breakanywhere (boolean) (false)]
 % Break lines anywhere, not just at spaces, when |breaklines=true|.
 %
-% Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details.
+% Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details, and consider |breaknonspaceingroup| as a solution in simple cases.
 %
 % \begin{longexample}
 %   \begin{Verbatim}[breaklines, breakanywhere]
@@ -806,11 +820,11 @@
 %
 %
 % \item[breakanywheresymbolpre (string) (\string\,\string\footnotesize\string\ensuremath\{\_\string\rfloor\}, \,\footnotesize\ensuremath{_\rfloor})]
-% The symbol inserted pre-break for breaks inserted by |breakanywhere|.
+% The symbol inserted pre-break for breaks inserted by |breakanywhere|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
 %
 %
 % \item[breakanywheresymbolpost (string) (\meta{none})]
-% The symbol inserted post-break for breaks inserted by |breakanywhere|.
+% The symbol inserted post-break for breaks inserted by |breakanywhere|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
 %
 %
 % \item[breakautoindent (boolean) (true)]
@@ -822,7 +836,7 @@
 %
 % For an alternative, see |breakafter|.  When |breakbefore| and |breakafter| are used for the same character, |breakbeforeinrun| and |breakafterinrun| must both have the same setting.
 %
-% Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details.
+% Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details, and consider |breaknonspaceingroup| as a solution in simple cases.
 %
 % \begin{longexample}
 %   \begin{Verbatim}[breaklines, breakbefore=A]
@@ -836,11 +850,15 @@
 %
 %
 % \item[breakbeforesymbolpre (string) (\string\,\string\footnotesize\string\ensuremath\{\_\string\rfloor\}, \,\footnotesize\ensuremath{_\rfloor})]
-% The symbol inserted pre-break for breaks inserted by |breakbefore|.
+% The symbol inserted pre-break for breaks inserted by |breakbefore|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
 %
 %
 % \item[breakbeforesymbolpost (string) (\meta{none})]
-% The symbol inserted post-break for breaks inserted by |breakbefore|.
+% The symbol inserted post-break for breaks inserted by |breakbefore|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
+%
+%
+% \item[breakcollapsespaces (bool) (true)]
+% When \Verb{true} (default), a line break within a run of regular spaces (\Verb{showspaces=false}) replaces all spaces with a single break, and the wrapped line after the break starts with a non-space character.  When \Verb{false}, a line break within a run of regular spaces preserves all spaces, and the wrapped line after the break may start with one or more spaces.  This causes regular spaces to behave exactly like the visible spaces produced with \Verb{showspaces}; both give identical line breaks, with the only difference being the appearance of spaces.
 %
 %
 % \item[breakindent (dimension) (\meta{breakindentnchars})]
@@ -853,7 +871,7 @@
 % \item[breaklines (boolean) (false)]
 % Automatically break long lines.  When a line is broken, the result must fit on a single page.  There is no support for breaking a line across multiple pages.\footnote{Following the implementation in \pkg{fancyvrb}, each line is typeset within an |\hbox|, so page breaks are not possible.}
 %
-% By default, automatic breaks occur at spaces.  Use |breakanywhere| to enable breaking anywhere; use |breakbefore| and |breakafter| for more fine-tuned breaking.
+% By default, automatic breaks occur at spaces (even when |showspaces=true|).  Use |breakanywhere| to enable breaking anywhere; use |breakbefore| and |breakafter| for more fine-tuned breaking.
 %
 % \begin{example}
 %   ...text.
@@ -885,10 +903,10 @@
 % \end{longexample}
 % \endgroup
 %
-% Automatic line breaks will not work with |showspaces=true| unless you use |breakanywhere|, or use |breakbefore| or |breakafter| with |\space|.  For example,
+% Beginning in version 1.6, automatic line breaks work with |showspaces=true| by default.  Defining |breakbefore| or |breakafter| for |\space| is no longer necessary.  For example,
 %
 % \begin{longexample}
-%   \begin{Verbatim}[breaklines, showspaces, breakafter=\space]
+%   \begin{Verbatim}[breaklines, showspaces]
 %   some_string = 'Some Text That Goes On And On For So Long That It Could Never Fit'
 %   \end{Verbatim}
 % \end{longexample}
@@ -952,6 +970,11 @@
 %
 % \item[breaksymbolseprightnchars (integer) (2)]
 % Allows |breaksymbolsepright| to be specified as an integer number of characters rather than as a dimension (assumes a fixed-width font).
+%
+%
+% \item[spacebreak (macro) (\Verb{\discretionary{}{}{}})]
+% This determines the break that is inserted around spaces when |breaklines=true| and one or more of the following conditions applies: |breakcollapsespaces=false|, |showspaces=true|, or the space is affected by |breakbefore| or |breakafter|.  If it is redefined, it should typically be similar to |\FancyVerbBreakAnywhereBreak|, |\FancyVerbBreakBeforeBreak|, and |\FancyVerbBreakAfterBreak| to obtain consistent breaks.
+%
 %
 % \end{optionlist}
 %
@@ -1073,7 +1096,7 @@
 % \DescribeMacro{\FancyVerbBreakBeforeBreak}
 % \DescribeMacro{\FancyVerbBreakAfterBreak}
 %
-% These macros govern the behavior of breaks introduced by |breakanywhere|, |breakbefore|, and |breakafter|.  Breaks introduced by the default |breaklines| when |showspaces=false| are standard breaks following spaces.  No special commands are provided for working with them; the normal \LaTeX\ commands for breaking should suffice.
+% These macros govern the behavior of breaks introduced by |breakanywhere|, |breakbefore|, and |breakafter|.  These do not apply to breaks inserted next to spaces; see |spacebreak|.
 %
 % By default, these macros use |\discretionary|.  |\discretionary| takes three arguments:  commands to insert before the break, commands to insert after the break, and commands to insert if there is no break.  For example, the default definition of |\FancyVerbBreakAnywhereBreak|:
 %
@@ -1138,7 +1161,7 @@
 % \subsection{Visible spaces}
 % \label{sec:patch:visible-space}
 %
-% The command |\FancyVerbSpace| defines the visible space when |showspaces=true|.  The default \fancyvrb\ definition allows a font command to escape under some circumstances, so that all following text is forced to be teletype font.  The command is redefined to use |\textvisiblespace|.
+% The command |\FancyVerbSpace| defines the visible space when |showspaces=true|.  The default \fancyvrb\ definition allows a font command to escape under some circumstances, so that all following text is forced to be teletype font.  The command is redefined following \url{https://tex.stackexchange.com/a/120231/10742}.
 %
 %
 % \subsection{\texttt{obeytabs} with visible tabs and with tabs inside macro arguments}
@@ -1305,7 +1328,7 @@
 %
 % \DescribeMacro{\FancyVerbSpace}
 %
-% This defines the visible space character (\texttt{\FancyVerbSpace}) that is used when |showspaces=true|.  The default definition (as patched by \fvextra, \cref{sec:patch:visible-space}) is |\textvisiblespace|.  While this may be redefined directly, \fvextra\ also defines a new option |space|.
+% This defines the visible space character (\texttt{\FancyVerbSpace}) that is used when |showspaces=true|.  The default definition (as patched by \fvextra, \cref{sec:patch:visible-space}) follows \url{https://tex.stackexchange.com/a/120231/10742}.  While this may be redefined directly, \fvextra\ also defines a new option |space|.
 %
 %
 %
@@ -1346,8 +1369,26 @@
 %
 % \subsubsection{\fancyvrb\ space and tab tokens}
 %
+% \begin{macro}{\FV@ActiveSpaceToken}
+% Active space for |\ifx| token comparisons.
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =\active%
+\gdef\FV@ActiveSpaceToken{ }%
+\endgroup%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\FV@SpaceCatTen}
+% Space with catcode 10.  Used instead of \Verb[showspaces]{\ } and |\space| in some contexts to avoid issues in the event that these are redefined.
+%    \begin{macrocode}
+\edef\FV@SpaceCatTen{\detokenize{ }}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{\FV@FVSpaceToken}
-% Macro with the same definition as \fancyvrb's active space.  Useful for |\ifx| comparisons with |\@ifnextchar| lookaheads.
+% Macro with the same definition as \fancyvrb's active space.  Useful for |\ifx| comparisons, such as |\@ifnextchar| lookaheads.
 %    \begin{macrocode}
 \def\FV@FVSpaceToken{\FV@Space}
 %    \end{macrocode}
@@ -1355,11 +1396,12 @@
 %
 %
 % \begin{macro}{\FV@FVTabToken}
-% Macro with the same definition as \fancyvrb's active tab.  Useful for |\ifx| comparisons with |\@ifnextchar| lookaheads.
+% Macro with the same definition as \fancyvrb's active tab.  Useful for |\ifx| comparisons, such as |\@ifnextchar| lookaheads.
 %    \begin{macrocode}
 \def\FV@FVTabToken{\FV@Tab}
 %    \end{macrocode}
 % \end{macro}
+%
 %
 %
 % \subsubsection{ASCII processing}
@@ -3745,9 +3787,15 @@
 %\begin{verbatim}
 %{\catcode`\ =12 \gdef\FancyVerbSpace{\tt }}
 %\end{verbatim}
-% The command is redefined in more robust and standard \LaTeX\ form.
+% |\textvisiblespace| is not an alternative because it does not have the correct width.  The redefinition follows \url{https://tex.stackexchange.com/a/120231/10742}.  
 %    \begin{macrocode}
-\def\FancyVerbSpace{\textvisiblespace}
+\def\FancyVerbSpace{%
+ \makebox[0.5em]{%
+   \kern.07em
+   \vrule height.3ex
+   \hrulefill
+   \vrule height.3ex
+   \kern.07em}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4128,8 +4176,20 @@
 % \end{macro}
 %
 %
+% \begin{macro}{showspaces, FV@showspaces}
+% Reimplement |showspaces| with a bool to work with new space options.
+%    \begin{macrocode}
+\newbool{FV@showspaces}
+\define@booleankey{FV}{showspaces}%
+ {\booltrue{FV@showspaces}}%
+ {\boolfalse{FV@showspaces}}
+\fvset{showspaces=false}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{space}
-% Redefine |\FancyVerbSpace|.
+% Redefine |\FancyVerbSpace|, which is the visible space.
 %    \begin{macrocode}
 \define@key{FV}{space}{\def\FancyVerbSpace{#1}}
 %    \end{macrocode}
@@ -4145,10 +4205,62 @@
    {\ifstrequal{#1}{none}%
      {\let\FV@SpaceColor\relax}%
      {\def\FV@SpaceColor{\textcolor{#1}}}}}
-\define@booleankey{FV}{showspaces}%
- {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}%
- {\def\FV@Space{\ }}
-\fvset{spacecolor=none, showspaces=false}
+\fvset{spacecolor=none}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{spacebreak, \FancyVerbSpaceBreak}
+% Line break for spaces that is inserted when spaces are visible (|showspaces=true|) or when breaks around spaces are handled specially (|breakcollapsespaces=false|).  Not used for regular spaces under default conditions.
+%    \begin{macrocode}
+\define@key{FV}{spacebreak}{%
+  \def\FancyVerbSpaceBreak{#1}}
+\fvset{spacebreak=\discretionary{}{}{}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{breakcollapsespaces, FV@breakcollapsespaces}
+% When a line break occurs within a sequence of regular space characters (|showspaces=false|), collapse the spaces into a single space and then replace it with the break.  When this is |true|, a sequence of spaces will cause at most a single line break, and the first character on the wrapped line after the break will be a non-space character.  When this is |false|, a sequence of spaces may result in multiple line breaks.  Each wrapped line besides the last will contain only spaces.  The final wrapped line may contain leading spaces before any non-space character(s).
+%    \begin{macrocode}
+\newbool{FV@breakcollapsespaces}
+\define@booleankey{FV}{breakcollapsespaces}%
+ {\booltrue{FV@breakcollapsespaces}}%
+ {\boolfalse{FV@breakcollapsespaces}}%
+\fvset{breakcollapsespaces=true}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@DefFVSpace}
+% Redefine |\FV@Space| based on \pkg{fvextra} options that affect spaces.
+%
+% This must be added to |\FV@FormattingPrep@PreHook|, but only after |breakbefore| and |breakafter| macros are defined.  Hence the |\AtEndOfPackage|.
+%    \begin{macrocode}
+\def\FV@DefFVSpace{%
+  \ifbool{FV@showspaces}%
+   {\ifbool{FV@breaklines}%
+     {\ifcsname FV@BreakBefore@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}%
+      \else\ifcsname FV@BreakAfter@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}%
+      \else
+        \def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}\FancyVerbSpaceBreak}%
+      \fi\fi}%
+     {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}}%
+   {\ifbool{FV@breaklines}%
+     {\ifcsname FV@BreakBefore@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\mbox{\FV@SpaceCatTen}}%
+      \else\ifcsname FV@BreakAfter@Token\FV@SpaceCatTen\endcsname
+        \def\FV@Space{\mbox{\FV@SpaceCatTen}}%
+      \else
+        \ifbool{FV@breakcollapsespaces}%
+         {\def\FV@Space{\FV@SpaceCatTen}}%
+         {\def\FV@Space{\mbox{\FV@SpaceCatTen}\FancyVerbSpaceBreak}}%
+      \fi\fi}%
+     {\def\FV@Space{\FV@SpaceCatTen}}}}%
+\AtEndOfPackage{%
+  \g@addto@macro\FV@FormattingPrep@PreHook{\FV@DefFVSpace}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4932,8 +5044,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
+%
 % \begin{macro}{FV@breakanywhere}
-% Allow line breaking (almost) anywhere.  Set |\FV@Break| and |\FV@EndBreak| to be used, and |\let| |\FV@Break@Token| to the appropriate macro.
+% Allow line breaking (almost) anywhere.  Set |\FV@Break| and |\FV@EndBreak| to be used, and |\let| |\FV@Break@DefaultToken| to the appropriate macro.
 %    \begin{macrocode}
 \newbool{FV@breakanywhere}
 \define@booleankey{FV}{breakanywhere}%
@@ -5509,7 +5622,7 @@
 %    \begin{macrocode}
 \def\FV@Break@NBToken#1{%
   \FV@BreakBuffer@Append{#1}%
-  \let\FV@Break@LastToken=\FV@Undefined
+  \let\FV@LastToken=\FV@Undefined
   \FV@Break@Scan}
 %    \end{macrocode}
 % \end{macro}
@@ -5537,8 +5650,21 @@
 %
 %    \begin{macrocode}
 \def\FV@Break@AnyToken#1{%
-  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
-  \FV@Break@Scan}
+  \ifx\FV@FVSpaceToken#1\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {\let\FV@LastToken=#1\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifx\FV@LastToken\FV@FVSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\let\FV@LastToken=#1%
+      \FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+     {\let\FV@LastToken=#1%
+      \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}\FV@Break@Scan}}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5568,11 +5694,19 @@
 \def\FV@Break@BeforeTokenBreak#1{%
   \ifbool{FV@breakbeforeinrun}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \ifx#1\FV@FVSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \fi
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
       \def\FV@RescanToken{#1}%
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \ifx#1\FV@FVSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \fi
       \let\FV@Break@Next\FV@Break@Scan
       \let\FV@LastToken=#1%
     \fi}%
@@ -5587,11 +5721,19 @@
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \ifx#1\FV@FVSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \fi
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
         \def\FV@RescanToken{#1}%
       \else
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \ifx#1\FV@FVSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \fi
         \let\FV@Break@Next\FV@Break@Scan
         \let\FV@LastToken=#1%
       \fi
@@ -5602,32 +5744,58 @@
 \def\FV@Break@AfterTokenBreak#1{%
   \let\FV@LastToken=#1%
   \@ifnextchar\FV@FVSpaceToken%
-   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
-   {\ifbool{FV@breakafterinrun}%
-     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
-      \let\FV@Break@Next\FV@Break@Scan}%
-     {\ifx\@let@token#1\relax
+   {\ifx#1\FV@FVSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\FV@Break@AfterTokenBreak@i{#1}}%
+     {\FV@BreakBuffer@Append{#1}%
+      \FV@Break@Scan}}%
+   {\FV@Break@AfterTokenBreak@i{#1}}}
+\def\FV@Break@AfterTokenBreak@i#1{%   
+  \ifbool{FV@breakafterinrun}%
+   {\ifx#1\FV@FVSpaceToken
+      \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
+    \fi
+    \let\FV@Break@Next\FV@Break@Scan}%
+   {\ifx\@let@token#1\relax
+      \FV@BreakBuffer@Append{#1}%
+      \let\FV@Break@Next\FV@Break@Scan
+    \else
+      \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
         \FV@BreakBuffer@Append{#1}%
-        \let\FV@Break@Next\FV@Break@Scan
+        \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
       \else
-        \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
-          \FV@BreakBuffer@Append{#1}%
-          \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
+        \ifx#1\FV@FVSpaceToken
+          \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
         \else
           \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
-          \let\FV@Break@Next\FV@Break@Scan
         \fi
-      \fi}%
-    \FV@Break@Next}%
+        \let\FV@Break@Next\FV@Break@Scan
+      \fi
+    \fi}%
+  \FV@Break@Next
 }
 \def\FV@Break@AfterTokenBreak@Group#1{%
   \ifstrempty{#1}%
    {\FV@BreakBuffer@Append{{}}%
     \@ifnextchar\FV@LastToken%
      {\FV@Break@Scan}%
-     {\FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+     {\ifx\FV@LastToken\FV@FVSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
       \FV@Break@Scan}}%
-   {\FV@Break@Group{#1}}}
+   {\ifx\FV@LastToken\FV@FVSpaceToken
+      \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+    \fi   
+    \FV@Break@Group{#1}}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5744,8 +5912,23 @@
   \FV@Break@Next{#1}%
 }
 \def\FV@Break@AnyToken@UTF@i#1{%
-  \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}%
-  \FV@Break@Scan}
+  \def\FV@CurrentToken{#1}%
+  \ifx\FV@CurrentToken\FV@ActiveSpaceToken\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {\let\FV@LastToken\FV@CurrentToken
+    \FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\let\FV@LastToken\FV@CurrentToken
+      \FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
+     {\let\FV@LastToken\FV@CurrentToken
+      \FV@BreakBuffer@Append{\FancyVerbBreakAnywhereBreak#1}\FV@Break@Scan}}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5783,11 +5966,19 @@
   \def\FV@CurrentToken{#1}%
   \ifbool{FV@breakbeforeinrun}%
    {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+      \fi
       \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
       \def\FV@RescanToken{#1}%
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+      \fi
       \let\FV@Break@Next\FV@Break@Scan
       \def\FV@LastToken{#1}%
     \fi}%
@@ -5802,11 +5993,19 @@
       \fi
     \else
       \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak}%
+        \fi
         \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
         \def\FV@RescanToken{#1}%
       \else
-        \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \ifx\FV@CurrentToken\FV@ActiveSpaceToken
+          \FV@BreakBuffer@Append{\FancyVerbSpaceBreak#1}%
+        \else
+          \FV@BreakBuffer@Append{\FancyVerbBreakBeforeBreak#1}%
+        \fi
         \let\FV@Break@Next\FV@Break@Scan
         \def\FV@LastToken{#1}%
       \fi
@@ -5817,27 +6016,43 @@
 \def\FV@Break@AfterTokenBreak@UTF#1{%
   \def\FV@LastToken{#1}%
   \@ifnextchar\FV@FVSpaceToken%
-   {\FV@BreakBuffer@Append{#1}\FV@Break@Scan}%
-   {\ifbool{FV@breakafterinrun}%
-     {\FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
-      \let\FV@Break@Next\FV@Break@Scan}%
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \expandafter\@firstoftwo
+    \else
+      \expandafter\@secondoftwo
+    \fi
+     {\FV@Break@AfterTokenBreak@UTF@i{#1}}%
      {\FV@BreakBuffer@Append{#1}%
-      \ifx\@let@token\bgroup\relax
-        \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
-      \else
-        \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@i
-      \fi}%
-    \FV@Break@Next}%
-}
+      \FV@Break@Scan}}%
+   {\FV@Break@AfterTokenBreak@UTF@i{#1}}}
 \def\FV@Break@AfterTokenBreak@UTF@i#1{%
+  \ifbool{FV@breakafterinrun}%
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{#1\FancyVerbBreakAfterBreak}%
+    \fi
+    \let\FV@Break@Next\FV@Break@Scan}%
+   {\FV@BreakBuffer@Append{#1}%
+    \expandafter\ifx\csname @let@token\endcsname\bgroup\relax
+      \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
+    \else
+      \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@ii
+    \fi}%
+  \FV@Break@Next}
+\def\FV@Break@AfterTokenBreak@UTF@ii#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
-    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@UTF@i
+    \let\FV@UTF@octets@after\FV@Break@AfterTokenBreak@UTF@ii
   \else
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \ifx\FV@LastToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
@@ -5846,9 +6061,19 @@
   \ifstrempty{#1}%
    {\FV@BreakBuffer@Append{{}}%
     \@ifnextchar\bgroup
-     {\FV@Break@Group}%
+     {\ifx\FV@LastToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
+      \FV@Break@Group}%
      {\FV@Break@AfterTokenBreak@Group@UTF@i}}%
-   {\FV@Break@Group{#1}}}
+   {\ifx\FV@LastToken\FV@ActiveSpaceToken
+      \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+    \else
+      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+    \fi
+    \FV@Break@Group{#1}}}
 \def\FV@Break@AfterTokenBreak@Group@UTF@i#1{%
   \ifcsname FV@U8:\detokenize{#1}\endcsname
     \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
@@ -5857,7 +6082,11 @@
     \def\FV@NextToken{#1}%
     \ifx\FV@LastToken\FV@NextToken
     \else
-      \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \ifx\FV@LastToken\FV@ActiveSpaceToken
+        \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
+      \else
+        \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
+      \fi
     \fi
     \let\FV@Break@Next\FV@Break@Scan
   \fi
