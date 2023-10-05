@@ -230,24 +230,6 @@
 %</driver>
 % \fi
 %
-% \CheckSum{5550}
-%
-% \CharacterTable
-%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
-%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
-%   Digits        \0\1\2\3\4\5\6\7\8\9
-%   Exclamation   \!     Double quote  \"     Hash (number) \#
-%   Dollar        \$     Percent       \%     Ampersand     \&
-%   Acute accent  \'     Left paren    \(     Right paren   \)
-%   Asterisk      \*     Plus          \+     Comma         \,
-%   Minus         \-     Point         \.     Solidus       \/
-%   Colon         \:     Semicolon     \;     Less than     \<
-%   Equals        \=     Greater than  \>     Question mark \?
-%   Commercial at \@     Left bracket  \[     Backslash     \\
-%   Right bracket \]     Circumflex    \^     Underscore    \_
-%   Grave accent  \`     Left brace    \{     Vertical bar  \|
-%   Right brace   \}     Tilde         \~}
-%
 %
 % \begin{changelog}{v1.6}{2023/10/??}
 % \item Redefined visible space \Verb{\FancyVerbSpace} so that it now has the correct width.  It had previously been redefined as \Verb{\textvisiblespace}, but that was slightly too narrrow.
@@ -382,7 +364,7 @@
 %
 %
 % \subsection{Pandoc compatibility}
-% 
+%
 % \pkg{fvextra} supports line breaking in \href{https://pandoc.org/}{Pandoc} \LaTeX\ output that includes highlighted source code.  Enabling basic line breaking at spaces is as simple as adding |\usepackage{fvextra}| and |\fvset{breaklines}| to the Pandoc Markdown |header-includes|.
 %
 % By default, more advanced line breaking features such as |breakanywhere|, |breakbefore|, and |breakafter| will not work with Pandoc highlighted output, due to the presence of the syntax highlighting macros.  This can be fixed by using |breaknonspaceingroup|, which enables all line breaking features within macros.  For example, the following YAML metadata in a Markdown document would redefine the Pandoc |Highlighting| environment to enable line breaking anywhere.
@@ -631,13 +613,13 @@
 %
 % This is like \cmd{\fvset}, except that options only apply to commands that typeset inline verbatim, like \cmd{\Verb} and \cmd{\EscVerb}.  Settings from \cmd{\fvinlineset} override those from \cmd{\fvset}.
 %
-% Note that \cmd{\fvinlineset} only works with commands that are reimplemented, patched, or defined by \fvextra; it is not compatible with the original \fancyvrb\ definitions.  
+% Note that \cmd{\fvinlineset} only works with commands that are reimplemented, patched, or defined by \fvextra; it is not compatible with the original \fancyvrb\ definitions.
 %
 %
 % \subsection{Custom formatting for inline commands like \cmd{\Verb} with \cmd{\FancyVerbFormatInline}}
 %
 % \DescribeMacro{\FancyVerbFormatInline}
-% 
+%
 % This can be used to apply custom formatting to inline verbatim text created with commands like \cmd{\Verb}.  It only works with commands that are reimplemented, patched, or defined by \fvextra; it is not compatible with the original \fancyvrb\ definitions.  The default definition does nothing; it is equivalent to |\newcommand{\FancyVerbFormatInline}[1]{#1}|.
 %
 % This is the inline equivalent of \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}.  In the inline context, there is no need to distinguish between entire line formatting and only text formatting, so only \cmd{\FancyVerbFormatInline} exists.
@@ -680,7 +662,7 @@
 %
 % The new \cmd{\Verb} works as expected (with a few limitations) inside other commands.  It even works in movable arguments (for example, in \cmd{\section}), and is compatible with \pkg{hyperref} for generating PDF strings (for example, PDF bookmarks).  The \fancyvrb\ definition did work inside some other commands, but essentially functioned as \cmd{\texttt} in that context.
 %
-% \cmd{\Verb} is compatible with |breaklines| and the relevant line-breaking options.  
+% \cmd{\Verb} is compatible with |breaklines| and the relevant line-breaking options.
 %
 % Like the original \fancyvrb\ implementation, the new \cmd{\Verb} can be starred (|*|) as a shortcut for |showspaces|, and accepts optional arguments.
 % \begin{description}
@@ -724,7 +706,7 @@
 % \item |\UseVerb[retokenize, commandchars=\\\{\}]{save}| $\Rightarrow$ \UseVerb[retokenize, commandchars=\\\{\}]{save}
 % \end{itemize}
 %
-% 
+%
 %
 %
 %
@@ -913,7 +895,7 @@
 %
 %
 % \item[breaknonspaceingroup (boolean) (false)]
-% By using |commandchars|, it is possible to include \LaTeX\ commands within otherwise verbatim text.  In these cases, there can be groups (typically |{...}| but depends on |commandchars|) within verbatim.  Spaces within groups are treated as potential line break locations when |breaklines=true|, but by default no other break locations are inserted (|breakbefore|, |breakafter|, |breakanywhere|).  This is because inserting non-space break locations can interfere with command functionality.  For example, in |\textcolor{red}{text}|, breaks shouldn't be inserted within |red|. 
+% By using |commandchars|, it is possible to include \LaTeX\ commands within otherwise verbatim text.  In these cases, there can be groups (typically |{...}| but depends on |commandchars|) within verbatim.  Spaces within groups are treated as potential line break locations when |breaklines=true|, but by default no other break locations are inserted (|breakbefore|, |breakafter|, |breakanywhere|).  This is because inserting non-space break locations can interfere with command functionality.  For example, in |\textcolor{red}{text}|, breaks shouldn't be inserted within |red|.
 %
 % |breaknonspaceingroup| allows non-space breaks to be inserted within groups.  This option should only be used when |commandchars| is including \LaTeX\ commands that do not take optional arguments and only take mandatory arguments that are typeset.  Something like |\textit{text}| is fine, but |\textcolor{red}{text}| is not because one of the mandatory arguments is not typeset but rather provides a setting.  For more complex commands, it is typically better to redefine them to insert breaks in appropriate locations using |\FancyVerbBreakStart...\FancyVerbBreakStop|.
 %
@@ -1264,7 +1246,7 @@
 %
 %
 % \subsection{Command lookahead tokenization}
-% 
+%
 % \cmd{\FV@Command} is used internally by commands like \cmd{\Verb} to read stars (|*|) and optional arguments (|[...]|) before invoking the core of the command.  This is redefined so that lookahead tokenizes under a verbatim catcode regime.  The original definition could prevent commands like \cmd{\Verb} from using characters like |%| as delimiters, because the lookahead for a star and optional argument could read the |%| and give it its normal meaning of comment character.  The new definition fixes this, so that commands like \cmd{\Verb} behave as closely to \cmd{\verb} as possible.
 %
 %
@@ -2195,7 +2177,7 @@
 % \begin{itemize}
 % \item \cmd{\FV@VDetok@Scan} searches for spaces to replace.  After any spaces in \meta{tokens} have been handled, the space in \Verb*|^^C \FV@<Sentinel>| triggers space processing.  When \cmd{\FV@VDetok@Scan} detects the sentinel macro \cmd{\FV@<Sentinel>}, scanning stops.
 % \item The |{}| protects the beginning of \meta{tokens}, so that if \meta{tokens} is a group, its braces won't be gobbled.  Later, the inserted |{}| must be stripped so that it does not become part the processed \meta{tokens}.
-% \item |^^C| is a convenient separator between \meta{tokens} and the rest of the sentinel sequence.  
+% \item |^^C| is a convenient separator between \meta{tokens} and the rest of the sentinel sequence.
 %     \begin{itemize}
 %     \item Since \cmd{\FV@VDetok@Scan} has delimited arguments, a leading catcode 10 space in \meta{tokens} will be preserved automatically.  Preserving a trailing catcode 10 space is much easier if it is immediately adjacent to a non-space character in the sentinel sequence; two adjacent catcode 10 spaces would be difficult to handle with macro pattern matching.  However, the sentinel sequence must contain a catcode 10 space, so the sentinel sequence must contain at least 3 tokens.
 %     \item Since |^^C| is not a control word, it does not gobble following spaces.  That makes it much easier to assemble macro arguments that contain a catcode 10 space.  This is useful because the sentinel sequence \Verb*|^^C \FV@<Sentinel>| may have to be inserted into processing multiple times (for example, in recursive handling of groups).
@@ -2329,7 +2311,7 @@
   {\expandafter\FV@VDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
 %    \end{macrocode}
 % \end{macro}
-% 
+%
 % \begin{macro}{\FV@VDetok@ScanToken@i}
 % If |#2| is empty, then there are no spaces in the detokenized token, so it is either an \cmd{\active} character other than the space, or a two-character sequence of the form |<backslash><symbol>| where the second character is not a space.  Thus, |#1| contains \meta{detokenized}|^^C|.  Otherwise, |#1| contains \meta{detokenized\_without\_space}, and |#2| may be discarded since it contains \Verb*|^^C \FV@<Sentinel>|.  (If the detokenized token contains a space, it is always at the end.)
 %    \begin{macrocode}
@@ -2531,7 +2513,7 @@
   {\expandafter\FV@PDFStrVDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
 %    \end{macrocode}
 % \end{macro}
-% 
+%
 % \begin{macro}{\FV@PDFStrVDetok@ScanToken@i}
 %    \begin{macrocode}
 \gdef\FV@PDFStrVDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
@@ -2628,7 +2610,7 @@
 % \begin{macro}{\FVExtraEscapedVerbatimDetokenize}
 % This is a variant of \cmd{\FVExtraVerbatimDetokenize} that treats character sequences of the form |\<char>| as escapes for |<char>|.  It is primarily intended for making |\<symbol>| escapes for |<symbol>|, but allowing arbitrary escapes simplifies the default behavior and implementation.  This is useful in constructing nearly verbatim commands that can be used inside other commands, because the backslash escapes allow for characters like |#| and |%|, as well as making possible multiple adjacent spaces via \Verb*|\ |.  It should be applied to arguments that are read verbatim insofar as is possible, except that the backslash |\| should have its normal meaning (catcode 0).  Most of the implementation is identical to that for \cmd{\FVExtraVerbatimDetokenize}.  Only the token processing requires modification to handle backslash escapes.
 %
-% It is possible to restrict escapes to ASCII symbols and punctuation.  See \cmd{\FVExtraDetokenizeREscVArg}.  The disadvantage of restricting escapes is that it prevents functioning in an expansion-only context (unless you want to use undefined macros as a means of raising errors).  The advantage is that it eliminates ambiguity introduced by allowing arbitrary escapes. Backslash escapes of characters with catcode 11 (ASCII letters, |[A-Za-z]|) are typically not necessary, and introduce ambiguity because something like |\x| will gobble following spaces since it will be tokenized originally as a control word.  
+% It is possible to restrict escapes to ASCII symbols and punctuation.  See \cmd{\FVExtraDetokenizeREscVArg}.  The disadvantage of restricting escapes is that it prevents functioning in an expansion-only context (unless you want to use undefined macros as a means of raising errors).  The advantage is that it eliminates ambiguity introduced by allowing arbitrary escapes. Backslash escapes of characters with catcode 11 (ASCII letters, |[A-Za-z]|) are typically not necessary, and introduce ambiguity because something like |\x| will gobble following spaces since it will be tokenized originally as a control word.
 %    \begin{macrocode}
 \gdef\FVExtraEscapedVerbatimDetokenize#1{%
   \FV@EscVDetok@Scan{}#1^^C \FV@<Sentinel>}
@@ -2739,7 +2721,7 @@
   {\expandafter\FV@EscVDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
 %    \end{macrocode}
 % \end{macro}
-% 
+%
 % \begin{macro}{\FV@EscVDetok@ScanToken@i}
 %    \begin{macrocode}
 \gdef\FV@EscVDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
@@ -2979,7 +2961,7 @@
   {\expandafter\FV@PDFStrEscVDetok@ScanToken@i\detokenize{#1}^^C \FV@<Sentinel>}}
 %    \end{macrocode}
 % \end{macro}
-% 
+%
 % \begin{macro}{\FV@PDFStrEscVDetok@ScanToken@i}
 %    \begin{macrocode}
 \gdef\FV@PDFStrEscVDetok@ScanToken@i#1 #2\FV@<Sentinel>{%
@@ -3363,7 +3345,7 @@
    {\FVC@Verb@Extra@i}}
 %    \end{macrocode}
 % \end{macro}
-%  
+%
 % \begin{macro}{\FVC@Verb@Extra@i}
 %    \begin{macrocode}
 \def\FVC@Verb@Extra@i{%
@@ -3500,7 +3482,7 @@
   \fi}
 %    \end{macrocode}
 % \end{macro}
-%             
+%
 %
 % \begin{macro}{\FVC@UseVerb@Extra}
 %    \begin{macrocode}
@@ -3579,7 +3561,7 @@
 % \end{macro}
 %
 % \begin{macro}{\FVC@EscVerb@i}
-%    \begin{macrocode}  
+%    \begin{macrocode}
 \def\FVC@EscVerb@i#1{%
   \begingroup
   \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
@@ -3787,7 +3769,7 @@
 %\begin{verbatim}
 %{\catcode`\ =12 \gdef\FancyVerbSpace{\tt }}
 %\end{verbatim}
-% |\textvisiblespace| is not an alternative because it does not have the correct width.  The redefinition follows \url{https://tex.stackexchange.com/a/120231/10742}.  
+% |\textvisiblespace| is not an alternative because it does not have the correct width.  The redefinition follows \url{https://tex.stackexchange.com/a/120231/10742}.
 %    \begin{macrocode}
 \def\FancyVerbSpace{%
  \makebox[0.5em]{%
@@ -4840,7 +4822,7 @@
   \ifx\directlua\relax
   \else
     \FV@AddToHook\FV@FormattingPrep@PreHook\FV@BreakLinesLuaTeXHook
-  \fi  
+  \fi
 \fi
 %    \end{macrocode}
 % \end{macro}
@@ -5465,7 +5447,7 @@
 %
 % For \pkg{fvextra}'s standard scanning:  If this is the main buffer (depth 0), stop scanning---which ultimately allows |\FV@BreakBuffer| to be handled by |\FV@InsertBreaks|.  For user macros:  Insert |\FV@BreakBuffer| at buffer depth 0.  Otherwise for both cases:  Append the current buffer to the previous buffer, and continue scanning.
 %
-% An intermediate |\FV@BreakBufferStop@i| is used to optimize |\ifx| comparisons for |\FV@BreakBufferStop| during scanning. 
+% An intermediate |\FV@BreakBufferStop@i| is used to optimize |\ifx| comparisons for |\FV@BreakBufferStop| during scanning.
 %    \begin{macrocode}
 \def\FV@BreakBufferStop{%
   \FV@BreakBufferStop@i}
@@ -5753,7 +5735,7 @@
      {\FV@BreakBuffer@Append{#1}%
       \FV@Break@Scan}}%
    {\FV@Break@AfterTokenBreak@i{#1}}}
-\def\FV@Break@AfterTokenBreak@i#1{%   
+\def\FV@Break@AfterTokenBreak@i#1{%
   \ifbool{FV@breakafterinrun}%
    {\ifx#1\FV@FVSpaceToken
       \FV@BreakBuffer@Append{#1\FancyVerbSpaceBreak}%
@@ -5794,7 +5776,7 @@
       \FV@BreakBuffer@Append{\FancyVerbSpaceBreak}%
     \else
       \FV@BreakBuffer@Append{\FancyVerbBreakAfterBreak}%
-    \fi   
+    \fi
     \FV@Break@Group{#1}}}
 %    \end{macrocode}
 % \end{macro}
