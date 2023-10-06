@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/10/04 v1.6dev1 fvextra - extensions and patches for fancyvrb]
+    [2023/10/05 v1.6dev2 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -232,6 +232,7 @@
 %
 %
 % \begin{changelog}{v1.6}{2023/10/??}
+% \item Added new environment \Verb{VerbatimWrite}.  This is similar to \Verb{fancyvrb}'s \Verb{VerbatimOut}, except that it allows for writing to a file multiple times and guarantees truly verbatim output via \Verb{\detokenize}.
 % \item Redefined visible space \Verb{\FancyVerbSpace} so that it now has the correct width.  It had previously been redefined as \Verb{\textvisiblespace}, but that was slightly too narrrow.
 % \item Added option \Verb{spacebreak}.  This determines the break that is inserted around spaces when \Verb{showspaces=true} or \Verb{breakcollapsespaces=false}, by defining the new macro \Verb{\FancyVerbSpaceBreak}.
 % \item \Verb{breakbefore}, \Verb{breakafter}, and \Verb{breakanywhere} now produce plain breaks around spaces when \Verb{showspaces=true}, instead of breaks with a break symbol at the end of wrapped lines.  \Verb{\FancyVerbBreakAnywhereBreak}, \Verb{\FancyVerbBreakBeforeBreak}, and \Verb{\FancyVerbBreakAfterBreak} are no longer inserted next to spaces.  Instead, \Verb{\FancyVerbSpaceBreak} is inserted or (depending on options) \Verb{\FV@Space} is defined to include \Verb{\FancyVerbSpaceBreak}.
@@ -747,6 +748,38 @@
 %   \end{VerbEnv}
 %   AFTER
 % \end{example}
+%
+% \cmd{VerbEnv} is not implemented using the regular \fancyvrb\ environment style, so it is not compatible with |\RecustomVerbatimEnvironment|.
+%
+%
+% \subsection{\cmd{VerbatimWrite}}
+% \DescribeMacro{\begin\{VerbatimWrite\}\oarg{opt}\\$\langle$\textit{lines}$\rangle$\\\cmd{\end{VerbatimWrite}}}
+%
+% This writes environment contents verbatim to an external file.  It is similar to \fancyvrb's |VerbatimOut|, except that (1) it allows writing to a file multiple times (multiple environments can write to the same file) and (2) by default it uses |\detokenize| to guarantee truly verbatim output.
+%
+% Options defined specifically for \cmd{VerbatimWrite}:
+% \begin{optionlist}
+% \item[writefilehandle (file handle) (\meta{none})]
+% File handle for writing.  For example,
+% \begin{Verbatim}[gobble=2]
+% \newwrite\myfile
+% \immediate\openout\myfile=myfile.txt\relax
+%
+% \begin{VerbatimWrite}[writefilehandle=\myfile]
+% ...
+% \end{VerbatimWrite}
+%
+% \immediate\closeout\myfile
+% \end{Verbatim}
+%
+% \item[writer (macro) (\cmd{\FancyVerbDefaultWriter})]
+% This is the macro that processes each line of text in the environment and then writes it to file.  This is the default implementation:
+% \begin{Verbatim}[gobble=2]
+% \def\FancyVerbDefaultWriter#1{%
+%   \immediate\write\FancyVerbWriteFileHandle{\detokenize{#1}}}
+% \end{Verbatim}
+% \end{optionlist}
+%
 %
 %
 % \section{Line breaking}
@@ -3693,6 +3726,80 @@
 %    \end{macrocode}
 % \end{macro}
 %
+%
+%
+% \subsubsection{\cmd{VerbatimWrite}}
+%
+% This environment writes its contents to a file verbatim.  Differences from \fancyvrb's |VerbatimOut|:
+% \begin{itemize}
+% \item Multiple |VerbatimWrite| environments can write to the same file.  The file is set via the |writefilehandle| option.  This does mean that the user is responsible for creating a new file handle via |\newwrite| and then ideally invoking |\closeout| at the appropriate time.
+% \item By default, text is really written verbatim.  This is accomplished by a combination of setting catcodes to 12 (other) and |\detokenize|.  This can be customized using the new |writer| option, which defines a macro that performs any processing on each line before writing it to file.  By default, all \fancyvrb\ options except for |VerbatimWrite|-specific options are ignored.  This can be customized on a per-environment basis via optional arguments.
+% \end{itemize}
+%
+% \begin{macro}{writefilehandle, \FancyVerbWriteFileHandle}
+% Set file handle for |VerbatimWrite|.
+%    \begin{macrocode}
+\define@key{FV}{writefilehandle}{%
+  \FV@SetWrite#1\FV@Sentinel}
+\def\FV@SetWrite#1#2\FV@Sentinel{%
+  \let\FancyVerbWriteFileHandle\relax
+  \if\relax\detokenize{#2}\relax
+    \let\FancyVerbWriteFileHandle#1\relax
+  \fi
+  \ifx\FancyVerbWriteFileHandle\relax
+    \PackageError{fvextra}%
+     {Missing or invalid file handle for write}%
+     {Need file handle from \string\newwrite}%
+  \fi}
+\let\FancyVerbWriteFileHandle\relax
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{writer, \FV@Writer}
+% Define writer macro that processes each line before writing.
+%    \begin{macrocode}
+\define@key{FV}{writer}{%
+  \let\FV@Writer#1\relax}
+\def\FancyVerbDefaultWriter#1{%
+  \immediate\write\FancyVerbWriteFileHandle{\detokenize{#1}}}
+\fvset{writer=\FancyVerbDefaultWriter}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{VerbatimWrite}
+% The environment implementation follows standard \fancyvrb\ environment style.
+%
+% A special write counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |writer|, but are needed to enable \fancyvrb\ options when a custom |writer| is used in conjuction with optional environment arguments.  These include |\FancyVerbDefineActive|, |\FancyVerbFormatCom|, and |\FV@DefineTabOut|.
+%    \begin{macrocode}
+\newcounter{FancyVerbWriteLine}
+\def\VerbatimWrite{%
+  \FV@Environment
+   {codes=,commandchars=none,commentchar=none,defineactive,%
+    gobble=0,formatcom=,firstline,lastline}%
+   {VerbatimWrite}}
+\def\FVB@VerbatimWrite{%
+  \@bsphack
+  \begingroup
+  \setcounter{FancyVerbWriteLine}{0}%
+  \let\c@FancyVerbLine\c@FancyVerbWriteLine
+  \FV@UseKeyValues
+  \FV@DefineWhiteSpace
+  \def\FV@Space{\space}%
+  \FV@DefineTabOut
+  \let\FV@ProcessLine\FV@Writer
+  \let\FV@FontScanPrep\relax
+  \let\@noligs\relax
+  \FancyVerbDefineActive
+  \FancyVerbFormatCom
+  \FV@Scan}
+\def\FVE@VerbatimWrite{%
+  \endgroup
+  \@esphack}
+\def\endVerbatimWrite{\FVE@VerbatimWrite}
+%    \end{macrocode}
+% \end{macro}
 %
 %
 %

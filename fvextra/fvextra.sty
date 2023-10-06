@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2023/10/04 v1.6dev1 fvextra - extensions and patches for fancyvrb]
+    [2023/10/05 v1.6dev2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1188,6 +1188,49 @@
   \Verb[#1]{#2}%
   \expandafter\end\expandafter{\FV@EnvironName}}
 \def\endVerbEnv{\global\let\FV@EnvironName\relax}
+\define@key{FV}{writefilehandle}{%
+  \FV@SetWrite#1\FV@Sentinel}
+\def\FV@SetWrite#1#2\FV@Sentinel{%
+  \let\FancyVerbWriteFileHandle\relax
+  \if\relax\detokenize{#2}\relax
+    \let\FancyVerbWriteFileHandle#1\relax
+  \fi
+  \ifx\FancyVerbWriteFileHandle\relax
+    \PackageError{fvextra}%
+     {Missing or invalid file handle for write}%
+     {Need file handle from \string\newwrite}%
+  \fi}
+\let\FancyVerbWriteFileHandle\relax
+\define@key{FV}{writer}{%
+  \let\FV@Writer#1\relax}
+\def\FancyVerbDefaultWriter#1{%
+  \immediate\write\FancyVerbWriteFileHandle{\detokenize{#1}}}
+\fvset{writer=\FancyVerbDefaultWriter}
+\newcounter{FancyVerbWriteLine}
+\def\VerbatimWrite{%
+  \FV@Environment
+   {codes=,commandchars=none,commentchar=none,defineactive,%
+    gobble=0,formatcom=,firstline,lastline}%
+   {VerbatimWrite}}
+\def\FVB@VerbatimWrite{%
+  \@bsphack
+  \begingroup
+  \setcounter{FancyVerbWriteLine}{0}%
+  \let\c@FancyVerbLine\c@FancyVerbWriteLine
+  \FV@UseKeyValues
+  \FV@DefineWhiteSpace
+  \def\FV@Space{\space}%
+  \FV@DefineTabOut
+  \let\FV@ProcessLine\FV@Writer
+  \let\FV@FontScanPrep\relax
+  \let\@noligs\relax
+  \FancyVerbDefineActive
+  \FancyVerbFormatCom
+  \FV@Scan}
+\def\FVE@VerbatimWrite{%
+  \endgroup
+  \@esphack}
+\def\endVerbatimWrite{\FVE@VerbatimWrite}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces}\FV@@Command{#2}}%
