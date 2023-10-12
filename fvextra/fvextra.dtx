@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/10/11 v1.6dev4 fvextra - extensions and patches for fancyvrb]
+    [2023/10/11 v1.6dev5 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -263,6 +263,7 @@
 % \item \Verb{breaklines} now automatically enables breaks after space characters when \Verb{showspaces=true}.
 % \item Reimplemented definition of \Verb{\FV@Space} to work with new space options.
 % \item Added documentation about how reimplemented commands handle the \Verb{codes} option differently compared to \fancyvrb\ (\#17).
+% \item The \Verb{mathescape} option now resets the ampersand \Verb{&} catcode (\#18).
 % \end{changelog}
 %
 %
@@ -497,9 +498,13 @@
 %
 %
 % \item[mathescape (boolean) (false)]
-% This causes everything between dollar signs |$...$| to be typeset as math.  The caret |^| and underscore |_| have their normal math meanings.
+% This causes everything between dollar signs |$...$| to be typeset as math.  The ampersand |&|, caret |^|, and underscore |_| have their normal math meanings.
 %
-% This is equivalent to |codes={\catcode`$=3\catcode`^=7\catcode`_=8}|.  |mathescape| is always applied \emph{before} |codes|, so that |codes| can be used to override some of these definitions.
+% This is equivalent to
+% \begin{Verbatim}[gobble=2]
+% codes={\catcode`\$=3\catcode`\&=4\catcode`\^=7\catcode`\_=8}
+% \end{Verbatim}
+% |mathescape| is always applied \emph{before} |codes|, so that |codes| can be used to override some of these definitions.
 %
 % Note that \fvextra\ provides several patches that make math mode within verbatim as close to normal math mode as possible (\cref{sec:patch:math}).
 %
@@ -4684,12 +4689,12 @@
 %
 %
 % \begin{macro}{mathescape}
-% Give |$|, |^|, and |_| their normal catcodes to allow normal typeset math.
+% Give |$|, |&|, |^|, and |_| their normal catcodes to allow normal typeset math.
 %    \begin{macrocode}
 \define@booleankey{FV}{mathescape}%
  {\let\FancyVerbMathEscape\FV@MathEscape}%
  {\let\FancyVerbMathEscape\relax}
-\def\FV@MathEscape{\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}
+\def\FV@MathEscape{\catcode`\$=3\catcode`\&=4\catcode`\^=7\catcode`\_=8\relax}
 \FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \fvset{mathescape=false}
 %    \end{macrocode}

@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2023/10/11 v1.6dev3 fvextra - extensions and patches for fancyvrb]
+    [2023/10/11 v1.6dev5 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1610,7 +1610,7 @@
 \define@booleankey{FV}{mathescape}%
  {\let\FancyVerbMathEscape\FV@MathEscape}%
  {\let\FancyVerbMathEscape\relax}
-\def\FV@MathEscape{\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}
+\def\FV@MathEscape{\catcode`\$=3\catcode`\&=4\catcode`\^=7\catcode`\_=8\relax}
 \FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
 \fvset{mathescape=false}
 \define@booleankey{FV}{beameroverlays}%
