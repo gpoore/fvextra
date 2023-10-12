@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/10/05 v1.6dev2 fvextra - extensions and patches for fancyvrb]
+    [2023/10/11 v1.6dev3 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -63,6 +63,27 @@
 \usepackage{amsmath, amssymb}
 
 \usepackage{environ}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{listings}
+% strip leading percent symbols
+\def\tcbverbatimwrite#1{%
+  \@bsphack
+  \tcb@set@verbatim@finish%
+  \tcb@allocate@tcb@out%
+  \immediate\openout\tcb@out #1
+  \tcb@verbatim@begin@hook%
+  \let\do\@makeother\dospecials
+  \tcb@verbatim@change@percent\catcode`\^^M\active \catcode`\^^I=12
+  \def\verbatim@processline{%
+    \immediate\write\tcb@out
+      {\expandafter\@gobble\the\verbatim@line}}%
+  \verbatim@start}%
+
+% fix redefinition by tcolorbox
+\def\verbatim@processline{%
+  \expandafter\check@percent\the\verbatim@line\par}
+
 
 \usepackage{hyperref}
 \hypersetup{
@@ -209,9 +230,9 @@
     \g@addto@macro\changestext{\end{itemize}}%
 }
 \newcommand{\PrintChangelog}{%
-    \addcontentsline{toc}{section}{Version History}
-    \section*{Version History}%
-    \label{sec:version-history}
+    \addcontentsline{toc}{section}{Changelog}
+    \section*{Changelog}%
+    \label{sec:changelog}
     \begin{description}%
     \changestext
     \end{description}%
@@ -233,6 +254,8 @@
 %
 % \begin{changelog}{v1.6}{2023/10/??}
 % \item Added new environment \Verb{VerbatimWrite}.  This is similar to \Verb{fancyvrb}'s \Verb{VerbatimOut}, except that it allows for writing to a file multiple times and guarantees truly verbatim output via \Verb{\detokenize}.
+% \item Added new environment \Verb{VerbatimBuffer}.  This stores the contents of an environment verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.
+% \item Added new command \Verb{\VerbatimInsertBuffer}.  This inserts an existing buffer created by \Verb{VerbatimBuffer} as a \Verb{Verbatim} environment.
 % \item Redefined visible space \Verb{\FancyVerbSpace} so that it now has the correct width.  It had previously been redefined as \Verb{\textvisiblespace}, but that was slightly too narrrow.
 % \item Added option \Verb{spacebreak}.  This determines the break that is inserted around spaces when \Verb{showspaces=true} or \Verb{breakcollapsespaces=false}, by defining the new macro \Verb{\FancyVerbSpaceBreak}.
 % \item \Verb{breakbefore}, \Verb{breakafter}, and \Verb{breakanywhere} now produce plain breaks around spaces when \Verb{showspaces=true}, instead of breaks with a break symbol at the end of wrapped lines.  \Verb{\FancyVerbBreakAnywhereBreak}, \Verb{\FancyVerbBreakBeforeBreak}, and \Verb{\FancyVerbBreakAfterBreak} are no longer inserted next to spaces.  Instead, \Verb{\FancyVerbSpaceBreak} is inserted or (depending on options) \Verb{\FV@Space} is defined to include \Verb{\FancyVerbSpaceBreak}.
@@ -749,7 +772,7 @@
 %   AFTER
 % \end{example}
 %
-% \cmd{VerbEnv} is not implemented using the regular \fancyvrb\ environment style, so it is not compatible with |\RecustomVerbatimEnvironment|.
+% \cmd{VerbEnv} is not implemented using the typical \fancyvrb\ environment implementation style, so it is not compatible with |\RecustomVerbatimEnvironment|.
 %
 %
 % \subsection{\cmd{VerbatimWrite}}
@@ -757,7 +780,12 @@
 %
 % This writes environment contents verbatim to an external file.  It is similar to \fancyvrb's |VerbatimOut|, except that (1) it allows writing to a file multiple times (multiple environments can write to the same file) and (2) by default it uses |\detokenize| to guarantee truly verbatim output.
 %
-% Options defined specifically for \cmd{VerbatimWrite}:
+% By default, all \fancyvrb\ options except for |VerbatimWrite|-specific options are ignored.  This can be customized on a per-environment basis via environment optional arguments.
+%
+% ~
+%
+% \noindent Options defined specifically for \cmd{VerbatimWrite}:
+%
 % \begin{optionlist}
 % \item[writefilehandle (file handle) (\meta{none})]
 % File handle for writing.  For example,
@@ -779,6 +807,116 @@
 %   \immediate\write\FancyVerbWriteFileHandle{\detokenize{#1}}}
 % \end{Verbatim}
 % \end{optionlist}
+%
+%
+% \subsection{\cmd{VerbatimBuffer}}
+% \DescribeMacro{\begin\{VerbatimBuffer\}\oarg{opt}\\$\langle$\textit{lines}$\rangle$\\\cmd{\end{VerbatimBuffer}}}
+%
+% This environment stores its contents verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.  This is similar to  \fancyvrb's |SaveVerbatim|, which saves an environment for later use.  |VerbatimBuffer| offers additional flexibility by capturing truly verbatim environment contents using |\detokenize| and saving environment contents in a format designed for further processing.
+%
+% By default, all \fancyvrb\ options except for |VerbatimBuffer|-specific options are ignored.  This can be customized on a per-environment basis via environment optional arguments.
+%
+% Below is an extended example that demonstrates what is possible with |VerbatimBuffer| combined with |\VerbatimInsertBuffer|.  This uses |\ifdefstring| from the \pkg{etoolbox} package.
+% \begin{itemize}
+% \item |\setformatter| defines an empty |\formatter| macro.  Then it loops over the lines in a buffer looking for a line containing only the text ``red''.  If this is found, it redefines |\formatter| to |\color{red}|.  |FancyVerbBufferIndex| is a counter that is always available for buffer looping.  |FancyVerbBufferLength| is the default counter containing the buffer length (number of lines).  |\FancyVerbBufferLineName| contains the base name for buffer line macros (default |FancyVerbBufferLine|).
+% \item |afterbuffer| involves two steps:  (1) |\setformatter| loops through the buffer and defines |\formatter| based on the buffer contents, and (2) |\VerbatimInsertBuffer| typesets the buffer, using |formatcom=\formatter| to format the text based on whether any line contains only the text ``red''.
+% \end{itemize}
+%
+%\begin{tcblisting}{oversize=5em}
+%\def\setformatter{%
+%  \def\formatter{}%
+%  \setcounter{FancyVerbBufferIndex}{1}%
+%  \loop\unless\ifnum\value{FancyVerbBufferIndex}>\value{FancyVerbBufferLength}\relax
+%    \expandafter\let\expandafter\bufferline
+%      \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
+%    \ifdefstring{\bufferline}{red}{\def\formatter{\color{red}}}{}%
+%    \stepcounter{FancyVerbBufferIndex}%
+%  \repeat}
+%
+%\begin{VerbatimBuffer}[
+%  afterbuffer={\setformatter\VerbatimInsertBuffer[formatcom=\formatter]}
+%]
+%first
+%second
+%red
+%\end{VerbatimBuffer}
+%\end{tcblisting}
+%
+% Here is the same example, but rewritten to use a global buffer with custom buffer names instead.
+%
+%\begin{tcblisting}{oversize=5em}
+%\begin{VerbatimBuffer}[globalbuffer, bufferlinename=exbuff, bufferlengthname=exbuff]
+%first
+%second
+%red
+%\end{VerbatimBuffer}
+%
+%\def\formatter{}
+%\setcounter{FancyVerbBufferIndex}{1}
+%\loop\unless\ifnum\value{FancyVerbBufferIndex}>\value{exbuff}\relax
+%  \expandafter\let\expandafter\bufferline
+%    \csname exbuff\arabic{FancyVerbBufferIndex}\endcsname
+%  \ifdefstring{\bufferline}{red}{\def\formatter{\color{red}}}{}
+%  \stepcounter{FancyVerbBufferIndex}
+%\repeat
+%
+%\VerbatimInsertBuffer[
+%  formatcom=\formatter,
+%  bufferlinename=exbuff,
+%  bufferlengthname=exbuff
+%]
+%\end{tcblisting}
+%
+% ~
+%
+% \noindent Options defined specifically for \cmd{VerbatimBuffer}:
+%
+% \begin{optionlist}
+% \item[afterbuffer (macro) (\meta{none})]
+% Macro or macros invoked at the end of the environment, after all lines of the environment have been buffered.  This is outside the |\begingroup...\endgroup| that wraps verbatim processing, so \fancyvrb\ settings are no longer active.  However, the buffer line macros and the buffer length counter are still accessible.
+%
+% \item[bufferer (macro) (\Verb{\FancyVerbDefaultBufferer})]
+% This is the macro that adds lines to the buffer.  The default is designed to create a truly verbatim buffer via |\detokenize|.  This can be customized if you wish to use \fancyvrb\ options related to catcodes to create a buffer that is only partially verbatim (that contains macros).
+% \begin{Verbatim}[gobble=2, fontsize=\small]
+% \def\FancyVerbDefaultBufferer#1{%
+%   \expandafter\xdef\csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname{%
+%     \detokenize{#1}}}
+% \end{Verbatim}
+% A custom |bufferer| must take a single argument |#1| (a line of the environment text) and ultimately store the processed line in a macro called
+% \begin{Verbatim}[gobble=2]
+% \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
+% \end{Verbatim}
+% This macro must be defined globally, so |\xdef| or |\gdef| is necessary (this does not interfere with scoping from |globalbuffer|).  Otherwise, there are no restrictions.  The |\xdef| and |\detokenize| in the default definition guarantee that the buffer consists only of the literal text from the environment, but this is not required for a custom |bufferer|.
+%
+% \item[bufferlengthname (counter) (FancyVerbBufferLength)]
+% Counter (|\newcounter|) storing the length of the buffer.  This is the number of lines stored.
+%
+% \item[bufferlinename (string) (FancyVerbBufferLine)]
+% The base name of the buffer line macros.  The default is |FancyVerbBufferLine|, which will result in buffer macros |\FancyVerbBufferLine<n>| with integer |n| greater than or equal to one and less than or equal to the number of lines (one-based indexing).  Since buffer macro names contain a number, they must be accessed differently than typical macros:
+% \begin{Verbatim}[gobble=2]
+% \csname FancyVerbBufferLine<n>\endcsname
+% \@nameuse{FancyVerbBufferLine<n>}
+% \end{Verbatim}
+% Typically the buffer macros will be looped over with a counter that is incremented, in which case |<n>| should be the counter value |\arabic{<counter>}|.
+%
+% \item[globalbuffer (bool) (false)]
+% This determines whether buffer line macros are defined globally, that is, whether they are accessible after the end of the |VerbatimBuffer| environment.  It does not affect any |afterbuffer| macro, since that is invoked inside the environment.  |globalbuffer| also determines whether the buffer length counter contains the buffer length or is reset to zero after the end of the |VerbatimBuffer| environment.
+%
+% When buffered lines are used immediately, consider using |afterbuffer| instead of |globalbuffer|.  When buffered lines must be used later in a document, consider using |globalbuffer| with custom (and perhaps unique) |bufferlinename| and |bufferlengthname|.
+%
+% When |globalbuffer=false|, at the end of the environment all buffer line macros based on the current |bufferlinename| are ``deleted'' (|\let| to an undefined macro), and the buffer length counter from |bufferlengthname| is set to zero.  This means that a |VerbatimBuffer| environment with |globalbuffer=false| will clear the buffer created by any previous |VerbatimBuffer| that had |globalbuffer=true| and shared the same |bufferlinename|.
+% \end{optionlist}
+%
+%
+% \subsection{\cmd{\VerbatimInsertBuffer}}
+% \DescribeMacro{\VerbatimInsertBuffer\oarg{options}}
+%
+% This inserts an existing buffer created by |VerbatimBuffer| as a |Verbatim| environment.  It customizes |Verbatim| internals to function with a buffer in a command context.  See the |VerbatimBuffer| documentation for an example of usage.
+%
+% Options related to catcodes cause the buffer to be retokenized during typesetting.  That is, the \fancyvrb\ options used for |\VerbatimInsertBuffer| are not restricted by those that were in effect when |VerbatimBuffer| originally created the buffer, so long as the buffer contains a complete representation of the original |VerbatimBuffer| environment contents.
+%
+% |\VerbatimInsertBuffer| is not implemented using the typical \fancyvrb\ command and environment implementation styles, so it is not compatible with |\RecustomVerbatimCommand| or |\RecustomVerbatimEnvironment|.
+%
 %
 %
 %
@@ -3733,7 +3871,7 @@
 % This environment writes its contents to a file verbatim.  Differences from \fancyvrb's |VerbatimOut|:
 % \begin{itemize}
 % \item Multiple |VerbatimWrite| environments can write to the same file.  The file is set via the |writefilehandle| option.  This does mean that the user is responsible for creating a new file handle via |\newwrite| and then ideally invoking |\closeout| at the appropriate time.
-% \item By default, text is really written verbatim.  This is accomplished by a combination of setting catcodes to 12 (other) and |\detokenize|.  This can be customized using the new |writer| option, which defines a macro that performs any processing on each line before writing it to file.  By default, all \fancyvrb\ options except for |VerbatimWrite|-specific options are ignored.  This can be customized on a per-environment basis via optional arguments.
+% \item By default, text is really written verbatim.  This is accomplished by a combination of setting catcodes to 12 (other) and |\detokenize|.  This can be customized using the new |writer| option, which defines a macro that performs any processing on each line before writing it to file.  By default, all \fancyvrb\ options except for |VerbatimWrite|-specific options are ignored.  This can be customized on a per-environment basis via environment optional arguments.
 % \end{itemize}
 %
 % \begin{macro}{writefilehandle, \FancyVerbWriteFileHandle}
@@ -3800,6 +3938,194 @@
 \def\endVerbatimWrite{\FVE@VerbatimWrite}
 %    \end{macrocode}
 % \end{macro}
+%
+%
+%
+% \subsubsection{\cmd{VerbatimBuffer}}
+%
+% This environment stores its contents verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.
+%
+% By default, all \fancyvrb\ options except for |VerbatimBuffer|-specific options are ignored.  This can be customized on a per-environment basis via environment optional arguments.
+%
+% \begin{macro}{afterbuffer, \FV@afterbuffer}
+% Macro that is inserted after the last line of the environment is buffered, immediately before the environment ends.
+%    \begin{macrocode}
+\define@key{FV}{afterbuffer}{%
+  \def\FV@afterbuffer{#1}}
+\fvset{afterbuffer=}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{FancyVerbBufferIndex}
+% Current index in buffer during buffering.  This is given a |\FancyVerb*| macro name since it may be accessed by the user in defining custom |bufferer|.
+%    \begin{macrocode}
+\newcounter{FancyVerbBufferIndex}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{bufferer, \FV@Bufferer, \FancyVerbDefaultBufferer}
+% This is the macro that adds lines to the buffer.  The default is designed to create a truly verbatim buffer via |\detokenize|.
+%    \begin{macrocode}
+\define@key{FV}{bufferer}{%
+  \let\FV@Bufferer=#1\relax}
+\def\FancyVerbDefaultBufferer#1{%
+  \expandafter\xdef\csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname{%
+    \detokenize{#1}}}
+\fvset{bufferer=\FancyVerbDefaultBufferer}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{bufferlengthname, \FV@bufferlengthname}
+% Name of counter storing the length of the buffer.
+%    \begin{macrocode}
+\define@key{FV}{bufferlengthname}{%
+  \ifcsname c@#1\endcsname
+  \else
+    \newcounter{#1}%
+  \fi
+  \def\FV@bufferlengthname{#1}}
+\fvset{bufferlengthname=FancyVerbBufferLength}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{bufferlinename, \FancyVerbBufferLineName}
+% Base name of buffer line macros.  This is given a |\FancyVerb*| macro name since it may be accessed by the user in defining custom |bufferer|.
+%    \begin{macrocode}
+\define@key{FV}{bufferlinename}{%
+  \def\FancyVerbBufferLineName{#1}}
+\fvset{bufferlinename=FancyVerbBufferLine}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{globalbuffer, FV@globalbuffer}
+% Whether buffer macros and the buffer length counter are defined globally.
+%    \begin{macrocode}
+\newbool{FV@globalbuffer}
+\define@booleankey{FV}{globalbuffer}%
+ {\booltrue{FV@globalbuffer}}%
+ {\boolfalse{FV@globalbuffer}}
+\fvset{globalbuffer=false}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{VerbatimBuffer}
+% The environment implementation follows standard \fancyvrb\ environment style.
+%
+% A special buffer counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |bufferer|, but are needed to enable \fancyvrb\ options when a custom |bufferer| is used in conjuction with optional environment arguments.  These include |\FancyVerbDefineActive| and |\FancyVerbFormatCom|.  Since counters are global, the location of |\setcounter| at the end of the environment relative to |\begingroup...\endgroup| is not important.
+%    \begin{macrocode}
+\newcounter{FancyVerbBufferLine}
+\newcounter{FV@oldbufferlength}
+\newbool{FV@globalbuffer@tmp}
+\let\FV@bufferlengthname@tmp\relax
+\let\FancyVerbBufferLineName@tmp\relax
+\let\FV@afterbuffer@tmp\relax
+\def\VerbatimBuffer{%
+  \FV@Environment
+   {codes=,commandchars=none,commentchar=none,defineactive,%
+    gobble=0,formatcom=,firstline,lastline}%
+   {VerbatimBuffer}}
+\def\FVB@VerbatimBuffer{%
+  \@bsphack
+  \begingroup
+  \setcounter{FancyVerbBufferLine}{0}%
+  \let\c@FancyVerbLine\c@FancyVerbBufferLine
+  \setcounter{FancyVerbBufferIndex}{0}%
+  \setcounter{FV@oldbufferlength}{\expandafter\value\expandafter{\FV@bufferlengthname}}%
+  \expandafter\setcounter\expandafter{\FV@bufferlengthname}{0}%
+  \FV@UseKeyValues
+  \ifbool{FV@globalbuffer}%
+   {\global\booltrue{FV@globalbuffer@tmp}}%
+   {\global\boolfalse{FV@globalbuffer@tmp}}%
+  \global\let\FV@bufferlengthname@tmp\FV@bufferlengthname
+  \global\let\FancyVerbBufferLineName@tmp\FancyVerbBufferLineName
+  \global\let\FV@afterbuffer@tmp\FV@afterbuffer
+  \FV@DefineWhiteSpace
+  \def\FV@ProcessLine{\stepcounter{FancyVerbBufferIndex}\FV@Bufferer}%
+  \let\FV@FontScanPrep\relax
+  \let\@noligs\relax
+  \FancyVerbDefineActive
+  \FancyVerbFormatCom
+  \FV@Scan}
+\def\FVE@VerbatimBuffer{%
+  \endgroup
+  \@esphack
+  \expandafter\setcounter\expandafter{\FV@bufferlengthname@tmp}%
+   {\value{FancyVerbBufferIndex}}%
+  \setcounter{FancyVerbBufferIndex}{0}%
+  \begingroup
+  \FV@afterbuffer@tmp
+  \endgroup
+  \ifbool{FV@globalbuffer@tmp}%
+   {}%
+   {\ifnum\value{FV@oldbufferlength}>%
+        \expandafter\value\expandafter{\FV@bufferlengthname@tmp}\relax
+      \expandafter\setcounter\expandafter{\FV@bufferlengthname@tmp}%
+       {\value{FV@oldbufferlength}}%
+    \fi
+    \loop\unless\ifnum\expandafter\value\expandafter{\FV@bufferlengthname@tmp}=0\relax
+      \expandafter\global\expandafter\let\csname
+        \FancyVerbBufferLineName@tmp
+        \expandafter\arabic\expandafter{\FV@bufferlengthname@tmp}%
+        \endcsname\FV@Undefined
+      \expandafter\addtocounter\expandafter{\FV@bufferlengthname@tmp}{-1}%
+    \repeat}}
+\def\endVerbatimBuffer{\FVE@VerbatimBuffer}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+% \subsubsection{\cmd{\VerbatimInsertBuffer}}
+% \begin{macro}{\VerbatimInsertBuffer}
+% This inserts an existing buffer created by |VerbatimBuffer| as a |Verbatim| environment.  It customizes |Verbatim| internals to function with a buffer in a command context.
+%    \begin{macrocode}
+\newcommand{\VerbatimInsertBuffer}[1][]{%
+  \begingroup
+  \def\FV@KeyValues{#1}%
+  \def\FV@Scan{%
+    \FV@CatCodes
+    \xdef\FV@EnvironName{Verbatim}%
+    \ifnum\expandafter\value\expandafter{\FV@bufferlengthname}=\z@\relax
+      \PackageError{fvextra}%
+       {Buffer length counter \FV@bufferlengthname\space is invalid or zero}%
+       {}%
+      \let\FV@GetLine\relax
+    \fi
+    \FV@GetLine}%
+  \let\FV@CheckScan\relax
+  \setcounter{FancyVerbBufferIndex}{1}%
+  \def\VerbatimInsertBuffer@def@FV@Line##1{%
+    \FVExtraRetokenizeVArg{\def\FV@Line}{}{##1}}
+  \def\FancyVerbGetLine{%
+    \ifnum\value{FancyVerbBufferIndex}>%
+        \expandafter\value\expandafter{\FV@bufferlengthname}\relax
+      \global\let\FV@EnvironName\relax
+      \let\next\relax
+    \else
+      \ifcsname \FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
+        \expandafter\let\expandafter\FV@Line@Buffer
+          \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
+        \expandafter\VerbatimInsertBuffer@def@FV@Line\expandafter{\FV@Line@Buffer}%
+        \def\next{\FV@PreProcessLine\FV@GetLine}%
+        \stepcounter{FancyVerbBufferIndex}%
+      \else
+        \def\next{%
+          \PackageError{fvextra}%
+           {Buffer with line macro named
+            "\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}" does not exist}%
+           {Check bufferlinename, bufferlengthname, and globalbuffer settings}%
+        }%
+      \fi
+    \fi
+    \next}%
+  \FVB@Verbatim
+  \FVE@Verbatim
+  \setcounter{FancyVerbBufferIndex}{0}%
+  \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
 %
 %
 %
