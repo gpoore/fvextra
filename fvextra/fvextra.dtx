@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/10/11 v1.6dev3 fvextra - extensions and patches for fancyvrb]
+    [2023/10/11 v1.6dev4 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -262,6 +262,7 @@
 % \item Added option \Verb{breakcollapsespaces}.  When \Verb{true} (default), a line break within a run of regular spaces (\Verb{showspaces=false}) replaces all spaces with a single break, and the wrapped line after the break starts with a non-space character.  When \Verb{false}, a line break within a run of regular spaces preserves all spaces, and the wrapped line after the break may start with one or more spaces.  This causes regular spaces to behave exactly like the visible spaces produced with \Verb{showspaces}; both give identical line breaks, with the only difference being the appearance of spaces.
 % \item \Verb{breaklines} now automatically enables breaks after space characters when \Verb{showspaces=true}.
 % \item Reimplemented definition of \Verb{\FV@Space} to work with new space options.
+% \item Added documentation about how reimplemented commands handle the \Verb{codes} option differently compared to \fancyvrb\ (\#17).
 % \end{changelog}
 %
 %
@@ -371,7 +372,7 @@
 %
 % Additional verbatim features would be nice, but since \fancyvrb\ has remained almost unchanged for so long, a major upgrade could be problematic.  There are likely many existing documents that tweak or patch \fancyvrb\ internals in a way that relies on the existing implementation.  At the same time, creating a completely new verbatim package would require a major time investment and duplicate much of \fancyvrb\ that remains perfectly functional.  Perhaps someday there will be an amazing new verbatim package.  Until then, we have \fvextra.
 %
-% \fvextra\ is an add-on package that gives \fancyvrb\ several additional features, including automatic line breaking.  Because \fvextra\ patches and overwrites some of the \fancyvrb\ internals, it may not be suitable for documents that rely on the details of the original \fancyvrb\ implementation.  \fvextra\ tries to maintain the default \fancyvrb\ behavior in most cases.  All reimplementations (\cref{sec:reimplemented-cmd-env}), patches (\cref{sec:patch}), and modifications to \fancyvrb\ defaults (\cref{sec:modifications}) are documented.  In most cases, there are options to switch back to original implementations or original default behavior.
+% \fvextra\ is an add-on package that gives \fancyvrb\ several additional features, including automatic line breaking.  Because \fvextra\ patches and overwrites some of the \fancyvrb\ internals, it may not be suitable for documents that rely on the details of the original \fancyvrb\ implementation.  \fvextra\ tries to maintain the default \fancyvrb\ behavior in most cases.  All reimplementations (\cref{sec:reimplemented-cmd}), patches (\cref{sec:patch}), and modifications to \fancyvrb\ defaults (\cref{sec:modifications}) are documented.  In most cases, there are options to switch back to original implementations or original default behavior.
 %
 % Some features of \fvextra\ were originally created as part of the \pkg{pythontex} and \pkg{minted} packages.  \fancyvrb-related patches and extensions that currently exist in those packages will gradually be migrated into \fvextra.
 %
@@ -676,10 +677,12 @@
 %
 %
 %
-% \section{Reimplemented commands and environments}
-% \label{sec:reimplemented-cmd-env}
+% \section{Reimplemented commands}
+% \label{sec:reimplemented-cmd}
 %
 % \fvextra\ reimplements parts of \fancyvrb.  These new implementations stay close to the original definitions while allowing for new features that otherwise would not be possible.  Reimplemented versions are used by default.  The original implementations may be used via |\fvset{extra=false}| or by using |extra=false| in the optional arguments to a command or environment.
+%
+% Reimplemented commands restrict the scope of catcode-related options compared to the original \fancyvrb\ versions.  This prevents catcode-related options from interfering with new features such as |\FancyVerbFormatInline|.  With \fvextra, the |codes| option should only be used for catcode modifications.  Including non-catcode commands in |codes| will typically have no effect, unlike with \fancyvrb.  If you want to customize verbatim content using general commands, consider |formatcom|.
 %
 % \subsection{\cmd{\Verb}}
 % \DescribeMacro{\Verb*\oarg{options}\meta{delim~char~or~\{}\meta{text}\meta{delim~char~or~\}}}
