@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/10/11 v1.6dev5 fvextra - extensions and patches for fancyvrb]
+    [2023/11/19 v1.6dev6 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -230,8 +230,9 @@
     \g@addto@macro\changestext{\end{itemize}}%
 }
 \newcommand{\PrintChangelog}{%
-    \addcontentsline{toc}{section}{Changelog}
-    \section*{Changelog}%
+    %\addcontentsline{toc}{section}{Changelog}
+    %\section*{Changelog}%
+    \section{Changelog}%
     \label{sec:changelog}
     \begin{description}%
     \changestext
@@ -252,7 +253,7 @@
 % \fi
 %
 %
-% \begin{changelog}{v1.6}{2023/10/??}
+% \begin{changelog}{v1.6}{2023/11/??}
 % \item Added new environment \Verb{VerbatimWrite}.  This is similar to \Verb{fancyvrb}'s \Verb{VerbatimOut}, except that it allows for writing to a file multiple times and guarantees truly verbatim output via \Verb{\detokenize}.
 % \item Added new environment \Verb{VerbatimBuffer}.  This stores the contents of an environment verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.
 % \item Added new command \Verb{\VerbatimInsertBuffer}.  This inserts an existing buffer created by \Verb{VerbatimBuffer} as a \Verb{Verbatim} environment.
@@ -896,8 +897,8 @@
 % \end{Verbatim}
 % This macro must be defined globally, so |\xdef| or |\gdef| is necessary (this does not interfere with scoping from |globalbuffer|).  Otherwise, there are no restrictions.  The |\xdef| and |\detokenize| in the default definition guarantee that the buffer consists only of the literal text from the environment, but this is not required for a custom |bufferer|.
 %
-% \item[bufferlengthname (counter) (FancyVerbBufferLength)]
-% Counter (|\newcounter|) storing the length of the buffer.  This is the number of lines stored.
+% \item[bufferlengthname (string) (FancyVerbBufferLength)]
+% Name of the counter (|\newcounter|) storing the length of the buffer.  This is the number of lines stored.
 %
 % \item[bufferlinename (string) (FancyVerbBufferLine)]
 % The base name of the buffer line macros.  The default is |FancyVerbBufferLine|, which will result in buffer macros |\FancyVerbBufferLine<n>| with integer |n| greater than or equal to one and less than or equal to the number of lines (one-based indexing).  Since buffer macro names contain a number, they must be accessed differently than typical macros:
@@ -906,6 +907,9 @@
 % \@nameuse{FancyVerbBufferLine<n>}
 % \end{Verbatim}
 % Typically the buffer macros will be looped over with a counter that is incremented, in which case |<n>| should be the counter value |\arabic{<counter>}|.
+%
+% \item[buffername (string) (\meta{none})]
+% Shortcut for setting |bufferlengthname| and |bufferlinename| simultaneously, using the same root name.  This sets |bufferlengthname| to |<buffername>length| and |bufferlinename| to |<buffername>line|.
 %
 % \item[globalbuffer (bool) (false)]
 % This determines whether buffer line macros are defined globally, that is, whether they are accessible after the end of the |VerbatimBuffer| environment.  It does not affect any |afterbuffer| macro, since that is invoked inside the environment.  |globalbuffer| also determines whether the buffer length counter contains the buffer length or is reset to zero after the end of the |VerbatimBuffer| environment.
@@ -4002,6 +4006,14 @@
 \define@key{FV}{bufferlinename}{%
   \def\FancyVerbBufferLineName{#1}}
 \fvset{bufferlinename=FancyVerbBufferLine}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{buffername}
+% Shortcut for setting |bufferlengthname| and |bufferlinename|.
+%    \begin{macrocode}
+\define@key{FV}{buffername}{%
+  \fvset{bufferlengthname=#1length,bufferlinename=#1line}}
 %    \end{macrocode}
 % \end{macro}
 %

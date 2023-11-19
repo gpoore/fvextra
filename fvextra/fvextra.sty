@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2023/10/11 v1.6dev5 fvextra - extensions and patches for fancyvrb]
+    [2023/11/19 v1.6dev6 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1251,6 +1251,8 @@
 \define@key{FV}{bufferlinename}{%
   \def\FancyVerbBufferLineName{#1}}
 \fvset{bufferlinename=FancyVerbBufferLine}
+\define@key{FV}{buffername}{%
+  \fvset{bufferlengthname=#1length,bufferlinename=#1line}}
 \newbool{FV@globalbuffer}
 \define@booleankey{FV}{globalbuffer}%
  {\booltrue{FV@globalbuffer}}%
