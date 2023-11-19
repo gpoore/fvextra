@@ -1,6 +1,61 @@
 # Changes
 
 
+## v1.6 (2023/11/19)
+
+*  Added new environment `VerbatimWrite`.  This is similar to `fancyvrb`'s
+   `VerbatimOut`, except that it allows for writing to a file multiple times
+   and guarantees truly verbatim output via `\detokenize`.
+
+*  Added new environment `VerbatimBuffer`.  This stores the contents of an
+   environment verbatim in a "buffer," a sequence of numbered macros each of
+   which contains one line of the environment.  The "buffered" lines can then
+   be looped over for further processing or later use.
+
+*  Added new command `\VerbatimInsertBuffer`.  This inserts an existing buffer
+   created by `VerbatimBuffer` as a `Verbatim` environment.
+
+*  Redefined visible space `\FancyVerbSpace` so that it now has the correct
+   width.  It had previously been redefined as `\textvisiblespace`, but that
+   was slightly too narrrow.
+
+*  Added option `spacebreak`.  This determines the line break that is inserted
+   around spaces when `showspaces=true` or `breakcollapsespaces=false`, by
+   defining the new macro `\FancyVerbSpaceBreak`.
+
+*  `breakbefore`, `breakafter`, and `breakanywhere` now produce plain breaks
+   around spaces when `showspaces=true`, instead of breaks with a break symbol
+   at the end of wrapped lines.  `\FancyVerbBreakAnywhereBreak`,
+   `\FancyVerbBreakBeforeBreak`, and `\FancyVerbBreakAfterBreak` are no longer
+   inserted next to spaces.  Instead, `\FancyVerbSpaceBreak` is inserted or
+   (depending on options) `\FV@Space` is defined to include
+   `\FancyVerbSpaceBreak`.
+
+*  Added option `breakcollapsespaces`.  When `true` (default), a line break
+   within a run of regular spaces (`showspaces=false`) replaces all spaces
+   with a single break, and the wrapped line after the break starts with a
+   non-space character.  When `false`, a line break within a run of regular
+   spaces preserves all spaces, and the wrapped line after the break may start
+   with one or more spaces.  This causes regular spaces to behave exactly like
+   the visible spaces produced with `showspaces`; both give identical line
+   breaks, with the only difference being the appearance of spaces.
+
+*  `breaklines` now automatically enables breaks after space characters when
+   `showspaces=true`.
+
+*  Reimplemented definition of `\FV@Space` to work with new space options.
+
+*  Added documentation about how reimplemented commands handle the `codes`
+   option differently compared to `fancyvrb` (#17).
+
+*  Starred commands such as `\Verb*` now use both visible spaces and visible
+   tabs instead of just visible spaces.  This is more similar to the current
+   behavior of `\verb*`, except that `\verb*` converts tabs into visible
+   spaces (#19).
+
+*  The `mathescape` option now resets the ampersand `&` catcode (#18).
+
+
 ## v1.5 (2022/11/30)
 
 *  Added `\FancyVerbFormatInline` for customizing the formatting of inline

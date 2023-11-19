@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/11/19 v1.6dev7 fvextra - extensions and patches for fancyvrb]
+    [2023/11/19 v1.6 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -253,12 +253,12 @@
 % \fi
 %
 %
-% \begin{changelog}{v1.6}{2023/11/??}
+% \begin{changelog}{v1.6}{2023/11/19}
 % \item Added new environment \Verb{VerbatimWrite}.  This is similar to \Verb{fancyvrb}'s \Verb{VerbatimOut}, except that it allows for writing to a file multiple times and guarantees truly verbatim output via \Verb{\detokenize}.
 % \item Added new environment \Verb{VerbatimBuffer}.  This stores the contents of an environment verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.
 % \item Added new command \Verb{\VerbatimInsertBuffer}.  This inserts an existing buffer created by \Verb{VerbatimBuffer} as a \Verb{Verbatim} environment.
 % \item Redefined visible space \Verb{\FancyVerbSpace} so that it now has the correct width.  It had previously been redefined as \Verb{\textvisiblespace}, but that was slightly too narrrow.
-% \item Added option \Verb{spacebreak}.  This determines the break that is inserted around spaces when \Verb{showspaces=true} or \Verb{breakcollapsespaces=false}, by defining the new macro \Verb{\FancyVerbSpaceBreak}.
+% \item Added option \Verb{spacebreak}.  This determines the line break that is inserted around spaces when \Verb{showspaces=true} or \Verb{breakcollapsespaces=false}, by defining the new macro \Verb{\FancyVerbSpaceBreak}.
 % \item \Verb{breakbefore}, \Verb{breakafter}, and \Verb{breakanywhere} now produce plain breaks around spaces when \Verb{showspaces=true}, instead of breaks with a break symbol at the end of wrapped lines.  \Verb{\FancyVerbBreakAnywhereBreak}, \Verb{\FancyVerbBreakBeforeBreak}, and \Verb{\FancyVerbBreakAfterBreak} are no longer inserted next to spaces.  Instead, \Verb{\FancyVerbSpaceBreak} is inserted or (depending on options) \Verb{\FV@Space} is defined to include \Verb{\FancyVerbSpaceBreak}.
 % \item Added option \Verb{breakcollapsespaces}.  When \Verb{true} (default), a line break within a run of regular spaces (\Verb{showspaces=false}) replaces all spaces with a single break, and the wrapped line after the break starts with a non-space character.  When \Verb{false}, a line break within a run of regular spaces preserves all spaces, and the wrapped line after the break may start with one or more spaces.  This causes regular spaces to behave exactly like the visible spaces produced with \Verb{showspaces}; both give identical line breaks, with the only difference being the appearance of spaces.
 % \item \Verb{breaklines} now automatically enables breaks after space characters when \Verb{showspaces=true}.
