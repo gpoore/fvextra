@@ -1360,7 +1360,7 @@
   \endgroup}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
-   {\def\FV@KeyValues{#1,showspaces}\FV@@Command{#2}}%
+   {\def\FV@KeyValues{#1,showspaces,showtabs}\FV@@Command{#2}}%
    {\def\FV@KeyValues{#1}\FV@@Command{#2}}}
 \def\FV@@Command#1{%
   \FVExtra@ifnextcharVArg[%
