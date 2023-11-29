@@ -1,6 +1,11 @@
 # Changes
 
 
+## v1.6.1 (2023/11/28)
+
+*  Fixed bug from v1.6 that caused a space following a comma to be lost (#21).
+
+
 ## v1.6 (2023/11/19)
 
 *  Added new environment `VerbatimWrite`.  This is similar to `fancyvrb`'s

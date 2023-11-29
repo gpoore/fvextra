@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2023/11/19 v1.6 fvextra - extensions and patches for fancyvrb]
+    [2023/11/28 v1.6.1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -252,6 +252,10 @@
 %</driver>
 % \fi
 %
+%
+% \begin{changelog}{v1.6.1}{2023/11/28}
+% \item Fixed bug from v1.6 that caused a space following a comma to be lost (\#21).
+% \end{changelog}
 %
 % \begin{changelog}{v1.6}{2023/11/19}
 % \item Added new environment \Verb{VerbatimWrite}.  This is similar to \Verb{fancyvrb}'s \Verb{VerbatimOut}, except that it allows for writing to a file multiple times and guarantees truly verbatim output via \Verb{\detokenize}.
@@ -1549,7 +1553,7 @@
 % \begin{macro}{\FV@SpaceCatTen}
 % Space with catcode 10.  Used instead of \Verb[showspaces]{\ } and |\space| in some contexts to avoid issues in the event that these are redefined.
 %    \begin{macrocode}
-\edef\FV@SpaceCatTen{\detokenize{ }}
+\edef\FV@SpaceCatTen{{\detokenize{ }}}
 %    \end{macrocode}
 % \end{macro}
 %

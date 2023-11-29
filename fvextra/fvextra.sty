@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2023/11/19 v1.6 fvextra - extensions and patches for fancyvrb]
+    [2023/11/28 v1.6.1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -38,7 +38,7 @@
 \catcode`\ =\active%
 \gdef\FV@ActiveSpaceToken{ }%
 \endgroup%
-\edef\FV@SpaceCatTen{\detokenize{ }}
+\edef\FV@SpaceCatTen{{\detokenize{ }}}
 \def\FV@FVSpaceToken{\FV@Space}
 \def\FV@FVTabToken{\FV@Tab}
 \def\FVExtraDoSpecials{%
