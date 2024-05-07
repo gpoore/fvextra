@@ -1,4 +1,4 @@
-# Changes
+# Changelog
 
 
 ## v1.7 (dev)

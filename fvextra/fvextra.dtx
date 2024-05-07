@@ -207,22 +207,6 @@
 \edef\hashchar{\string#}
 
 
-\newcommand{\changestext}{}
-\NewEnviron{changelog}[2]{%
-    \g@addto@macro\changestext{\item[#1] (#2) \begin{itemize}}%
-    \expandafter\g@addto@macro\expandafter\changestext\expandafter{\BODY}%
-    \g@addto@macro\changestext{\end{itemize}}%
-}
-\newcommand{\PrintChangelog}{%
-    %\addcontentsline{toc}{section}{Changelog}
-    %\section*{Changelog}%
-    \section{Changelog}%
-    \label{sec:changelog}
-    \begin{description}%
-    \changestext
-    \end{description}%
-}
-
 %\EnableCrossrefs
 %\CodelineIndex
 %\RecordChanges
@@ -235,89 +219,6 @@
 \end{document}
 %</driver>
 % \fi
-%
-%
-% \begin{changelog}{v1.6.1}{2023/11/28}
-% \item Fixed bug from v1.6 that caused a space following a comma to be lost (\#21).
-% \end{changelog}
-%
-% \begin{changelog}{v1.6}{2023/11/19}
-% \item Added new environment \Verb{VerbatimWrite}.  This is similar to \Verb{fancyvrb}'s \Verb{VerbatimOut}, except that it allows for writing to a file multiple times and guarantees truly verbatim output via \Verb{\detokenize}.
-% \item Added new environment \Verb{VerbatimBuffer}.  This stores the contents of an environment verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.
-% \item Added new command \Verb{\VerbatimInsertBuffer}.  This inserts an existing buffer created by \Verb{VerbatimBuffer} as a \Verb{Verbatim} environment.
-% \item Redefined visible space \Verb{\FancyVerbSpace} so that it now has the correct width.  It had previously been redefined as \Verb{\textvisiblespace}, but that was slightly too narrrow.
-% \item Added option \Verb{spacebreak}.  This determines the line break that is inserted around spaces when \Verb{showspaces=true} or \Verb{breakcollapsespaces=false}, by defining the new macro \Verb{\FancyVerbSpaceBreak}.
-% \item \Verb{breakbefore}, \Verb{breakafter}, and \Verb{breakanywhere} now produce plain breaks around spaces when \Verb{showspaces=true}, instead of breaks with a break symbol at the end of wrapped lines.  \Verb{\FancyVerbBreakAnywhereBreak}, \Verb{\FancyVerbBreakBeforeBreak}, and \Verb{\FancyVerbBreakAfterBreak} are no longer inserted next to spaces.  Instead, \Verb{\FancyVerbSpaceBreak} is inserted or (depending on options) \Verb{\FV@Space} is defined to include \Verb{\FancyVerbSpaceBreak}.
-% \item Added option \Verb{breakcollapsespaces}.  When \Verb{true} (default), a line break within a run of regular spaces (\Verb{showspaces=false}) replaces all spaces with a single break, and the wrapped line after the break starts with a non-space character.  When \Verb{false}, a line break within a run of regular spaces preserves all spaces, and the wrapped line after the break may start with one or more spaces.  This causes regular spaces to behave exactly like the visible spaces produced with \Verb{showspaces}; both give identical line breaks, with the only difference being the appearance of spaces.
-% \item \Verb{breaklines} now automatically enables breaks after space characters when \Verb{showspaces=true}.
-% \item Reimplemented definition of \Verb{\FV@Space} to work with new space options.
-% \item Added documentation about how reimplemented commands handle the \Verb{codes} option differently compared to \fancyvrb\ (\#17).
-% \item Starred commands such as \Verb{\Verb*} now use both visible spaces and visible tabs instead of just visible spaces.  This is more similar to the current behavior of \Verb{\verb*}, except that \Verb{\verb*} converts tabs into visible spaces (\#19).
-% \item The \Verb{mathescape} option now resets the ampersand \Verb{&} catcode (\#18).
-% \end{changelog}
-%
-%
-% \begin{changelog}{v1.5}{2022/11/30}
-% \item Added \cmd{\FancyVerbFormatInline} for customizing the formatting of inline verbatim, such as \cmd{\Verb}.  This parallels \cmd{\FancyVerbFormatLine} and \cmd{\FancyVerbFormatText}.
-% \item Added line breaking option \Verb{breaknonspaceingroup}.  When \cmd{commandchars} is used to allow macros within verbatim, this inserts breaks within groups \Verb{{...}}.
-% \item Added \cmd{\FVExtraUnexpandedReadStarOArgMArgBVArg} to support reimplementation of \cmd{\mintinline} for \pkg{minted}.
-% \item Added \cmd{VerbEnv} environment, which is an environment variant of \cmd{\Verb}.  This supports reimplementation of \cmd{\mintinline} for \pkg{minted}.
-% \item \cmd{breakbefore} and \cmd{breakafter} now support the escaped comma \cmd{\,} (\#15).
-% \item Fixed unintended line breaks after hyphens under LuaTeX (\#14).
-% \item Added documentation on Pandoc compatibility (\#11).
-% \item Replaced \Verb{breakbeforegroup} with \Verb{breakbeforeinrun}, and replaced \Verb{breakaftergroup} with \Verb{breakafterinrun}.  With the introduction of \Verb{breaknonspaceingroup}, ``\Verb{group}'' is now reserved for referring to TeX groups \Verb{{...}}.
-% \item Removed dependency on \Verb{ifthen} package.
-% \item \Verb{breakautoindent} now works correctly with Pygments output that treats leading whitespace as a separate token or as part of a token.
-% \end{changelog}
-%
-% \begin{changelog}{v1.4}{2019/02/04}
-% \item Reimplemented \texttt{\string\Verb}.  It now works as expected inside other commands (with a few limitations), including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.  It now supports \texttt{breaklines} and relevant line-breaking options.
-% \item Reimplemented \texttt{\string\SaveVerb} and \texttt{\string\UseVerb} to be equivalent to the new \texttt{\string\Verb}.  The new option \texttt{retokenize} allows saved verbatim material to be retokenized under new \texttt{commandchars} and \texttt{codes} when it is inserted with \texttt{\string\UseVerb}.
-% \item New command \texttt{\string\EscVerb} works like the reimplemented \texttt{\string\Verb}, except that special characters can be escaped with a backslash.  It works inside other commands without any limitations, including in movable arguments, and is compatible with \texttt{hyperref} for things like PDF bookmarks.
-% \item Added \texttt{extra} option for switching between the reimplemented  \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb} and the original \texttt{fancyvrb} definitions.  Reimplemented versions are used by default.  This option will apply to any future reimplemented commands and environments.
-% \item New command \texttt{\string\fvinlineset} only applies options to commands related to typesetting verbatim inline, like \texttt{\string\Verb}, \texttt{\string\SaveVerb}, \texttt{\string\UseVerb}.  It only works with commands that are defined or reimplemented by \texttt{fvextra}.  It overrides options from \texttt{\string\fvset}.
-% \item Patched \texttt{fancyvrb} so that \texttt{\string\Verb} (either reimplemented version or original) can use characters like \texttt{\%} for delimiters when used outside any commands.
-% \item \texttt{obeytabs} now works with the \texttt{calc} package's redefined \texttt{\string\setcounter}.  Since \texttt{minted} loads \texttt{calc}, this also fixes \texttt{minted} compatibility (\texttt{minted} \#221).
-% \item Added new option \texttt{fontencoding} (\texttt{minted} \#208).
-% \item \texttt{highlightlines} now works correctly with \texttt{frame} (\#7).
-% \end{changelog}
-%
-% \begin{changelog}{v1.3.1}{2017/07/08}
-% \item \texttt{beameroverlays} now works with \texttt{VerbatimOut}.
-% \end{changelog}
-%
-% \begin{changelog}{v1.3}{2017/07/08}
-% \item Added \texttt{beameroverlays} option, which enables \texttt{beamer} overlays using the \texttt{<} and \texttt{>} characters.
-% \item Added options \texttt{breakindentnchars}, \texttt{breaksymbolsepleftnchars} (alias \texttt{breaksymbolsepnchars}), \texttt{breaksymbolseprightnchars}, \texttt{breaksymbolindentleftnchars} (alias \texttt{breaksymbolindentnchars}), and \texttt{breaksymbolindentrightnchars}.  These are identical to the pre-existing options without the \texttt{nchars} suffix, except that they allow indentation to be specified as an integer number of characters rather than as a dimension.  As a result of these new options, \texttt{\string\settowidth} is no longer used in the preamble, resolving some font incompatibilities (\#4).
-% \item Clarified in the docs that \texttt{breaksymbolsepright} is a \emph{minimum}, rather than exact, distance.
-% \end{changelog}
-%
-%
-% \begin{changelog}{v1.2.1}{2016/09/02}
-% \item The package is now compatible with classes and packages that redefine \texttt{\string\raggedright}.
-% \item Fixed a bug that introduced extra space in inline contexts such as \texttt{\string\mintinline} when \texttt{breaklines=true} (\#3).
-% \end{changelog}
-%
-%
-% \begin{changelog}{v1.2}{2016/07/20}
-% \item Added support for line breaking when working with Pygments for syntax highlighting.
-% \item The default \texttt{highlightcolor} is now defined with \texttt{rgb} for compatibility with the \texttt{color} package.  Fixed a bug in the conditional color definition when \texttt{color} and \texttt{xcolor} are not loaded before \texttt{fvextra}.
-% \end{changelog}
-%
-%
-% \begin{changelog}{v1.1}{2016/07/14}
-% \item The options \texttt{rulecolor} and \texttt{fillcolor} now accept color names directly; using \texttt{\string\color\{<color\_name>\}} is no longer necessary, though it still works.
-% \item Added \texttt{tabcolor} and \texttt{spacecolor} options for use with \texttt{showtabs} and \texttt{showspaces}.
-% \item Added \texttt{highlightlines} option that takes a line number or range of line numbers and highlights the corresponding lines.  Added \texttt{highlightcolor} option that controls hightlighting color.
-% \item \texttt{obeytabs} no longer causes lines to vanish when tabs are inside macro arguments.  Tabs and spaces inside a macro argument but otherwise at the beginning of a line are expanded correctly.  Tabs inside a macro argument that are preceded by non-whitespace characters (not spaces or tabs) are expanded based on the starting position of the run of whitespace in which they occur.
-% \item The line breaking options \texttt{breakanywhere}, \texttt{breakbefore}, and \texttt{breakafter} now work with multi-byte UTF-8 code points under pdfTeX with \texttt{inputenc}.  They were already fully functional under XeTeX and LuaTeX.
-% \item Added \texttt{curlyquotes} option, which essentially disables the \texttt{uquote} package.
-% \end{changelog}
-%
-%
-% \begin{changelog}{v1.0}{2016/06/28}
-% \item Initial release.
-% \end{changelog}
 %
 %
 % \DoNotIndex{\newcommand,\newenvironment}
@@ -1486,8 +1387,6 @@
 % This defines the visible space character (\texttt{\FancyVerbSpace}) that is used when |showspaces=true|.  The default definition (as patched by \fvextra, \cref{sec:patch:visible-space}) follows \url{https://tex.stackexchange.com/a/120231/10742}.  While this may be redefined directly, \fvextra\ also defines a new option |space|.
 %
 %
-%
-% \PrintChangelog
 %
 % \StopEventually{\PrintIndex}
 %
