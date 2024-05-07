@@ -3,6 +3,9 @@
 
 ## v1.7 (dev)
 
+* `\FVExtraUnexpandedReadStarOArgMArgBVArg` now checks that the final argument
+  it reads is braced (#22).
+
 * Text that immediately follows `\VerbatimInsertBuffer` is no longer indented
   to start a new paragraph.
 

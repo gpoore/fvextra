@@ -326,12 +326,16 @@
   \makeatother}
 \def\FVExtraUnexpandedReadStarOArgMArgBVArg#1#{%
   \FV@UnexpandedReadStarOArgMArgBVArg@i{#1}}
-\def\FV@UnexpandedReadStarOArgMArgBVArg@i#1#2#3{%
-  \FVExtraAlwaysUnexpanded{\FVExtraUnexpandedReadStarOArgMArgBVArg#1{#2}{#3}}}
+\def\FV@UnexpandedReadStarOArgMArgBVArg@i#1#2{%
+  \FV@UnexpandedReadStarOArgMArgBVArg@ii{#1}{#2}}
+\def\FV@UnexpandedReadStarOArgMArgBVArg@ii#1#2#3#{%
+  \FV@UnexpandedReadStarOArgMArgBVArg@iii{#1}{#2}{#3}}
+\def\FV@UnexpandedReadStarOArgMArgBVArg@iii#1#2#3#4{%
+  \FVExtraAlwaysUnexpanded{\FVExtraUnexpandedReadStarOArgMArgBVArg#1{#2}#3{#4}}}
 \FVExtrapdfstringdefDisableCommands{%
   \makeatletter
-  \def\FV@UnexpandedReadStarOArgMArgBVArg@i#1#2#3{%
-    \FVExtraPDFStringVerbatimDetokenize{#3}}%
+  \def\FV@UnexpandedReadStarOArgMArgBVArg@iii#1#2#3#4{%
+    \FVExtraPDFStringVerbatimDetokenize{#4}}%
   \makeatother}
 \def\FVExtraPDFStringEscapeChar#1{%
   \ifcsname FV@PDFStringEscapeChar@#1\endcsname
