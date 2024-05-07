@@ -3,14 +3,20 @@
 
 ## v1.7 (dev)
 
-* `\FVExtraUnexpandedReadStarOArgMArgBVArg` now checks that the final argument
-  it reads is braced (#22).
+*  Added new command `\VerbatimClearBuffer`.
 
-* Text that immediately follows `\VerbatimInsertBuffer` is no longer indented
-  to start a new paragraph.
+*  `VerbatimBuffer` environments with the same buffer name now append to the
+   same buffer, regardless of the value of `globalbuffer`.  Previously,
+   `globalbuffer=false` caused any pre-existing buffer to be cleared.
 
-* Updated `tcblisting` usage in docs for compatibility with the latest
-  `tcolorbox`.
+*  `\FVExtraUnexpandedReadStarOArgMArgBVArg` now checks that the final argument
+   it reads is braced (#22).
+
+*  Text that immediately follows `\VerbatimInsertBuffer` is no longer indented
+   to start a new paragraph.
+
+*  Updated `tcblisting` usage in docs for compatibility with the latest
+   `tcolorbox`.
 
 
 ## v1.6.1 (2023/11/28)
