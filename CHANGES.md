@@ -1,6 +1,15 @@
 # Changes
 
 
+## v1.7 (dev)
+
+* Text that immediately follows `\VerbatimInsertBuffer` is no longer indented
+  to start a new paragraph.
+
+* Updated `tcblisting` usage in docs for compatibility with the latest
+  `tcolorbox`.
+
+
 ## v1.6.1 (2023/11/28)
 
 *  Fixed bug from v1.6 that caused a space following a comma to be lost (#21).
