@@ -1,16 +1,19 @@
 # Changelog
 
 
-## v1.7 (dev)
+## v1.7.0 (2024/05/16)
 
 *  Added new command `\VerbatimClearBuffer`.
 
 *  `VerbatimBuffer` environments with the same buffer name now append to the
    same buffer, regardless of the value of `globalbuffer`.  Previously,
-   `globalbuffer=false` caused any pre-existing buffer to be cleared.
+   `globalbuffer=false` caused any pre-existing buffer to be cleared.  Now,
+   `globalbuffer=false` causes anything that is appended to the buffer to be
+   removed at the end of the environment, but the entire buffer is not
+   cleared.
 
-*  `\FVExtraUnexpandedReadStarOArgMArgBVArg` now checks that the final argument
-   it reads is braced (#22).
+*  `\FVExtraUnexpandedReadStarOArgMArgBVArg` now checks that the final
+   argument it reads is braced (#22).
 
 *  Text that immediately follows `\VerbatimInsertBuffer` is no longer indented
    to start a new paragraph.
