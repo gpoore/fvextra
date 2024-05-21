@@ -1506,7 +1506,7 @@
 %
 % There are two contexts in which sentinels may be needed.  In delimited macro arguments, such as |\def\macro#1\sentinel{...}|, a sentinel is needed as the delimiter.  Because the delimiting macro need not be defined, special delimiting macros need not be created for this case.  The important thing is to ensure that the macro name is sufficiently unique to avoid collisions.  Typically, using \cmd{\makeatletter} to allow something like \cmd{\@sentinel} will be sufficient.  For added security, additional characters can be given catcode 11, to allow things like \cmd{\@sent!nel}.
 %
-% The other context for sentinels is in scanning through a sequence of tokens that is delimited by a sentinel, and using \cmd{\ifx} comparisons to identify the sentinel and stop scanning.  In this case, using an undefined macro is risky.  Under normal conditions, the sequence of tokens could contain an undefined macro due to mistyping.  In some \fvextra\ applications, the tokens will have been incorrectly tokenized under a normal catcode regime, and need to be retokenized as verbatim, in which case undefined macros must be expected.  Thus, a sentinel macro whose expansion is resistent to collisions is needed.
+% The other context for sentinels is in scanning through a sequence of tokens that is delimited by a sentinel, and using \cmd{\ifx} comparisons to identify the sentinel and stop scanning.  In this case, using an undefined macro is risky.  Under normal conditions, the sequence of tokens could contain an undefined macro due to mistyping.  In some \fvextra\ applications, the tokens will have been incorrectly tokenized under a normal catcode regime, and need to be retokenized as verbatim, in which case undefined macros must be expected.  Thus, a sentinel macro whose expansion is resistant to collisions is needed.
 %
 % \begin{macro}{\FV@<Sentinel>}
 % This is the standard default \fvextra\ delimited-macro sentinel.  It is used with \cmd{\makeatletter} by changing |<| and |>| to catcode 11.  The |<| and |>| add an extra level of collision resistance.  Because it is undefined, it is \emph{only} appropriate for use in delimited macro arguments.
@@ -2962,7 +2962,7 @@
 % \end{macro}
 %
 % \begin{macro}{\FV@PDFStrEscVDetok@ScanCont}
-% This is modified to use |\040| for the space.  In the unescaped case, using a normal space here is fine, but in the escaped case, the preceeding or following token could be an escaped space.
+% This is modified to use |\040| for the space.  In the unescaped case, using a normal space here is fine, but in the escaped case, the preceding or following token could be an escaped space.
 %    \begin{macrocode}
 \begingroup
 \catcode`\!=0\relax
@@ -3058,7 +3058,7 @@
 % \end{macro}
 %
 % \begin{macro}{\FV@PDFStrEscVDetok@ScanTokenNoSpace}
-% This was modifed to add \cmd{\FVExtraPDFStringEscapeChar}
+% This was modified to add \cmd{\FVExtraPDFStringEscapeChar}
 %    \begin{macrocode}
 \gdef\FV@PDFStrEscVDetok@ScanTokenNoSpace#1#2^^C{%
   \if\relax\detokenize{#2}\relax
@@ -3820,7 +3820,7 @@
 % \begin{macro}{VerbatimWrite}
 % The environment implementation follows standard \fancyvrb\ environment style.
 %
-% A special write counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |writer|, but are needed to enable \fancyvrb\ options when a custom |writer| is used in conjuction with optional environment arguments.  These include |\FancyVerbDefineActive|, |\FancyVerbFormatCom|, and |\FV@DefineTabOut|.
+% A special write counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |writer|, but are needed to enable \fancyvrb\ options when a custom |writer| is used in conjunction with optional environment arguments.  These include |\FancyVerbDefineActive|, |\FancyVerbFormatCom|, and |\FV@DefineTabOut|.
 %    \begin{macrocode}
 \newcounter{FancyVerbWriteLine}
 \def\VerbatimWrite{%
@@ -3931,7 +3931,7 @@
 % \begin{macro}{VerbatimBuffer}
 % The environment implementation follows standard \fancyvrb\ environment style.
 %
-% A special buffer counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |bufferer|, but are needed to enable \fancyvrb\ options when a custom |bufferer| is used in conjuction with optional environment arguments.  These include |\FancyVerbDefineActive| and |\FancyVerbFormatCom|.  Since counters are global, the exact location of the |\setcounter| commands at the end of the environment relative to |\begingroup...\endgroup| is not important.
+% A special buffer counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |bufferer|, but are needed to enable \fancyvrb\ options when a custom |bufferer| is used in conjunction with optional environment arguments.  These include |\FancyVerbDefineActive| and |\FancyVerbFormatCom|.  Since counters are global, the exact location of the |\setcounter| commands at the end of the environment relative to |\begingroup...\endgroup| is not important.
 %    \begin{macrocode}
 \newcounter{FancyVerbBufferLine}
 \newcounter{FV@oldbufferlength}
@@ -5452,7 +5452,7 @@
 % \end{macro}
 %
 % \begin{macro}{\FV@BreakBeforePrep}
-% We need a way to break before characters if and only if they have been specified as breaking characters.  It would be possible to do that via a nested conditional, but that would be messy.  It is much simpler to create an empty macro whose name contains the character, and test for the existence of this macro.  This needs to be done inside a |\begingroup...\endgroup| so that the macros do not have to be cleaned up manually.  A good place to do this is in |\FV@FormattingPrep|, which is inside a group and before processing starts.  The macro is added to |\FV@FormattingPrep@PreHook|, which contains \fvextra\ exntensions to |\FV@FormattingPrep|, after |\FV@BreakAfterPrep| is defined below.
+% We need a way to break before characters if and only if they have been specified as breaking characters.  It would be possible to do that via a nested conditional, but that would be messy.  It is much simpler to create an empty macro whose name contains the character, and test for the existence of this macro.  This needs to be done inside a |\begingroup...\endgroup| so that the macros do not have to be cleaned up manually.  A good place to do this is in |\FV@FormattingPrep|, which is inside a group and before processing starts.  The macro is added to |\FV@FormattingPrep@PreHook|, which contains \fvextra\ extensions to |\FV@FormattingPrep|, after |\FV@BreakAfterPrep| is defined below.
 %
 % The procedure here is a bit roundabout.  We need to use |\FV@EscChars| to handle character escapes, but the character redefinitions need to be kept local, requiring that we work within a |\begingroup...\endgroup|.  So we loop through the breaking tokens and assemble a macro that will itself define character macros.  Only this defining macro is declared global, and it contains \emph{expanded} characters so that there is no longer any dependence on |\FV@EscChars|.
 %
@@ -5791,7 +5791,7 @@
 % \begin{macro}{\FV@BreakBufferStart}
 % Create a new buffer, either at the beginning of scanning or during recursion.  The single mandatory argument is the macro for handling tokens, which is |\let| to |\FV@Break@Token|.  An intermediate |\FV@BreakBufferStart@i| is used to optimize |\ifx| comparisons for |\FV@BreakBufferStart| during scanning.
 %
-% For recursion, |\FV@BreakBuffer<n>| and |\FV@Break@Token<n>| store the state (buffer and token handling macro) immediately prior to recusion with depth |<n>|.
+% For recursion, |\FV@BreakBuffer<n>| and |\FV@Break@Token<n>| store the state (buffer and token handling macro) immediately prior to recursion with depth |<n>|.
 %    \begin{macrocode}
 \def\FV@BreakBufferStart{%
   \FV@BreakBufferStart@i}
@@ -6791,7 +6791,7 @@
 %
 % In the |breakbytoken| cases, an |\hbox| is used to prevent breaks within the macro (breaks could occur at spaces even without |\FancyVerbBreakStart|).  The |breakbytokenanywhere| case is similar but a little tricky.  |\FV@BreakByTokenAnywhereHook|, which is inside |\FV@SaveLineBox| where line breaking occurs, is used to define |\FV@BreakByTokenAnywhereBreak| so that it will ``do nothing'' the first time it is used and on subsequent invocations become |\FancyVerbBreakByTokenAnywhereBreak|.  Because the hook is within the |internallinenumbers*| environment, the redefinition doesn't escape, and the default global definition of |\FV@BreakByTokenAnywhereBreak| as |\relax| is not affected.  We don't want the actual break to appear before the first Pygments macro in case it might cause a spurious break after leading whitespace.  But we must have breaks \emph{before} Pygments macros because otherwise lookahead would be necessary.
 %
-% An intermediate variable |\FV@PYG| is defined to avoid problems in case |#1|$=$|#2|.  There is also a check for a non-existant |#2| (|\PYG|\meta{style\_name} may not be created until a later compile in the \pkg{pythontex} case); if |#2| does not exist, fall back to |#1|.  For the existance check, |\ifx...\relax| must be used instead of |\ifcsname|, because |#2| will be a macro, and will typically be created with |\csname...\endcsname| which will |\let| the macro to |\relax| if it doesn't already exist.
+% An intermediate variable |\FV@PYG| is defined to avoid problems in case |#1|$=$|#2|.  There is also a check for a non-existent |#2| (|\PYG|\meta{style\_name} may not be created until a later compile in the \pkg{pythontex} case); if |#2| does not exist, fall back to |#1|.  For the existence check, |\ifx...\relax| must be used instead of |\ifcsname|, because |#2| will be a macro, and will typically be created with |\csname...\endcsname| which will |\let| the macro to |\relax| if it doesn't already exist.
 %
 % |\FV@PYG@Redefed| is |\let| to the Pygments macro that appears literally (after redefinition), so that it can be detected elsewhere to allow for special processing, such as in |breakautoindent|.
 %    \begin{macrocode}
