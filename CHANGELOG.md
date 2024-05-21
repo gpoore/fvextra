@@ -209,7 +209,7 @@
 
 *  Added `highlightlines` option that takes a line number or range of line
    numbers and highlights the corresponding lines.  Added `highlightcolor`
-   option that controls hightlighting color.
+   option that controls highlighting color.
 
 *  `obeytabs` no longer causes lines to vanish when tabs are inside macro
    arguments.  Tabs and spaces inside a macro argument but otherwise at the
