@@ -1,6 +1,12 @@
 # Changelog
 
 
+## v1.8.0 (dev)
+
+* When `numberblanklines=false`, `highlightlines` no longer highlights blank
+  lines at the end of a highlighted range (#25, gpoore/minted#226).
+
+
 ## v1.7.0 (2024/05/16)
 
 *  Added new command `\VerbatimClearBuffer`.

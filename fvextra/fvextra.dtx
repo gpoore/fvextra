@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/05/16 v1.7.0 fvextra - extensions and patches for fancyvrb]
+    [2024/05/16 v1.8.0dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -5135,6 +5135,32 @@
     \expandafter\FV@HighlightLinesParse@Range@Loop
   \fi}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FV@HighlightLinesPrep}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@StepLineNo@Patch@HighlightLine}
+% Patch |\FV@StepLineNo| so that when |numberblanklines=false|, blank lines won't be highlighted.  If the previous line is at the end of a highlighted range, then |\let| |\FV@HighlightLine:<n>| to |\FV@Undefined| to prevent further highlighting.  Otherwise, leave everything as-is since the blank line(s) are within a highlighted range.
+%    \begin{macrocode}
+\def\FV@StepLineNo@Patch@HighlightLine{%
+  \ifcsname FV@HighlightLine:\number\c@FancyVerbLine\endcsname
+    \@tempcnta=\c@FancyVerbLine
+    \advance\@tempcnta\@ne
+    \ifcsname FV@HighlightLine:\number\@tempcnta\endcsname
+    \else
+      \expandafter\let
+        \csname FV@HighlightLine:\number\c@FancyVerbLine\endcsname\FV@Undefined
+    \fi
+  \fi}
+\patchcmd{\FV@StepLineNo}%
+ {\ifx\FV@Line\empty}%
+ {\ifx\FV@Line\empty\FV@StepLineNo@Patch@HighlightLine}%
+ {}%
+ {\PackageError{fvextra}%
+   {Failed to patch \string\FV@StepLineNo\ to make highlightlines
+    compatible with numberblanklines}%
+   {Failed to patch \string\FV@StepLineNo\ to make highlightlines
+    compatible with numberblanklines}}
 %    \end{macrocode}
 % \end{macro}
 %

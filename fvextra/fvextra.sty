@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/05/16 v1.7.0 fvextra - extensions and patches for fancyvrb]
+    [2024/05/16 v1.8.0dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1944,6 +1944,25 @@
     \expandafter\FV@HighlightLinesParse@Range@Loop
   \fi}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FV@HighlightLinesPrep}
+\def\FV@StepLineNo@Patch@HighlightLine{%
+  \ifcsname FV@HighlightLine:\number\c@FancyVerbLine\endcsname
+    \@tempcnta=\c@FancyVerbLine
+    \advance\@tempcnta\@ne
+    \ifcsname FV@HighlightLine:\number\@tempcnta\endcsname
+    \else
+      \expandafter\let
+        \csname FV@HighlightLine:\number\c@FancyVerbLine\endcsname\FV@Undefined
+    \fi
+  \fi}
+\patchcmd{\FV@StepLineNo}%
+ {\ifx\FV@Line\empty}%
+ {\ifx\FV@Line\empty\FV@StepLineNo@Patch@HighlightLine}%
+ {}%
+ {\PackageError{fvextra}%
+   {Failed to patch \string\FV@StepLineNo\ to make highlightlines
+    compatible with numberblanklines}%
+   {Failed to patch \string\FV@StepLineNo\ to make highlightlines
+    compatible with numberblanklines}}
 \newcount\FV@LoopCount
 \newbox\FV@NCharsBox
 \def\FV@SetToWidthNChars#1#2{%
