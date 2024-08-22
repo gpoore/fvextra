@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/05/16 v1.8.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2024/08/21 v1.8.0dev2 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -978,6 +978,12 @@
 % By using |commandchars|, it is possible to include \LaTeX\ commands within otherwise verbatim text.  In these cases, there can be groups (typically |{...}| but depends on |commandchars|) within verbatim.  Spaces within groups are treated as potential line break locations when |breaklines=true|, but by default no other break locations are inserted (|breakbefore|, |breakafter|, |breakanywhere|).  This is because inserting non-space break locations can interfere with command functionality.  For example, in |\textcolor{red}{text}|, breaks shouldn't be inserted within |red|.
 %
 % |breaknonspaceingroup| allows non-space breaks to be inserted within groups.  This option should only be used when |commandchars| is including \LaTeX\ commands that do not take optional arguments and only take mandatory arguments that are typeset.  Something like |\textit{text}| is fine, but |\textcolor{red}{text}| is not because one of the mandatory arguments is not typeset but rather provides a setting.  For more complex commands, it is typically better to redefine them to insert breaks in appropriate locations using |\FancyVerbBreakStart...\FancyVerbBreakStop|.
+%
+%
+% \item[breakpreferspaces (boolean) (true)]
+% This determines whether line breaks are preferentially inserted at normal spaces (|breakcollapsespaces=true|, |showspaces=false|) rather than at other locations allowed by |breakbefore|, |breakafter|, or |breakanywhere|.
+%
+% Using |breakpreferspaces=false| with |breakanywhere=true| will typically result in all broken segments of a line going all the way to the right margin.
 %
 %
 % \item[breaksymbol (string) (breaksymbolleft)]
@@ -5706,6 +5712,26 @@
 \fvset{breaknonspaceingroup=false}
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{breakpreferspaces,\FV@BreakHyphenation}
+% Adjust hyphenation settings for |breaklines|.
+%
+% When |breakbefore|, |breakafter|, or |breakanywhere| are in use, |\finalhyphendemerits=0| prevents the final ``word'' on a line from being put into a line segment by itself after line breaking.  Otherwise, \TeX\ tries to avoid a line break (hyphenation) within a ``word'' on the penultimate line segment, and may accomplish this by introducing an unnecessary line break at the space before the last ``word.''
+%
+% |breakpreferspaces| (|\linepenalty|) determines whether line breaks are preferentially inserted at normal spaces (|breakcollapsespaces=true|, |showspaces=false|) rather than at other locations allowed by |breakbefore|, |breakafter|, or |breakanywhere|.
+%    \begin{macrocode}
+\newbool{FV@breakpreferspaces}
+\booltrue{FV@breakpreferspaces}
+\define@booleankey{FV}{breakpreferspaces}%
+ {\booltrue{FV@breakpreferspaces}}%
+ {\boolfalse{FV@breakpreferspaces}}
+\def\FV@BreakHyphenation{%
+  \finalhyphendemerits=0\relax
+  \ifbool{FV@breakpreferspaces}{}{\linepenalty=\@M\relax}}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@BreakHyphenation}
+%    \end{macrocode}
 % \end{macro}
 %
 %

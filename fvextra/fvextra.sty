@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/05/16 v1.8.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2024/08/21 v1.8.0dev2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -2239,6 +2239,15 @@
  {\booltrue{FV@breaknonspaceingroup}}%
  {\boolfalse{FV@breaknonspaceingroup}}
 \fvset{breaknonspaceingroup=false}
+\newbool{FV@breakpreferspaces}
+\booltrue{FV@breakpreferspaces}
+\define@booleankey{FV}{breakpreferspaces}%
+ {\booltrue{FV@breakpreferspaces}}%
+ {\boolfalse{FV@breakpreferspaces}}
+\def\FV@BreakHyphenation{%
+  \finalhyphendemerits=0\relax
+  \ifbool{FV@breakpreferspaces}{}{\linepenalty=\@M\relax}}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@BreakHyphenation}
 \newsavebox{\FV@LineBox}
 \newsavebox{\FV@LineIndentBox}
 \let\FV@LineIndentChars\@empty

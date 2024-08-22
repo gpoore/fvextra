@@ -3,8 +3,17 @@
 
 ## v1.8.0 (dev)
 
-* When `numberblanklines=false`, `highlightlines` no longer highlights blank
-  lines at the end of a highlighted range (#25, gpoore/minted#226).
+*  When `numberblanklines=false`, `highlightlines` no longer highlights blank
+   lines at the end of a highlighted range (#25, gpoore/minted#226).
+
+*  An unnecessary line break is no longer inserted before the last "word" of a
+   line when it is preceded by a long "word" that is broken internally as a
+   result of `breakbefore`, `breakafter`, or `breakanywhere` (#26).
+
+*  Added option `breakpreferspaces` (default `true`).  This determines whether
+   line breaks are preferentially inserted at normal spaces rather than at
+   other locations allowed by `breakbefore`, `breakafter`, or `breakanywhere`
+   (#26).
 
 
 ## v1.7.0 (2024/05/16)
