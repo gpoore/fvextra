@@ -134,6 +134,48 @@
 \def\theCodelineNo{\textcolor{DarkGreen}{\sffamily\scriptsize{\arabic{CodelineNo}}}}
 
 
+\renewenvironment{macro}{\macro@custom@arg}{}
+\def\macro@custom@arg{%
+  \begingroup\makeatletter\macro@custom@arg@i}
+\def\macro@custom@arg@i#1{%
+  \makeatother
+  \par\noindent
+  \ifstrempty{#1}%
+   {~\par}%
+   {\ttfamily\color{DarkGreen}\hspace*{-0.5in}%
+    \macro@custom@arg@split#1,\FV@Sentinel\par}%
+  \endgroup}
+\def\macro@custom@arg@spacegobble#1{#1}
+\def\macro@custom@arg@split#1,#2\FV@Sentinel{%
+  \expandafter\macro@custom@arg@spacegobble\string#1%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {}{\\\hspace*{-0.5in}\macro@custom@arg@split#2\FV@Sentinel}}
+
+\renewenvironment{environment}{\env@custom@arg}{}
+\def\env@custom@arg{%
+  \begingroup\makeatletter\env@custom@arg@i}
+\def\env@custom@arg@i#1{%
+  \makeatother
+  \ifstrempty{#1}%
+   {~\par}%
+   {\ttfamily\color{DarkGreen}\hspace*{-0.5in}%
+    \env@custom@arg@split#1,\FV@Sentinel\par}%
+  \endgroup}
+\def\env@custom@arg@spacegobble#1{#1}
+\def\env@custom@arg@split#1,#2\FV@Sentinel{%
+  \env@custom@arg@spacegobble#1{\textrm{ \textit{(env.)}}}%
+  \if\relax\detokenize{#2}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+  {}{\\\hspace*{-0.5in}\env@custom@arg@split#2\FV@Sentinel}}
+
+
 \let\orig@footnote\footnote
 \renewcommand{\footnote}{%
   \begingroup
@@ -2932,7 +2974,7 @@
 % \end{macro}
 %
 %
-% \paragraph{Detokenize as if the original source were tokenized verbatim, except for backslash escapes of non-catcode 11 characters, then convert to PDF string}
+% \paragraph{Detokenize as if the original source were tokenized verbatim, except for backslash escapes of non-catcode 11 characters, then convert to PDF string}\hfill\\
 %
 % \begin{macro}{\FVExtraPDFStringEscapedVerbatimDetokenize}
 % This is identical to \cmd{\FVExtraEscapedVerbatimDetokenize}, except that the output is converted to a valid PDF string.  All spaces are represented with the octal escape \cmd{\040} to prevent adjacent spaces from being merged.  There is no alternate implementation for restricting escapes to ASCII symbols and punctuation.  Typically, this would be used in an expansion-only context to create something like bookmarks, while \cmd{\FVExtraEscapedVerbatimDetokenize} (potentially with escape restrictions) would be used in parallel to generate whatever is actually typeset.  Escape errors can be handled in generating what is typeset.
@@ -3256,8 +3298,7 @@
 % \subsection{Hooks}
 %
 %
-% \begin{macro}{\FV@FormattingPrep@PreHook}
-% \begin{macro}{\FV@FormattingPrep@PostHook}
+% \begin{macro}{\FV@FormattingPrep@PreHook,\FV@FormattingPrep@PostHook}
 % These are hooks for extending |\FV@FormattingPrep|.  |\FV@FormattingPrep| is inside a group, before the beginning of processing, so it is a good place to add extension code.  These hooks are used for such things as tweaking math mode behavior and preparing for |breakbefore| and |breakafter|.  The |PreHook| should typically be used, unless \pkg{fancyvrb}'s font settings, whitespace setup, and active character definitions are needed for extension code.
 %    \begin{macrocode}
 \let\FV@FormattingPrep@PreHook\@empty
@@ -3265,7 +3306,6 @@
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
   \expandafter\FV@FormattingPrep@PreHook\FV@FormattingPrep\FV@FormattingPrep@PostHook}
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 %
 %
@@ -3811,7 +3851,7 @@
 % \end{macro}
 %
 %
-% \begin{macro}{writer, \FV@Writer}
+% \begin{macro}{writer,\FV@Writer}
 % Define writer macro that processes each line before writing.
 %    \begin{macrocode}
 \define@key{FV}{writer}{%
@@ -3864,7 +3904,7 @@
 %
 % By default, all \fancyvrb\ options except for |VerbatimBuffer|-specific options are ignored.  This can be customized on a per-environment basis via environment optional arguments.
 %
-% \begin{macro}{afterbuffer, \FV@afterbuffer}
+% \begin{macro}{afterbuffer,\FV@afterbuffer}
 % Macro that is inserted after the last line of the environment is buffered, immediately before the environment ends.
 %    \begin{macrocode}
 \define@key{FV}{afterbuffer}{%
@@ -3880,7 +3920,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{bufferer, \FV@Bufferer, \FancyVerbDefaultBufferer}
+% \begin{macro}{bufferer,\FV@Bufferer,\FancyVerbDefaultBufferer}
 % This is the macro that adds lines to the buffer.  The default is designed to create a truly verbatim buffer via |\detokenize|.
 %    \begin{macrocode}
 \define@key{FV}{bufferer}{%
@@ -5382,6 +5422,7 @@
 %
 %
 % We need macros that contain the logic for typesetting the break symbols.  By default, the symbol macros contain everything regarding the symbol and its typesetting, while these macros contain pure logic.  The symbols should be wrapped in braces so that formatting commands (for example, |\tiny|) don't escape.
+%
 % \begin{macro}{\FancyVerbBreakSymbolLeftLogic}
 % The left break symbol should only appear with continuation lines.  Note that |linenumber| here refers to local line numbering for the broken line, \emph{not} line numbering for all lines in the environment being typeset.
 %    \begin{macrocode}
@@ -5737,7 +5778,7 @@
 %
 % \subsubsection{Line breaking implementation}
 %
-% \paragraph{Helper macros}
+% \paragraph{Helper macros}\hfill\\
 %
 % \begin{macro}{\FV@LineBox}
 % A box for saving a line of text, so that its dimensions may be determined and thus we may figure out if it needs line breaking.
@@ -6513,7 +6554,7 @@
 %
 %
 %
-% \paragraph{Line processing before scanning}
+% \paragraph{Line processing before scanning}\hfill\\
 %
 % \begin{macro}{\FV@makeLineNumber}
 % The \pkg{lineno} package is used for formatting wrapped lines and inserting break symbols.  We need a version of \pkg{lineno}'s |\makeLineNumber| that is adapted for our purposes.  This is adapted directly from the example |\makeLineNumber| that is given in the \pkg{lineno} documentation under the discussion of internal line numbers.  The |\FV@SetLineBreakLast| is needed to determine the internal line number of the last segment of the broken line, so that we can disable the right-hand break symbol on this segment.  When a right-hand break symbol is in use, a line of code will be processed twice:  once to determine the last internal line number, and once to use this information only to insert right-hand break symbols on the appropriate lines.  During the second run, |\FV@SetLineBreakLast| is disabled by |\let|ting it to |\relax|.
