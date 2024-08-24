@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/08/21 v1.8.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2024/08/24 v1.8.0dev3 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1320,50 +1320,68 @@
     \global\let\FV@bufferlengthname@tmp\relax
     \global\let\FancyVerbBufferLineName@tmp\relax}}
 \def\endVerbatimBuffer{\FVE@VerbatimBuffer}
+\define@key{FV}{insertenv}{%
+  \def\FV@VerbatimInsertEnv{#1}}
+\fvset{insertenv=Verbatim}
+\def\FV@Environment@InsertBuffer#1#2{%
+  \def\FV@KeyValues{#1}%
+  \FV@GetKeyValues{\@nameuse{FVB@#2}}}
+\def\FV@Scan@InsertBuffer{%
+  \FV@CatCodes
+  \xdef\FV@EnvironName{\FV@VerbatimInsertEnv}%
+  \ifnum\expandafter\value\expandafter{\FV@bufferlengthname}=\z@\relax
+    \PackageError{fvextra}%
+     {Buffer length counter \FV@bufferlengthname\space is invalid or zero}%
+     {}%
+    \let\FV@GetLine\relax
+  \fi
+  \FV@BeginScanning}%
+\def\VerbatimInsertBuffer@def@FV@Line#1{%
+  \FVExtraRetokenizeVArg{\def\FV@Line}{}{#1}}
+\def\FancyVerbGetLine@VerbatimInsertBuffer{%
+  \ifnum\value{FancyVerbBufferIndex}>%
+      \expandafter\value\expandafter{\FV@bufferlengthname}\relax
+    \global\let\FV@EnvironName\relax
+    \let\next\relax
+  \else
+    \ifcsname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
+      \expandafter\let\expandafter\FV@Line@Buffer
+        \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
+      \expandafter\VerbatimInsertBuffer@def@FV@Line\expandafter{\FV@Line@Buffer}%
+      \def\next{\FV@PreProcessLine\FV@GetLine}%
+      \stepcounter{FancyVerbBufferIndex}%
+    \else
+      \def\next{%
+        \PackageError{fvextra}%
+         {Buffer with line macro named
+          "\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}" does not exist}%
+         {Check bufferlinename, bufferlengthname, and globalbuffer settings}%
+      }%
+    \fi
+  \fi
+  \next}
 \newcommand{\VerbatimInsertBuffer}[1][]{%
   \begingroup
-  \def\FV@KeyValues{#1}%
-  \def\FV@Scan{%
-    \FV@CatCodes
-    \xdef\FV@EnvironName{Verbatim}%
-    \ifnum\expandafter\value\expandafter{\FV@bufferlengthname}=\z@\relax
-      \PackageError{fvextra}%
-       {Buffer length counter \FV@bufferlengthname\space is invalid or zero}%
-       {}%
-      \let\FV@GetLine\relax
-    \fi
-    \FV@GetLine}%
+  \let\FV@Scan\FV@Scan@InsertBuffer
   \let\FV@CheckScan\relax
+  \let\FV@Environment\FV@Environment@InsertBuffer
+  \let\FancyVerbGetLine\FancyVerbGetLine@VerbatimInsertBuffer
   \setcounter{FancyVerbBufferIndex}{1}%
-  \def\VerbatimInsertBuffer@def@FV@Line##1{%
-    \FVExtraRetokenizeVArg{\def\FV@Line}{}{##1}}
-  \def\FancyVerbGetLine{%
-    \ifnum\value{FancyVerbBufferIndex}>%
-        \expandafter\value\expandafter{\FV@bufferlengthname}\relax
-      \global\let\FV@EnvironName\relax
-      \let\next\relax
-    \else
-      \ifcsname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
-        \expandafter\let\expandafter\FV@Line@Buffer
-          \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
-        \expandafter\VerbatimInsertBuffer@def@FV@Line\expandafter{\FV@Line@Buffer}%
-        \def\next{\FV@PreProcessLine\FV@GetLine}%
-        \stepcounter{FancyVerbBufferIndex}%
-      \else
-        \def\next{%
-          \PackageError{fvextra}%
-           {Buffer with line macro named
-            "\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}" does not exist}%
-           {Check bufferlinename, bufferlengthname, and globalbuffer settings}%
-        }%
-      \fi
-    \fi
-    \next}%
-  \FVB@Verbatim
-  \FVE@Verbatim
+  \VerbatimInsertBuffer@insertenv{#1}%
   \setcounter{FancyVerbBufferIndex}{0}%
   \endgroup
   \@doendpe}
+\begingroup
+\catcode`\^^M=\active
+\gdef\VerbatimInsertBuffer@insertenv#1{%
+  \begingroup%
+  \fvset{#1}%
+  \global\let\FV@CurrentVerbatimInsertEnv\FV@VerbatimInsertEnv%
+  \endgroup%
+  \csname \FV@CurrentVerbatimInsertEnv\endcsname[#1]^^M%
+  \csname end\FV@CurrentVerbatimInsertEnv\endcsname%
+  \global\let\FV@CurrentVerbatimInsertEnv\FV@Undefined}%
+\endgroup
 \newcommand{\VerbatimClearBuffer}[1][]{%
   \begingroup
   \def\FV@KeyValues{#1}%

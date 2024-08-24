@@ -3,6 +3,9 @@
 
 ## v1.8.0 (dev)
 
+*  Added option `insertenv`.  This customizes the verbatim environment used by
+   `\VerbatimInsertBuffer`.
+
 *  When `numberblanklines=false`, `highlightlines` no longer highlights blank
    lines at the end of a highlighted range (#25, gpoore/minted#226).
 
