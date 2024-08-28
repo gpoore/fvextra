@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/08/24 v1.8.0dev3 fvextra - extensions and patches for fancyvrb]
+    [2024/08/28 v1.8.0dev4 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -110,6 +110,10 @@
   \endgroup}
 \AtBeginDocument{\let|\pipe@active@verbatim}
 \endgroup
+
+\renewenvironment{verbatim}%
+ {\VerbatimEnvironment\begin{Verbatim}[gobble=1]}%
+ {\end{Verbatim}}
 
 
 \newcommand{\todo}[1]{}
@@ -332,7 +336,7 @@
 %\hrule
 %\vspace{2ex}
 %\noindent\begin{minipage}{\linewidth}
-%\begin{Verbatim}[gobble=1]
+%\begin{verbatim}
 %---
 %header-includes:
 % -  |
@@ -343,7 +347,7 @@
 %      breaklines, breaknonspaceingroup, breakanywhere}
 %    ```
 %---
-%\end{Verbatim}
+%\end{verbatim}
 %\end{minipage}
 %\vspace{2ex}
 %\hrule
@@ -856,7 +860,7 @@
 % \subsection{\cmd{\VerbatimInsertBuffer}}
 % \DescribeMacro{\VerbatimInsertBuffer\oarg{options}}
 %
-% This inserts an existing buffer created by |VerbatimBuffer| as a verbatim environment.  The |Verbatim| environment is used by default, but this can be customized by setting |insertenv|.  |\VerbatimInsertBuffer| modifies |Verbatim| and |BVerbatim| internals to function with a buffer in a command context.  See the |VerbatimBuffer| documentation for an example of usage.
+% This inserts an existing buffer created by |VerbatimBuffer| as a verbatim environment.  The |Verbatim| environment is used by default, but this can be customized by setting |insertenvname|.  |\VerbatimInsertBuffer| modifies |Verbatim| and |BVerbatim| internals to function with a buffer in a command context.  See the |VerbatimBuffer| documentation for an example of usage.
 %
 % Options related to catcodes cause the buffer to be retokenized during typesetting.  That is, the \fancyvrb\ options used for |\VerbatimInsertBuffer| are not restricted by those that were in effect when |VerbatimBuffer| originally created the buffer, so long as the buffer contains a complete representation of the original |VerbatimBuffer| environment contents.
 %
@@ -866,8 +870,8 @@
 % \noindent Options defined specifically for \cmd{\VerbatimInsertBuffer}:
 %
 % \begin{optionlist}
-% \item[insertenv (string) (Verbatim)]
-% This is the verbatim environment used for inserting the buffer.  |insertenv| can be any |Verbatim|- or |BVerbatim|-based environment.  Environments defined with |\CustomVerbatimEnvironment| and |\RecustomVerbatimEnvironment| are supported.  User-implemented environments that serve as wrappers around |Verbatim| or |BVerbatim| should typically be compatible so long as they accept \pkg{fancyvrb}/\pkg{fvextra} optional arguments in the same way as |Verbatim| and |BVerbatim|.
+% \item[insertenvname (string) (Verbatim)]
+% This is the name of the verbatim environment used for inserting the buffer.  |insertenvname| can be any |Verbatim|- or |BVerbatim|-based environment.  Environments defined with |\CustomVerbatimEnvironment| and |\RecustomVerbatimEnvironment| are supported.  User-implemented environments that serve as wrappers around |Verbatim| or |BVerbatim| should typically be compatible so long as they accept \pkg{fancyvrb}/\pkg{fvextra} optional arguments in the same way as |Verbatim| and |BVerbatim|.
 % \end{optionlist}
 %
 %
@@ -4051,24 +4055,24 @@
 %
 %
 % \subsubsection{\cmd{\VerbatimInsertBuffer}}
-% \begin{macro}{\VerbatimInsertBuffer, insertenv}
-% This inserts an existing buffer created with |VerbatimBuffer| as a verbatim environment.  By default, the inserted environment is |Verbatim|; this can be modified with the option |insertenv| to any |Verbatim|- or |BVerbatim|-based environment, or any environment with a compatible implementation.  The |Verbatim| and |BVerbatim| internals are customized to function with a buffer in a command context.
+% \begin{macro}{\VerbatimInsertBuffer, insertenvname}
+% This inserts an existing buffer created with |VerbatimBuffer| as a verbatim environment.  By default, the inserted environment is |Verbatim|; this can be modified with the option |insertenvname| to any |Verbatim|- or |BVerbatim|-based environment, or any environment with a compatible implementation.  The |Verbatim| and |BVerbatim| internals are customized to function with a buffer in a command context.
 %
-% Notes on implementation of |\VerbatimInsertBuffer@insertenv|:
+% Notes on the implementation of |\VerbatimInsertBuffer@i|:
 % \begin{itemize}
 % \item The active |^^M| allows a verbatim environment to read optional arguments in the usual way, without requiring modifications to argument-reading macros.
-% \item The |\begingroup\fvset{#1}\global\let\FV@CurrentVerbatimInsertEnv...| is used to extract any |insertenv| setting from optional arguments.  Most optional arguments apply to the verbatim environment or to the customized verbatim internals that are invoked within it.  However, |insertenv| is needed earlier to determine which verbatim environment is in use.  It is not possible simply to use |\fvset{#1}| before the verbatim environment to apply all settings, because that would conflict with the precedence of option processing in |\FV@Environment|.
+% \item The |\begingroup\fvset{#1}\global\let\FV@CurrentVerbatimInsertEnvName...| is used to extract any |insertenvname| setting from optional arguments.  Most optional arguments apply to the verbatim environment or to the customized verbatim internals that are invoked within it.  However, |insertenvname| is needed earlier to determine which verbatim environment is in use.  It is not possible simply to use |\fvset{#1}| before the verbatim environment to apply all settings, because that would conflict with the precedence of option processing in |\FV@Environment|.
 % \end{itemize}
 %    \begin{macrocode}
-\define@key{FV}{insertenv}{%
-  \def\FV@VerbatimInsertEnv{#1}}
-\fvset{insertenv=Verbatim}
+\define@key{FV}{insertenvname}{%
+  \def\FV@VerbatimInsertEnvName{#1}}
+\fvset{insertenvname=Verbatim}
 \def\FV@Environment@InsertBuffer#1#2{%
   \def\FV@KeyValues{#1}%
   \FV@GetKeyValues{\@nameuse{FVB@#2}}}
 \def\FV@Scan@InsertBuffer{%
   \FV@CatCodes
-  \xdef\FV@EnvironName{\FV@VerbatimInsertEnv}%
+  \xdef\FV@EnvironName{\FV@VerbatimInsertEnvName}%
   \ifnum\expandafter\value\expandafter{\FV@bufferlengthname}=\z@\relax
     \PackageError{fvextra}%
      {Buffer length counter \FV@bufferlengthname\space is invalid or zero}%
@@ -4107,20 +4111,20 @@
   \let\FV@Environment\FV@Environment@InsertBuffer
   \let\FancyVerbGetLine\FancyVerbGetLine@VerbatimInsertBuffer
   \setcounter{FancyVerbBufferIndex}{1}%
-  \VerbatimInsertBuffer@insertenv{#1}%
+  \VerbatimInsertBuffer@i{#1}%
   \setcounter{FancyVerbBufferIndex}{0}%
   \endgroup
   \@doendpe}
 \begingroup
 \catcode`\^^M=\active
-\gdef\VerbatimInsertBuffer@insertenv#1{%
+\gdef\VerbatimInsertBuffer@i#1{%
   \begingroup%
   \fvset{#1}%
-  \global\let\FV@CurrentVerbatimInsertEnv\FV@VerbatimInsertEnv%
+  \global\let\FV@CurrentVerbatimInsertEnvName\FV@VerbatimInsertEnvName%
   \endgroup%
-  \csname \FV@CurrentVerbatimInsertEnv\endcsname[#1]^^M%
-  \csname end\FV@CurrentVerbatimInsertEnv\endcsname%
-  \global\let\FV@CurrentVerbatimInsertEnv\FV@Undefined}%
+  \csname \FV@CurrentVerbatimInsertEnvName\endcsname[#1]^^M%
+  \csname end\FV@CurrentVerbatimInsertEnvName\endcsname%
+  \global\let\FV@CurrentVerbatimInsertEnvName\FV@Undefined}%
 \endgroup
 %    \end{macrocode}
 % \end{macro}
