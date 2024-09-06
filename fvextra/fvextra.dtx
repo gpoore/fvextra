@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/08/28 v1.8.0dev4 fvextra - extensions and patches for fancyvrb]
+    [2024/09/05 v1.8.0dev5 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -362,6 +362,26 @@
 % \fvextra\ adds several general options to \fancyvrb.  All options related to automatic line breaking are described separately in \cref{sec:breaklines}.  All options related to syntax highlighting using Pygments are described in \cref{sec:pygments}.
 %
 % \begin{optionlist}
+%
+% \item[backgroundcolor (string) (none)]
+% Background color behind commands and environments.  This is only a basic, lightweight implementation of background colors using |\colorbox|.  For more control of background colors, consider \href{https://ctan.org/pkg/tcolorbox}{\pkg{tcolorbox}} or a similar package, or a custom background color implementation.
+%
+% Background colors are implemented with |\colorbox|, which prevents line breaking for |\Verb| and |\EscVerb|.
+%
+% See |backgroundcolorvphantom| to customize the height of the background for each line of text, especially for |\Verb|, |\EscVerb|, and |BVerbatim|.
+%
+% When |backgroundcolor| is used with |Verbatim| with a |frame|, it may be necessary to adjust |framesep| and |fillcolor| depending on the desired result.
+%
+%
+% \item[backgroundcolorvphantom (macro) (\Verb{\vphantom{\"Apgjy}})]
+% |\vphantom| or similar macro such as |\strut| that is inserted at the beginning of each line of text using |backgroundcolor|.  This allows the height of the background for each line of text to be customized, especially for |\Verb|, |\EscVerb|, and |BVerbatim|.   |backgroundcolorvphantom| will typically have no effect on |Verbatim|-based environments unless it is set to a size larger than |\strut|.
+%
+% \item[bgcolor (string) (none)]
+% Alias for |backgroundcolor|.
+%
+% \item[bgcolorvphantom (macro) (\Verb{\vphantom{\"Apgjy}})]
+% Alias for |backgroundcolorvphantom|.
+%
 %
 % \item[beameroverlays (boolean) (false)]
 % Give the |<| and |>| characters their normal text meanings, so that \pkg{beamer} overlays of the form |\only<1>{...}| will work.  Note that something like |commandchars=\\\{\}| is required separately to enable macros.  This is not incorporated in the |beameroverlays| option because essentially arbitrary command characters could be used; only the |<| and |>| characters are hard-coded for overlays.
@@ -3498,15 +3518,22 @@
 % \end{macro}
 %
 % \begin{macro}{\FVC@Verb@Extra@ii}
+% |breaklines| is only applied when there is no background color, since |\colorbox| prevents line breaks.
 %    \begin{macrocode}
 \def\FVC@Verb@Extra@ii#1{%
-  \ifFV@breaklines
+  \ifx\FancyVerbBackgroundColor\relax
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
+   {\ifbool{FV@breaklines}%
+    {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
+    {\mbox{\FancyVerbFormatInline{#1}}}}%
+   {\setlength{\FV@TmpLength}{\fboxsep}%
+    \setlength{\fboxsep}{0pt}%
+    \colorbox{\FancyVerbBackgroundColor}{%
+      \setlength{\fboxsep}{\FV@TmpLength}%
+      \FancyVerbBackgroundColorVPhantom\FancyVerbFormatInline{#1}}}%
   \endgroup}
 %    \end{macrocode}
 % \end{macro}
@@ -3649,15 +3676,7 @@
 %
 % \begin{macro}{\FV@UseVerb@Extra}
 %    \begin{macrocode}
-\def\FV@UseVerb@Extra#1{%
-  \ifFV@breaklines
-    \expandafter\@firstoftwo
-  \else
-    \expandafter\@secondoftwo
-  \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
-  \endgroup}
+\let\FV@UseVerb@Extra\FVC@Verb@Extra@ii
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3712,15 +3731,7 @@
 %
 % \begin{macro}{\FVC@EscVerb@ii}
 %    \begin{macrocode}
-\def\FVC@EscVerb@ii#1{%
-  \ifFV@breaklines
-    \expandafter\@firstoftwo
-  \else
-    \expandafter\@secondoftwo
-  \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
-  \endgroup}
+\let\FVC@EscVerb@ii\FVC@Verb@Extra@ii
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4796,7 +4807,7 @@
 %
 %
 % \begin{macro}{\FV@ListProcessLine@NoBreak}
-% Redefined |\FV@ListProcessLine| in which |\FancyVerbFormatText| is added and tab handling is explicit.  The |@NoBreak| suffix is added because |\FV@ListProcessLine| will be |\let| to either this macro or to |\FV@ListProcessLine@Break| depending on whether line breaking is enabled.
+% Redefined |\FV@ListProcessLine| in which |bgcolor| support is added, |\FancyVerbFormatText| is added, and tab handling is explicit.  The |@NoBreak| suffix is added because |\FV@ListProcessLine| will be |\let| to either this macro or to |\FV@ListProcessLine@Break| depending on whether line breaking is enabled.
 %    \begin{macrocode}
 \def\FV@ListProcessLine@NoBreak#1{%
   \hbox to \hsize{%
@@ -4804,9 +4815,10 @@
     \hbox to \linewidth{%
       \FV@LeftListNumber
       \FV@LeftListFrame
-      \FancyVerbFormatLine{%
-        \FancyVerbHighlightLine{%
-          \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}\hss
+      \FV@BGColor@List{%
+        \FancyVerbFormatLine{%
+          \FancyVerbHighlightLine{%
+            \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}\hss
       \FV@RightListFrame
       \FV@RightListNumber}%
     \hss}}
@@ -4819,6 +4831,10 @@
 %    \begin{macrocode}
 \def\FV@BProcessLine#1{%
   \hbox{\FancyVerbFormatLine{%
+    \ifx\FancyVerbBackgroundColor\relax
+    \else
+      \expandafter\FancyVerbBackgroundColorVPhantom
+    \fi
     \FancyVerbHighlightLine{%
       \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}}
 %    \end{macrocode}
@@ -5041,6 +5057,131 @@
         \fi}{}%
     \fi}%
 }
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+% \subsubsection{Background color}
+% \label{sec:impl:extensions:bgcolor}
+%
+% Define an option |backgroundcolor| that provides a basic implementation of a background color behind commands and environments.  \pkg{tcolorbox} or a similar package should be used for more sophisticated background colors.
+% \begin{macro}{backgroundcolor,bgcolor,\FancyVerbBackgroundColor}
+%    \begin{macrocode}
+\define@key{FV}{backgroundcolor}{%
+  \def\FancyVerbBackgroundColor{#1}%
+  \ifx\FancyVerbBackgroundColor\FV@None
+    \let\FancyVerbBackgroundColor\relax
+  \else\ifx\FancyVerbBackgroundColor\@empty
+    \let\FancyVerbBackgroundColor\relax
+  \fi\fi}%
+\fvset{backgroundcolor=none}
+\define@key{FV}{bgcolor}{%
+  \fvset{backgroundcolor=#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{backgroundcolorvphantom,bgcolorvphantom,\FancyVerbBackgroundColorVPhantom}
+%    \begin{macrocode}
+\define@key{FV}{backgroundcolorvphantom}{%
+  \def\FancyVerbBackgroundColorVPhantom{#1}%
+  \ifx\FancyVerbBackgroundColorVPhantom\FV@None
+    \let\FancyVerbBackgroundColorVPhantom\relax
+  \else\ifx\FancyVerbBackgroundColorVPhantom\@empty
+    \let\FancyVerbBackgroundColorVPhantom\relax
+  \fi\fi}
+\fvset{backgroundcolorvphantom=\vphantom{\"Apgjy}}
+\define@key{FV}{bgcolorvphantom}{%
+  \fvset{backgroundcolorvphantom=#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@BGColor@List}
+% Background color for environments based on |Verbatim|.  Puts each line in a colorbox.  The |\FancyVerbBackgroundColorVPhantom| will not have any effect in this case, unless it is larger than |\strut|.
+%    \begin{macrocode}
+\def\FV@BGColor@List#1{%
+  \ifx\FancyVerbBackgroundColor\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {#1}%
+   {\setlength{\FV@TmpLength}{\fboxsep}%
+    \setlength{\fboxsep}{0pt}%
+    \colorbox{\FancyVerbBackgroundColor}{%
+      \setlength{\fboxsep}{\FV@TmpLength}%
+      \rlap{\FancyVerbBackgroundColorVPhantom\strut#1}%
+      \hspace{\linewidth}%
+      \ifx\FV@RightListFrame\relax\else
+        \hspace{-\FV@FrameSep}%
+        \hspace{-\FV@FrameRule}%
+      \fi
+      \ifx\FV@LeftListFrame\relax\else
+        \hspace{-\FV@FrameSep}%
+        \hspace{-\FV@FrameRule}%
+      \fi}%
+    \hss}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\FV@BVerbatimBegin,\FV@BVerbatimEnd}
+% Reimplementation of |BVerbatim| macros to support |bgcolor|.  Much of this follows the implementation of |SaveVerbatim| and |\BUseVerbatim|.
+%
+% Key values, formatting, and tabs must be configured immediately in the |bgcolor| case, so that the background color and other settings are available.  |\FV@UseKeyValues| can be invoked multiple times, but that doesn't cause any issues since |\FV@UseKeyValues| applies keys and then redefines |\FV@KeyValues| to empty.
+%
+% The definition of |\FV@BProcessLine| already accounts for |\FancyVerbBackgroundColorVPhantom|.
+%    \begin{macrocode}
+\let\FV@BVerbatimBegin@NoBGColor\FV@BVerbatimBegin
+\let\FV@BVerbatimEnd@NoBGColor\FV@BVerbatimEnd
+\def\FV@BVerbatimBegin{%
+  \begingroup
+  \FV@UseKeyValues
+  \FV@FormattingPrep
+  \let\FV@FormattingPrep\relax
+  \FV@ObeyTabsInit
+  \let\FV@ObeyTabsInit\relax
+  \ifx\FancyVerbBackgroundColor\relax
+    \expandafter\FV@BVerbatimBegin@NoBGColor
+  \else
+    \expandafter\FV@BVerbatimBegin@BGColor
+  \fi}
+\def\FV@BVerbatimEnd{%
+  \ifx\FancyVerbBackgroundColor\relax
+    \expandafter\FV@BVerbatimEnd@NoBGColor
+  \else
+    \expandafter\FV@BVerbatimEnd@BGColor
+  \fi
+  \endgroup}
+\def\FV@BVerbatimBegin@BGColor{%
+  \gdef\FV@TheVerbatim{}%
+  \ifx\FV@boxwidth\relax
+    \gdef\FV@boxwidth@tmp{0pt}%
+    \def\FV@ProcessLine##1{%
+      \sbox{\FV@LineBox}{\FV@BProcessLine{##1}}%
+      \ifdim\wd\FV@LineBox>\FV@boxwidth@tmp\relax
+        \xdef\FV@boxwidth@tmp{\the\wd\FV@LineBox}%
+      \fi
+      \expandafter\gdef\expandafter\FV@TheVerbatim\expandafter{%
+        \FV@TheVerbatim\FV@ProcessLine{##1}}}%
+  \else
+    \def\FV@ProcessLine##1{%
+      \expandafter\gdef\expandafter\FV@TheVerbatim\expandafter{%
+        \FV@TheVerbatim\FV@ProcessLine{##1}}}%
+  \fi}
+\def\FV@BVerbatimEnd@BGColor{%
+  \ifx\FV@boxwidth\relax
+    \let\FV@boxwidth\FV@boxwidth@tmp
+    \global\let\FV@boxwidth@tmp\FV@Undefined
+  \fi
+  \setlength{\FV@TmpLength}{\fboxsep}%
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{\FancyVerbBackgroundColor}{%
+    \setlength{\fboxsep}{\FV@TmpLength}%
+    \FV@BVerbatimBegin@NoBGColor\FV@TheVerbatim\FV@BVerbatimEnd@NoBGColor}%
+  \gdef\FV@TheVerbatim{}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6717,8 +6858,9 @@
       \FV@SaveLineBox{#1}}%
     \FV@LeftListNumber
     \FV@LeftListFrame
-    \FancyVerbFormatLine{%
-      \FancyVerbHighlightLine{\usebox{\FV@LineBox}}}%
+    \FV@BGColor@List{%
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{\usebox{\FV@LineBox}}}}%
     \FV@RightListFrame
     \FV@RightListNumber
     \ifx\FV@Tab\FV@TrueTab@UseWidth
@@ -6729,10 +6871,11 @@
     \let\FancyVerbBreakStop\relax
     \FV@LeftListNumber
     \FV@LeftListFrame
-    \FancyVerbFormatLine{%
-      \FancyVerbHighlightLine{%
-        \parbox[t]{\FV@LineWidth}{%
-          \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
+    \FV@BGColor@List{%
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{%
+          \parbox[t]{\FV@LineWidth}{%
+            \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}}%
     \FV@RightListFrame
     \FV@RightListNumber
   \fi}%

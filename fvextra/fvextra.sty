@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/08/28 v1.8.0dev4 fvextra - extensions and patches for fancyvrb]
+    [2024/09/05 v1.8.0dev5 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -998,13 +998,19 @@
     \FVExtraDetokenizeVArg{%
       \FVExtraRetokenizeVArg{\FVC@Verb@Extra@ii}{\FV@CatCodes}}}}
 \def\FVC@Verb@Extra@ii#1{%
-  \ifFV@breaklines
+  \ifx\FancyVerbBackgroundColor\relax
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
+   {\ifbool{FV@breaklines}%
+    {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
+    {\mbox{\FancyVerbFormatInline{#1}}}}%
+   {\setlength{\FV@TmpLength}{\fboxsep}%
+    \setlength{\fboxsep}{0pt}%
+    \colorbox{\FancyVerbBackgroundColor}{%
+      \setlength{\fboxsep}{\FV@TmpLength}%
+      \FancyVerbBackgroundColorVPhantom\FancyVerbFormatInline{#1}}}%
   \endgroup}
 \let\FVC@SaveVerb@FV\FVC@SaveVerb
 \def\FVC@SaveVerb{%
@@ -1061,15 +1067,7 @@
 \def\FV@UseVerb@Extra@Retok#1{%
   \FVExtraDetokenizeVArg{%
     \FVExtraRetokenizeVArg{\FV@UseVerb@Extra}{\FV@CatCodes}}{#1}}
-\def\FV@UseVerb@Extra#1{%
-  \ifFV@breaklines
-    \expandafter\@firstoftwo
-  \else
-    \expandafter\@secondoftwo
-  \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
-  \endgroup}
+\let\FV@UseVerb@Extra\FVC@Verb@Extra@ii
 \def\EscVerb{%
   \FVExtraRobustCommand\RobustEscVerb\FVExtraUnexpandedReadStarOArgBEscVArg}
 \protected\def\RobustEscVerb{\FV@Command{}{EscVerb}}
@@ -1086,15 +1084,7 @@
   \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
   \FVExtraDetokenizeREscVArg{%
     \FVExtraRetokenizeVArg{\FVC@EscVerb@ii}{\FV@CatCodes}}{#1}}
-\def\FVC@EscVerb@ii#1{%
-  \ifFV@breaklines
-    \expandafter\@firstoftwo
-  \else
-    \expandafter\@secondoftwo
-  \fi
-  {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
-  {\mbox{#1}}%
-  \endgroup}
+\let\FVC@EscVerb@ii\FVC@Verb@Extra@ii
 \def\VerbEnv{%
   \ifcsname @currenvir\endcsname
     \ifx\@currenvir\@empty
@@ -1691,14 +1681,19 @@
     \hbox to \linewidth{%
       \FV@LeftListNumber
       \FV@LeftListFrame
-      \FancyVerbFormatLine{%
-        \FancyVerbHighlightLine{%
-          \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}\hss
+      \FV@BGColor@List{%
+        \FancyVerbFormatLine{%
+          \FancyVerbHighlightLine{%
+            \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}\hss
       \FV@RightListFrame
       \FV@RightListNumber}%
     \hss}}
 \def\FV@BProcessLine#1{%
   \hbox{\FancyVerbFormatLine{%
+    \ifx\FancyVerbBackgroundColor\relax
+    \else
+      \expandafter\FancyVerbBackgroundColorVPhantom
+    \fi
     \FancyVerbHighlightLine{%
       \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}}
 \newbool{FV@NumberFirstLine}
@@ -1864,6 +1859,96 @@
         \fi}{}%
     \fi}%
 }
+\define@key{FV}{backgroundcolor}{%
+  \def\FancyVerbBackgroundColor{#1}%
+  \ifx\FancyVerbBackgroundColor\FV@None
+    \let\FancyVerbBackgroundColor\relax
+  \else\ifx\FancyVerbBackgroundColor\@empty
+    \let\FancyVerbBackgroundColor\relax
+  \fi\fi}%
+\fvset{backgroundcolor=none}
+\define@key{FV}{bgcolor}{%
+  \fvset{backgroundcolor=#1}}
+\define@key{FV}{backgroundcolorvphantom}{%
+  \def\FancyVerbBackgroundColorVPhantom{#1}%
+  \ifx\FancyVerbBackgroundColorVPhantom\FV@None
+    \let\FancyVerbBackgroundColorVPhantom\relax
+  \else\ifx\FancyVerbBackgroundColorVPhantom\@empty
+    \let\FancyVerbBackgroundColorVPhantom\relax
+  \fi\fi}
+\fvset{backgroundcolorvphantom=\vphantom{\"Apgjy}}
+\define@key{FV}{bgcolorvphantom}{%
+  \fvset{backgroundcolorvphantom=#1}}
+\def\FV@BGColor@List#1{%
+  \ifx\FancyVerbBackgroundColor\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi
+   {#1}%
+   {\setlength{\FV@TmpLength}{\fboxsep}%
+    \setlength{\fboxsep}{0pt}%
+    \colorbox{\FancyVerbBackgroundColor}{%
+      \setlength{\fboxsep}{\FV@TmpLength}%
+      \rlap{\FancyVerbBackgroundColorVPhantom\strut#1}%
+      \hspace{\linewidth}%
+      \ifx\FV@RightListFrame\relax\else
+        \hspace{-\FV@FrameSep}%
+        \hspace{-\FV@FrameRule}%
+      \fi
+      \ifx\FV@LeftListFrame\relax\else
+        \hspace{-\FV@FrameSep}%
+        \hspace{-\FV@FrameRule}%
+      \fi}%
+    \hss}}
+\let\FV@BVerbatimBegin@NoBGColor\FV@BVerbatimBegin
+\let\FV@BVerbatimEnd@NoBGColor\FV@BVerbatimEnd
+\def\FV@BVerbatimBegin{%
+  \begingroup
+  \FV@UseKeyValues
+  \FV@FormattingPrep
+  \let\FV@FormattingPrep\relax
+  \FV@ObeyTabsInit
+  \let\FV@ObeyTabsInit\relax
+  \ifx\FancyVerbBackgroundColor\relax
+    \expandafter\FV@BVerbatimBegin@NoBGColor
+  \else
+    \expandafter\FV@BVerbatimBegin@BGColor
+  \fi}
+\def\FV@BVerbatimEnd{%
+  \ifx\FancyVerbBackgroundColor\relax
+    \expandafter\FV@BVerbatimEnd@NoBGColor
+  \else
+    \expandafter\FV@BVerbatimEnd@BGColor
+  \fi
+  \endgroup}
+\def\FV@BVerbatimBegin@BGColor{%
+  \gdef\FV@TheVerbatim{}%
+  \ifx\FV@boxwidth\relax
+    \gdef\FV@boxwidth@tmp{0pt}%
+    \def\FV@ProcessLine##1{%
+      \sbox{\FV@LineBox}{\FV@BProcessLine{##1}}%
+      \ifdim\wd\FV@LineBox>\FV@boxwidth@tmp\relax
+        \xdef\FV@boxwidth@tmp{\the\wd\FV@LineBox}%
+      \fi
+      \expandafter\gdef\expandafter\FV@TheVerbatim\expandafter{%
+        \FV@TheVerbatim\FV@ProcessLine{##1}}}%
+  \else
+    \def\FV@ProcessLine##1{%
+      \expandafter\gdef\expandafter\FV@TheVerbatim\expandafter{%
+        \FV@TheVerbatim\FV@ProcessLine{##1}}}%
+  \fi}
+\def\FV@BVerbatimEnd@BGColor{%
+  \ifx\FV@boxwidth\relax
+    \let\FV@boxwidth\FV@boxwidth@tmp
+    \global\let\FV@boxwidth@tmp\FV@Undefined
+  \fi
+  \setlength{\FV@TmpLength}{\fboxsep}%
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{\FancyVerbBackgroundColor}{%
+    \setlength{\fboxsep}{\FV@TmpLength}%
+    \FV@BVerbatimBegin@NoBGColor\FV@TheVerbatim\FV@BVerbatimEnd@NoBGColor}%
+  \gdef\FV@TheVerbatim{}}
 \define@key{FV}{highlightlines}{\def\FV@HighlightLinesList{#1}}%
 \fvset{highlightlines=}
 \define@key{FV}{highlightcolor}{\def\FancyVerbHighlightColor{#1}}%
@@ -2903,8 +2988,9 @@
       \FV@SaveLineBox{#1}}%
     \FV@LeftListNumber
     \FV@LeftListFrame
-    \FancyVerbFormatLine{%
-      \FancyVerbHighlightLine{\usebox{\FV@LineBox}}}%
+    \FV@BGColor@List{%
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{\usebox{\FV@LineBox}}}}%
     \FV@RightListFrame
     \FV@RightListNumber
     \ifx\FV@Tab\FV@TrueTab@UseWidth
@@ -2915,10 +3001,11 @@
     \let\FancyVerbBreakStop\relax
     \FV@LeftListNumber
     \FV@LeftListFrame
-    \FancyVerbFormatLine{%
-      \FancyVerbHighlightLine{%
-        \parbox[t]{\FV@LineWidth}{%
-          \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
+    \FV@BGColor@List{%
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{%
+          \parbox[t]{\FV@LineWidth}{%
+            \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}}%
     \FV@RightListFrame
     \FV@RightListNumber
   \fi}%
