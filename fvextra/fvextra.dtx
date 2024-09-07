@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/09/05 v1.8.0dev5 fvextra - extensions and patches for fancyvrb]
+    [2024/09/06 v1.8.0dev6 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -1448,6 +1448,9 @@
 %
 % \item[formatcom* (macro) (\meta{empty})]
 % \fancyvrb's |formatcom| is used to execute commands before verbatim text.  It overwrites any existing |formatcom|.  |formatcom*| appends changes to existing settings.
+%
+% \item[listparameters  (macro) (\meta{empty})]
+% Set list-related lengths to modify spacing around lines of code.  For example, |listparameters=\setlength{\topsep}{0pt}| will remove space before and after a |Verbatim| environment.
 %
 % \end{optionlist}
 %

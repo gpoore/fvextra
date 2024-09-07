@@ -23,6 +23,9 @@
    other locations allowed by `breakbefore`, `breakafter`, or `breakanywhere`
    (#26).
 
+*  Added documentation for undocumented `fancyvrb` option `listparameters`
+   (gpoore/minted#256).
+
 
 ## v1.7.0 (2024/05/16)
 
