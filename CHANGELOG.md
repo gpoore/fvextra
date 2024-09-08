@@ -23,6 +23,8 @@
    other locations allowed by `breakbefore`, `breakafter`, or `breakanywhere`
    (#26).
 
+*  Added option `breakanywhereinlinestretch` (gpoore/minted#387).
+
 *  Added documentation for undocumented `fancyvrb` option `listparameters`
    (gpoore/minted#256).
 

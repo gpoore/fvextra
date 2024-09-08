@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/09/05 v1.8.0dev5 fvextra - extensions and patches for fancyvrb]
+    [2024/09/07 v1.8.0dev7 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -962,7 +962,8 @@
     \FV@InlineKeyValues#1,}}
 
 \def\FV@UseInlineKeyValues{%
-  \expandafter\fvset\expandafter{\FV@InlineKeyValues}}
+  \expandafter\fvset\expandafter{\FV@InlineKeyValues}%
+  \FV@ApplyBreakAnywhereInlineStretch}
 \newbool{FV@extra}
 \define@booleankey{FV}{extra}%
  {\booltrue{FV@extra}}%
@@ -2195,6 +2196,22 @@
     \let\FancyVerbBreakStop\relax
     \let\FV@Break@DefaultToken\FV@Break@NBToken}
 \fvset{breakanywhere=false}
+\define@key{FV}{breakanywhereinlinestretch}{%
+  \def\FV@breakanywhereinlinestretch{#1}%
+  \ifx\FV@breakanywhereinlinestretch\FV@None
+    \let\FV@breakanywhereinlinestretch\relax
+  \else\ifx\FV@breakanywhereinlinestretch\@empty
+    \let\FV@breakanywhereinlinestretch\relax
+  \fi\fi}
+\fvset{breakanywhereinlinestretch=none}
+\def\FV@ApplyBreakAnywhereInlineStretch{%
+  \ifx\FV@breakanywhereinlinestretch\relax
+  \else
+    \let\FancyVerbBreakAnywhereBreak@Orig\FancyVerbBreakAnywhereBreak
+    \def\FancyVerbBreakAnywhereBreak{%
+      \nobreak\hspace{0pt plus \FV@breakanywhereinlinestretch}%
+      \FancyVerbBreakAnywhereBreak@Orig}%
+  \fi}
 \define@key{FV}{breakbefore}{%
   \ifstrempty{#1}%
    {\let\FV@BreakBefore\@empty

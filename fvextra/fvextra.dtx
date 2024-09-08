@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/09/06 v1.8.0dev6 fvextra - extensions and patches for fancyvrb]
+    [2024/09/07 v1.8.0dev7 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -957,6 +957,17 @@
 %
 % \item[breakanywheresymbolpre (string) (\string\,\string\footnotesize\string\ensuremath\{\_\string\rfloor\}, \,\footnotesize\ensuremath{_\rfloor})]
 % The symbol inserted pre-break for breaks inserted by |breakanywhere|.  This does not apply to breaks inserted next to spaces; see |spacebreak|.
+%
+%
+% \item[breakanywhereinlinestretch (length) (\meta{none})]
+% Stretch glue to insert at potential |breakanywhere| break locations in inline contexts, to give better line widths and avoid overfull |\hbox|.  This allows the spacing between adjacent non-space characters to stretch, so it should not be used when column alignment is important.  For typical line lengths, values between |0.01em| and |0.02em| should be sufficient to provide a cumulative stretch per line that is equal to or greater than the width of one character.
+%
+% This is typically not needed in cases where an overfull |\hbox| only overflows by tiny amount, perhaps a fraction of a pt.  In those cases, the overfull |\hbox| could be ignored, |\hfuzz| could be set to 1pt or 2pt to suppress tiny overfull |\hbox| warnings, or |breakanywheresymbolpre| might be redefined to adjust spacing.
+%
+% Implementation:  Before each |breakanywhere| break location, this inserts the following sequence of macros:
+%\begin{verbatim}
+%\nobreak\hspace{0pt plus \FV@breaknonspaceinlinestretch}
+%\end{verbatim}
 %
 %
 % \item[breakanywheresymbolpost (string) (\meta{none})]
@@ -3407,7 +3418,8 @@
 % \begin{macro}{\FV@UseInlineKeyValues}
 %    \begin{macrocode}
 \def\FV@UseInlineKeyValues{%
-  \expandafter\fvset\expandafter{\FV@InlineKeyValues}}
+  \expandafter\fvset\expandafter{\FV@InlineKeyValues}%
+  \FV@ApplyBreakAnywhereInlineStretch}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5671,6 +5683,30 @@
     \let\FancyVerbBreakStop\relax
     \let\FV@Break@DefaultToken\FV@Break@NBToken}
 \fvset{breakanywhere=false}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{breakanywhereinlinestretch,\FV@breakanywhereinlinestretch,\FV@ApplyBreakAnywhereInlineStretch}
+% Stretch glue to insert at potential |breakanywhere| break locations in inline contexts, to give better line widths and avoid overfull |\hbox|.
+%
+% |\FV@UseInlineKeyValues| invokes |\FV@ApplyBreakAnywhereInlineStretch| to redefine |\FancyVerbBreakAnywhereBreak| locally.
+%    \begin{macrocode}
+\define@key{FV}{breakanywhereinlinestretch}{%
+  \def\FV@breakanywhereinlinestretch{#1}%
+  \ifx\FV@breakanywhereinlinestretch\FV@None
+    \let\FV@breakanywhereinlinestretch\relax
+  \else\ifx\FV@breakanywhereinlinestretch\@empty
+    \let\FV@breakanywhereinlinestretch\relax
+  \fi\fi}
+\fvset{breakanywhereinlinestretch=none}
+\def\FV@ApplyBreakAnywhereInlineStretch{%
+  \ifx\FV@breakanywhereinlinestretch\relax
+  \else
+    \let\FancyVerbBreakAnywhereBreak@Orig\FancyVerbBreakAnywhereBreak
+    \def\FancyVerbBreakAnywhereBreak{%
+      \nobreak\hspace{0pt plus \FV@breakanywhereinlinestretch}%
+      \FancyVerbBreakAnywhereBreak@Orig}%
+  \fi}
 %    \end{macrocode}
 % \end{macro}
 %
