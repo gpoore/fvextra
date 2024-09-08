@@ -28,6 +28,10 @@
 *  Added documentation for undocumented `fancyvrb` option `listparameters`
    (gpoore/minted#256).
 
+*  Expanded `breaklines` documentation with discussion of limitations and
+   alternatives (gpoore/minted#400).
+
+
 
 ## v1.7.0 (2024/05/16)
 

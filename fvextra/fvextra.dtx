@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/09/07 v1.8.0dev7 fvextra - extensions and patches for fancyvrb]
+    [2024/09/08 v1.8.0dev8 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -1016,7 +1016,11 @@
 %
 %
 % \item[breaklines (boolean) (false)]
-% Automatically break long lines.  When a line is broken, the result must fit on a single page.  There is no support for breaking a line across multiple pages.\footnote{Following the implementation in \pkg{fancyvrb}, each line is typeset within an |\hbox|, so page breaks are not possible.}
+% Automatically break long lines.
+%
+% \textbf{Limitations for verbatim environments/block text}, such as |Verbatim|:  When a line is broken, the result must fit on a single page.  There is no support for breaking a line across multiple pages.\footnote{Following the implementation in \pkg{fancyvrb}, each line is typeset within an |\hbox|, so page breaks are not possible.}
+%
+% \textbf{Limitations for verbatim commands/inline text}, such as |\Verb|:  When a line break is inserted, the text may still overflow into the margin or cause an overfull |\hbox|, depending on hyphenation settings and various penalties related to line breaks.  It may be possible to avoid this by allowing additional break locations with |breakbefore|, |breakafter|, or |breakanywhere|.  Small overfull |\hbox| warnings can be suppressed by setting |\hfuzz| to a larger value, for example setting it to |2pt| instead of the default |0.1pt|.  It is also possible to combine |breakanywhere| with |breakanywhereinlinestretch| to allow flexible spacing between adjacent non-space characters.  In cases where it is better to break before the margin rather than overflowing into the margin, consider setting |\emergencystretch|.
 %
 % By default, automatic breaks occur at spaces (even when |showspaces=true|).  Use |breakanywhere| to enable breaking anywhere; use |breakbefore| and |breakafter| for more fine-tuned breaking.
 %
