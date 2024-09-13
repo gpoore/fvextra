@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/09/07 v1.8.0dev7 fvextra - extensions and patches for fancyvrb]
+    [2024/09/12 v1.8.0dev9 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -197,6 +197,34 @@
   \FV@OuterDefSTXEmpty
   \catcode`\^^C=\active
   \FV@OuterDefETXEmpty
+  \begingroup
+  \catcode`\ =\FV@TmpSpaceCat\relax
+  \catcode`\{=1
+  \catcode`\}=2
+  \@ifnextchar\bgroup
+   {\endgroup
+    \catcode`\{=1
+    \catcode`\}=2
+    \catcode`\ =\active
+    \catcode`\^^I=\active
+    \FV@ReadVArg@Group{#1}}%
+   {\endgroup
+    \catcode`\ =\active
+    \catcode`\^^I=\active
+    \FV@ReadVArg@Char{#1}}}
+\def\FVExtraReadVArgSingleLine#1{%
+  \begingroup
+  \ifFV@pdfTeXinputenc
+    \ifdefstring{\inputencodingname}{utf8}%
+     {\let\FV@ReadVArg@Char\FV@ReadVArg@Char@UTF}%
+     {}%
+  \fi
+  \edef\FV@TmpSpaceCat{\the\catcode` }%
+  \let\do\@makeother\FVExtraDoSpecials
+  \catcode`\^^B=\active
+  \FV@OuterDefSTXEmpty
+  \catcode`\^^C=\active
+  \FV@OuterDefETXEmpty
   \catcode`\^^M=\active
   \FV@OuterDefEOLEmpty
   \begingroup
@@ -209,17 +237,17 @@
     \catcode`\}=2
     \catcode`\ =\active
     \catcode`\^^I=\active
-    \FV@ReadVArg@Group{#1}\FV@EOL}%
+    \FV@ReadVArg@Group{#1}}%
    {\endgroup
     \catcode`\ =\active
     \catcode`\^^I=\active
-    \FV@ReadVArg@Char{#1}\FV@EOL}}
-\def\FV@ReadVArg@Group#1#2#3{%
+    \FV@ReadVArg@Char{#1}}}
+\def\FV@ReadVArg@Group#1#2{%
   \endgroup
-  #1{#3}}
-\def\FV@ReadVArg@Char#1#2#3{%
+  #1{#2}}
+\def\FV@ReadVArg@Char#1#2{%
   \expandafter\expandafter\expandafter
-  \if\expandafter\expandafter\expandafter\relax\expandafter\@gobble\detokenize{#3}\relax
+  \if\expandafter\expandafter\expandafter\relax\expandafter\@gobble\detokenize{#2}\relax
     \expandafter\@gobble
   \else
     \expandafter\@firstofone
@@ -227,14 +255,14 @@
   {\PackageError{fvextra}%
     {Verbatim delimiters must be single characters, not commands}%
     {Try a different delimiter}}%
-  \def\FV@ReadVArg@Char@i##1##2##3#3{%
+  \def\FV@ReadVArg@Char@i##1##2#2{%
     \endgroup
-    ##1{##3}}%
-  \FV@ReadVArg@Char@i{#1}\FV@EOL}%
+    ##1{##2}}%
+  \FV@ReadVArg@Char@i{#1}}%
 \ifFV@pdfTeXinputenc
-\def\FV@ReadVArg@Char@UTF#1#2#3{%
+\def\FV@ReadVArg@Char@UTF#1#2{%
   \expandafter\expandafter\expandafter
-  \if\expandafter\expandafter\expandafter\relax\expandafter\@gobble\detokenize{#3}\relax
+  \if\expandafter\expandafter\expandafter\relax\expandafter\@gobble\detokenize{#2}\relax
     \expandafter\@gobble
   \else
     \expandafter\@firstofone
@@ -242,20 +270,25 @@
   {\PackageError{fvextra}%
     {Verbatim delimiters must be single characters, not commands}%
     {Try a different delimiter}}%
-  \ifcsname FV@U8:\detokenize{#3}\endcsname
+  \ifcsname FV@U8:\detokenize{#2}\endcsname
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
   {\def\FV@UTF@octets@after##1{\FV@ReadVArg@Char@UTF@i{#1}{##1}}%
-   \csname FV@U8:\detokenize{#3}\endcsname#3}%
-  {\FV@ReadVArg@Char@UTF@i{#1}{#3}}}
+   \csname FV@U8:\detokenize{#2}\endcsname#2}%
+  {\FV@ReadVArg@Char@UTF@i{#1}{#2}}}
 \def\FV@ReadVArg@Char@UTF@i#1#2{%
-  \def\FV@ReadVArg@Char@i##1##2##3#2{%
+  \def\FV@ReadVArg@Char@i##1##2#2{%
     \endgroup
-    ##1{##3}}%
-  \FV@ReadVArg@Char@i{#1}\FV@EOL}%
+    ##1{##2}}%
+  \FV@ReadVArg@Char@i{#1}}%
 \fi
+\newbool{FV@vargsingleline}
+\define@booleankey{FV}{vargsingleline}%
+ {\booltrue{FV@vargsingleline}}
+ {\boolfalse{FV@vargsingleline}}
+\fvset{vargsingleline=false}
 \def\FVExtrapdfstringdef#1#2{%
   \AfterPreamble{%
     \ifcsname pdfstringdef\endcsname
@@ -994,7 +1027,10 @@
    {\FVC@Verb@Extra@i}}
 \def\FVC@Verb@Extra@i{%
   \begingroup
-  \FVExtraReadVArg{%
+  \ifbool{FV@vargsingleline}%
+   {\let\FV@Reader\FVExtraReadVArgSingleLine}%
+   {\let\FV@Reader\FVExtraReadVArg}%
+  \FV@Reader{%
     \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep
     \FVExtraDetokenizeVArg{%
       \FVExtraRetokenizeVArg{\FVC@Verb@Extra@ii}{\FV@CatCodes}}}}
@@ -1026,7 +1062,10 @@
   \@namedef{FV@SV@#1}{}%
   \@namedef{FV@SVRaw@#1}{}%
   \begingroup
-  \FVExtraReadVArg{%
+  \ifbool{FV@vargsingleline}%
+   {\let\FV@Reader\FVExtraReadVArgSingleLine}%
+   {\let\FV@Reader\FVExtraReadVArg}%
+  \FV@Reader{%
     \FVC@SaveVerb@Extra@i{#1}}}
 \def\FVC@SaveVerb@Extra@i#1#2{%
   \FV@UseInlineKeyValues\FV@UseKeyValues\FV@FormattingPrep

@@ -25,6 +25,16 @@
 
 *  Added option `breakanywhereinlinestretch` (gpoore/minted#387).
 
+*  `\FVExtraReadVArg` now takes a multi-line (but not multi-paragraph)
+   verbatim argument.  The new `\FVExtraReadVArgSingleLine` provides the old
+   functionality of taking an argument restricted to a single line
+   (gpoore/minted#376).
+
+*  By default, `\Verb` and `\SaveVerb` now take multi-line (but not
+   multi-paragraph) verbatim arguments.  The old behavior of requiring
+   verbatim arguments to be on a single line can be restored by setting the
+   new option `vargsingleline` to `true`.
+
 *  Added documentation for undocumented `fancyvrb` option `listparameters`
    (gpoore/minted#256).
 
