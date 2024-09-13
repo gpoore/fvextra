@@ -6,7 +6,11 @@
 *.toc
 reference/
 *.aux
-
+*.bbl
+*.fdb_latexmk
+*.hd
+*.listing
+fvx*
 
 # Windows image file caches
 Thumbs.db
