@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.8.0 (dev)
+## v1.8.0 (2024/09/14)
 
 *  Added new option `backgroundcolor` (alias `bgcolor`).  This provides a
    basic, `\colorbox`-based implementation of background colors for commands
