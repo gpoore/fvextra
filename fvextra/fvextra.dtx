@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/09/12 v1.8.0dev9 fvextra - extensions and patches for fancyvrb]
+    [2024/09/14 v1.8.0dev10 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -151,7 +151,7 @@
   \endgroup}
 \def\macro@custom@arg@spacegobble#1{#1}
 \def\macro@custom@arg@split#1,#2\FV@Sentinel{%
-  \expandafter\macro@custom@arg@spacegobble\string#1%
+  \expandafter\string\macro@custom@arg@spacegobble#1%
   \if\relax\detokenize{#2}\relax
     \expandafter\@firstoftwo
   \else
@@ -193,25 +193,28 @@
   \orig@footnote{\scantokens{#1}}}
 
 
-\def\fvextraprintopt#1(#2) (#3){%
+\def\fvextra@optionlist@printopt#1(#2) (#3){%
   \vspace{0.1in}%
   \leavevmode%
-  \marginpar{\raggedleft\texttt{\small\textcolor{DarkGreen}{#1}}\ }%
+  \marginpar{\raggedleft\texttt{\textcolor{DarkGreen}{\small #1}}\ }%
   \kern-\parindent\textsf{(#2)}\hfill(default: \texttt{#3})\\}
 
 \newenvironment{optionlist}%
- {%
-  ~\par\vspace{-14pt}%
+ {~\par\vspace{-14pt}%
   \def\pipechar{|}
   \let\|\pipechar
-  \newcommand*\fvextranext{}%
+  \newcommand*\fvextra@optionlist@next{}%
+  \let\item@orig\item
   \renewcommand*\item[1][]{%
-    \fvextranext%
-    \renewcommand*\fvextranext{\par}%
-    \fvextraprintopt##1%
-    \ignorespaces}}
- {%
-  \par}
+    \ifdefstring{\@currenvir}{optionlist}%
+     {\fvextra@optionlist@next%
+      \renewcommand*\fvextra@optionlist@next{\par}%
+      \fvextra@optionlist@printopt##1%
+      \ignorespaces}%
+     {\ifstrempty{##1}%
+      {\vspace{-4pt}\item@orig}
+      {\vspace{-4pt}\item@orig[##1]}}}}
+ {\par}
 
 
 \newenvironment{example}
@@ -366,11 +369,32 @@
 % \item[backgroundcolor (string) (none)]
 % Background color behind commands and environments.  This is only a basic, lightweight implementation of background colors using |\colorbox|.  For more control of background colors, consider \href{https://ctan.org/pkg/tcolorbox}{\pkg{tcolorbox}} or a similar package, or a custom background color implementation.
 %
-% Background colors are implemented with |\colorbox|, which prevents line breaking for |\Verb| and |\EscVerb|.
+% Background colors are implemented with |\colorbox|, which prevents line breaking for |\Verb|, |\UseVerb|, and |\EscVerb|.  Background colors are only compatible with \fvextra's reimplemented |\Verb| and |\UseVerb| (|extra=true|).
 %
 % See |backgroundcolorvphantom| to customize the height of the background for each line of text, especially for |\Verb|, |\EscVerb|, and |BVerbatim|.
 %
-% When |backgroundcolor| is used with |Verbatim| with a |frame|, it may be necessary to adjust |framesep| and |fillcolor| depending on the desired result.
+% When |backgroundcolor| is used with |Verbatim| with a |frame|, it may be necessary to adjust |framesep| and |fillcolor| depending on the desired result.  |backgroundcolorpadding| provides a shortcut for this.
+%
+%
+% \item[backgroundcolorpadding (length) (none)]
+% Padding when |backgroundcolor| is set.  For |\Verb|, |\UseVerb|, |\EscVerb|, and |BVerbatim|, this sets |\fboxsep| for the |\colorbox| that is used to create the background color.  For |Verbatim|, \fancyvrb's frame options are used instead, particularly |framesep| and |fillcolor|.
+%
+% For |Verbatim|, this amounts to a shortcut for a combination of frame-related settings that provide padding when there is a background color.  This is only intended for cases with |frame=none| or |frame=single|.  In other cases, it may be better to modify the \fancyvrb\ frame settings directly, and it may be necessary to modify the \fancyvrb\ internals to obtain padding on all sides.
+%
+% For |Verbatim|, if |frame=single|, then this is equivalent to the following settings:
+% \begin{itemize}
+% \item |framesep=|\meta{\texttt{backgroundcolorpadding}}
+% \item |fillcolor=\FancyVerbBackgroundColor|
+% \end{itemize}
+%
+% For |Verbatim|, if |frame| has any value other than |single|, then this is equivalent to the following settings:
+% \begin{itemize}
+% \item |frame=single|
+% \item |framerule=0pt|
+% \item |rulecolor=\FancyVerbBackgroundColor|
+% \item |framesep=|\meta{\texttt{backgroundcolorpadding}}
+% \item |fillcolor=\FancyVerbBackgroundColor|
+% \end{itemize}
 %
 %
 % \item[backgroundcolorvphantom (macro) (\Verb{\vphantom{\"Apgjy}})]
@@ -378,6 +402,9 @@
 %
 % \item[bgcolor (string) (none)]
 % Alias for |backgroundcolor|.
+%
+% \item[bgcolorpadding (length) (none)]
+% Alias for |backgroundcolorpadding|.
 %
 % \item[bgcolorvphantom (macro) (\Verb{\vphantom{\"Apgjy}})]
 % Alias for |backgroundcolorvphantom|.
@@ -3602,7 +3629,11 @@
     {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
     {\mbox{\FancyVerbFormatInline{#1}}}}%
    {\setlength{\FV@TmpLength}{\fboxsep}%
-    \setlength{\fboxsep}{0pt}%
+    \ifx\FancyVerbBackgroundColorPadding\relax
+      \setlength{\fboxsep}{0pt}%
+    \else
+      \setlength{\fboxsep}{\FancyVerbBackgroundColorPadding}%
+    \fi
     \colorbox{\FancyVerbBackgroundColor}{%
       \setlength{\fboxsep}{\FV@TmpLength}%
       \FancyVerbBackgroundColorVPhantom\FancyVerbFormatInline{#1}}}%
@@ -5173,6 +5204,65 @@
 % \end{macro}
 %
 %
+% \begin{macro}{backgroundcolorpadding, bgcolorpadding, \FancyVerbBackgroundColorPadding}
+%    \begin{macrocode}
+\let\FancyVerbBackgroundColorPadding\relax
+\def\FV@backgroundcolorpadding@none@framenotsingle{%
+  \fvset{frame=none,framerule,rulecolor=none}}
+\def\FV@backgroundcolorpadding@dim@framenotsingle{%
+  \fvset{frame=single,framerule=0pt,rulecolor=\FancyVerbBackgroundColor}}
+\define@key{FV}{backgroundcolorpadding}{%
+  \def\FancyVerbBackgroundColorPadding{#1}%
+  \ifx\FancyVerbBackgroundColorPadding\FV@None
+    \let\FancyVerbBackgroundColorPadding\relax
+  \else\ifx\FancyVerbBackgroundColorPadding\@empty
+    \let\FancyVerbBackgroundColorPadding\relax
+  \fi\fi
+  \let\FV@Next\relax
+  \ifx\FancyVerbBackgroundColorPadding\relax
+    \ifx\FV@BeginListFrame\FV@BeginListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \ifx\FV@LeftListFrame\FV@LeftListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \ifx\FV@RightListFrame\FV@RightListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \ifx\FV@EndListFrame\FV@EndListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \FV@Next
+    \fvset{framesep,fillcolor=none}%
+  \else
+    \ifx\FV@BeginListFrame\FV@BeginListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \ifx\FV@LeftListFrame\FV@LeftListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \ifx\FV@RightListFrame\FV@RightListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \ifx\FV@EndListFrame\FV@EndListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \FV@Next
+    \fvset{framesep=#1,fillcolor=\FancyVerbBackgroundColor}%
+  \fi}
+\define@key{FV}{bgcolorpadding}{\fvset{backgroundcolorpadding=#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \begin{macro}{\FV@BGColor@List}
 % Background color for environments based on |Verbatim|.  Puts each line in a colorbox.  The |\FancyVerbBackgroundColorVPhantom| will not have any effect in this case, unless it is larger than |\strut|.
 %    \begin{macrocode}
@@ -5252,7 +5342,11 @@
     \global\let\FV@boxwidth@tmp\FV@Undefined
   \fi
   \setlength{\FV@TmpLength}{\fboxsep}%
-  \setlength{\fboxsep}{0pt}%
+  \ifx\FancyVerbBackgroundColorPadding\relax
+    \setlength{\fboxsep}{0pt}%
+  \else
+    \setlength{\fboxsep}{\FancyVerbBackgroundColorPadding}%
+  \fi
   \colorbox{\FancyVerbBackgroundColor}{%
     \setlength{\fboxsep}{\FV@TmpLength}%
     \FV@BVerbatimBegin@NoBGColor\FV@TheVerbatim\FV@BVerbatimEnd@NoBGColor}%

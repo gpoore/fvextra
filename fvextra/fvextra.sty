@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/09/12 v1.8.0dev9 fvextra - extensions and patches for fancyvrb]
+    [2024/09/14 v1.8.0dev10 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1044,7 +1044,11 @@
     {\FV@InsertBreaks{\FancyVerbFormatInline}{#1}}%
     {\mbox{\FancyVerbFormatInline{#1}}}}%
    {\setlength{\FV@TmpLength}{\fboxsep}%
-    \setlength{\fboxsep}{0pt}%
+    \ifx\FancyVerbBackgroundColorPadding\relax
+      \setlength{\fboxsep}{0pt}%
+    \else
+      \setlength{\fboxsep}{\FancyVerbBackgroundColorPadding}%
+    \fi
     \colorbox{\FancyVerbBackgroundColor}{%
       \setlength{\fboxsep}{\FV@TmpLength}%
       \FancyVerbBackgroundColorVPhantom\FancyVerbFormatInline{#1}}}%
@@ -1919,6 +1923,59 @@
 \fvset{backgroundcolorvphantom=\vphantom{\"Apgjy}}
 \define@key{FV}{bgcolorvphantom}{%
   \fvset{backgroundcolorvphantom=#1}}
+\let\FancyVerbBackgroundColorPadding\relax
+\def\FV@backgroundcolorpadding@none@framenotsingle{%
+  \fvset{frame=none,framerule,rulecolor=none}}
+\def\FV@backgroundcolorpadding@dim@framenotsingle{%
+  \fvset{frame=single,framerule=0pt,rulecolor=\FancyVerbBackgroundColor}}
+\define@key{FV}{backgroundcolorpadding}{%
+  \def\FancyVerbBackgroundColorPadding{#1}%
+  \ifx\FancyVerbBackgroundColorPadding\FV@None
+    \let\FancyVerbBackgroundColorPadding\relax
+  \else\ifx\FancyVerbBackgroundColorPadding\@empty
+    \let\FancyVerbBackgroundColorPadding\relax
+  \fi\fi
+  \let\FV@Next\relax
+  \ifx\FancyVerbBackgroundColorPadding\relax
+    \ifx\FV@BeginListFrame\FV@BeginListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \ifx\FV@LeftListFrame\FV@LeftListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \ifx\FV@RightListFrame\FV@RightListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \ifx\FV@EndListFrame\FV@EndListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@none@framenotsingle
+    \fi
+    \FV@Next
+    \fvset{framesep,fillcolor=none}%
+  \else
+    \ifx\FV@BeginListFrame\FV@BeginListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \ifx\FV@LeftListFrame\FV@LeftListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \ifx\FV@RightListFrame\FV@RightListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \ifx\FV@EndListFrame\FV@EndListFrame@Single
+    \else
+      \let\FV@Next\FV@backgroundcolorpadding@dim@framenotsingle
+    \fi
+    \FV@Next
+    \fvset{framesep=#1,fillcolor=\FancyVerbBackgroundColor}%
+  \fi}
+\define@key{FV}{bgcolorpadding}{\fvset{backgroundcolorpadding=#1}}
 \def\FV@BGColor@List#1{%
   \ifx\FancyVerbBackgroundColor\relax
     \expandafter\@firstoftwo
@@ -1984,7 +2041,11 @@
     \global\let\FV@boxwidth@tmp\FV@Undefined
   \fi
   \setlength{\FV@TmpLength}{\fboxsep}%
-  \setlength{\fboxsep}{0pt}%
+  \ifx\FancyVerbBackgroundColorPadding\relax
+    \setlength{\fboxsep}{0pt}%
+  \else
+    \setlength{\fboxsep}{\FancyVerbBackgroundColorPadding}%
+  \fi
   \colorbox{\FancyVerbBackgroundColor}{%
     \setlength{\fboxsep}{\FV@TmpLength}%
     \FV@BVerbatimBegin@NoBGColor\FV@TheVerbatim\FV@BVerbatimEnd@NoBGColor}%

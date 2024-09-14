@@ -6,7 +6,9 @@
 *  Added new option `backgroundcolor` (alias `bgcolor`).  This provides a
    basic, `\colorbox`-based implementation of background colors for commands
    and environments.  Added new option `backgroundcolorvphantom` (alias
-   `bgcolorvphantom`) for customizing background height.
+   `bgcolorvphantom`) for customizing background height.  Added new option
+   `backgroundcolorpadding` (alias `bgcolorpadding`) for customizing padding
+   between text and the edge of the region with background color.
 
 *  Added option `insertenvname`.  This customizes the verbatim environment
    used by `\VerbatimInsertBuffer`.
