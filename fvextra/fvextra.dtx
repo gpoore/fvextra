@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/09/14 v1.8.0 fvextra - extensions and patches for fancyvrb]
+    [2024/10/12 v1.9.0dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -819,7 +819,7 @@
 %
 % Below is an extended example that demonstrates what is possible with |VerbatimBuffer| combined with |\VerbatimInsertBuffer|.  This uses |\ifdefstring| from the \pkg{etoolbox} package.
 % \begin{itemize}
-% \item |\setformatter| defines an empty |\formatter| macro.  Then it loops over the lines in a buffer looking for a line containing only the text ``red''.  If this is found, it redefines |\formatter| to |\color{red}|.  |FancyVerbBufferIndex| is a counter that is always available for buffer looping.  |FancyVerbBufferLength| is the default counter containing the buffer length (number of lines).  |\FancyVerbBufferLineName| contains the base name for buffer line macros (default |FancyVerbBufferLine|).
+% \item |\setformatter| defines an empty |\formatter| macro.  Then it loops over the lines in a buffer looking for a line containing only the text ``red''.  If this is found, it redefines |\formatter| to |\color{red}|.  |FancyVerbBufferIndex| is a counter that is always available for buffer looping.  |\FancyVerbBufferLength| is the default macro containing the buffer length (number of lines).  |\FancyVerbBufferLineName| contains the base name for buffer line macros (default |FancyVerbBufferLine|).
 % \item |afterbuffer| involves two steps:  (1) |\setformatter| loops through the buffer and defines |\formatter| based on the buffer contents, and (2) |\VerbatimInsertBuffer| typesets the buffer, using |formatcom=\formatter| to format the text based on whether any line contains only the text ``red''.
 % \end{itemize}
 %
@@ -827,7 +827,7 @@
 %\def\setformatter{%
 %  \def\formatter{}%
 %  \setcounter{FancyVerbBufferIndex}{1}%
-%  \loop\unless\ifnum\value{FancyVerbBufferIndex}>\value{FancyVerbBufferLength}\relax
+%  \loop\unless\ifnum\value{FancyVerbBufferIndex}>\FancyVerbBufferLength\relax
 %    \expandafter\let\expandafter\bufferline
 %      \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname
 %    \ifdefstring{\bufferline}{red}{\def\formatter{\color{red}}}{}%
@@ -846,7 +846,7 @@
 % Here is the same example, but rewritten to use a global buffer with custom buffer names instead.
 %
 %\begin{tcblisting}{oversize=5em}
-%\begin{VerbatimBuffer}[globalbuffer, bufferlinename=exbuff, bufferlengthname=exbuff]
+%\begin{VerbatimBuffer}[globalbuffer, bufferlinename=exbuff, bufferlengthname=exbufflen]
 %first
 %second
 %red
@@ -854,7 +854,7 @@
 %
 %\def\formatter{}
 %\setcounter{FancyVerbBufferIndex}{1}
-%\loop\unless\ifnum\value{FancyVerbBufferIndex}>\value{exbuff}\relax
+%\loop\unless\ifnum\value{FancyVerbBufferIndex}>\exbufflen\relax
 %  \expandafter\let\expandafter\bufferline
 %    \csname exbuff\arabic{FancyVerbBufferIndex}\endcsname
 %  \ifdefstring{\bufferline}{red}{\def\formatter{\color{red}}}{}
@@ -864,7 +864,7 @@
 %\VerbatimInsertBuffer[
 %  formatcom=\formatter,
 %  bufferlinename=exbuff,
-%  bufferlengthname=exbuff
+%  bufferlengthname=exbufflen
 %]
 %\end{tcblisting}
 %
@@ -874,7 +874,7 @@
 %
 % \begin{optionlist}
 % \item[afterbuffer (macro) (\meta{none})]
-% Macro or macros invoked at the end of the environment, after all lines of the environment have been buffered.  This is outside the |\begingroup...\endgroup| that wraps verbatim processing, so \fancyvrb\ settings are no longer active.  However, the buffer line macros and the buffer length counter are still accessible.
+% Macro or macros invoked at the end of the environment, after all lines of the environment have been buffered.  This is outside the |\begingroup...\endgroup| that wraps verbatim processing, so \fancyvrb\ settings are no longer active.  However, the buffer line macros and the buffer length macro are still accessible.
 %
 % \item[bufferer (macro) (\Verb{\FancyVerbDefaultBufferer})]
 % This is the macro that adds lines to the buffer.  The default is designed to create a truly verbatim buffer via |\detokenize|.  This can be customized if you wish to use \fancyvrb\ options related to catcodes to create a buffer that is only partially verbatim (that contains macros).
@@ -890,7 +890,7 @@
 % This macro must be defined globally, so |\xdef| or |\gdef| is necessary (this does not interfere with scoping from |globalbuffer|).  Otherwise, there are no restrictions.  The |\xdef| and |\detokenize| in the default definition guarantee that the buffer consists only of the literal text from the environment, but this is not required for a custom |bufferer|.
 %
 % \item[bufferlengthname (string) (FancyVerbBufferLength)]
-% Name of the counter (|\newcounter|) storing the length of the buffer.  This is the number of lines stored.
+% Name of the macro storing the length of the buffer.  This is the number of lines stored.
 %
 % \item[bufferlinename (string) (FancyVerbBufferLine)]
 % The base name of the buffer line macros.  The default is |FancyVerbBufferLine|, which will result in buffer macros |\FancyVerbBufferLine<n>| with integer |n| greater than or equal to one and less than or equal to the number of lines (one-based indexing).  Since buffer macro names contain a number, they must be accessed differently than typical macros:
@@ -904,11 +904,11 @@
 % Shortcut for setting |bufferlengthname| and |bufferlinename| simultaneously, using the same root name.  This sets |bufferlengthname| to |<buffername>length| and |bufferlinename| to |<buffername>line|.
 %
 % \item[globalbuffer (bool) (false)]
-% This determines whether buffer line macros are defined globally, that is, whether they are accessible after the end of the |VerbatimBuffer| environment.  If the line macros are defined globally, then the buffer length counter is also increased appropriately outside the environment.  |globalbuffer| does not affect any |afterbuffer| macro, since that is invoked inside the environment.
+% This determines whether buffer line macros are defined globally, that is, whether they are accessible after the end of the |VerbatimBuffer| environment.  If the line macros are defined globally, then the buffer length macro is also increased appropriately outside the environment.  |globalbuffer| does not affect any |afterbuffer| macro, since that is invoked inside the environment.
 %
 % When buffered lines are used immediately, consider using |afterbuffer| instead of |globalbuffer|.  When buffered lines must be used later in a document, consider using |globalbuffer| with custom (and perhaps unique) |bufferlinename| and |bufferlengthname|.
 %
-% When |globalbuffer=true|, |VerbatimBuffer| environments with the same buffer name will append to a single buffer, so that it ultimately contains the concatenated contents of all environments.  A |VerbatimBuffer| environment with |globalbuffer=false| will append to the buffer created by any previous |VerbatimBuffer| that had |globalbuffer=true| and shared the same buffer name.  Any |afterbuffer| macro will have access to a buffer containing the concatenated data.  At the very end of the environment with |globalbuffer=false|, after any |afterbuffer|, this appended content will be removed.  All buffer line macros (from |bufferlinename|) that were created by that environment are ``deleted'' (|\let| to an undefined macro), and the buffer length counter (from |bufferlengthname|) is reduced proportionally.
+% When |globalbuffer=true|, |VerbatimBuffer| environments with the same buffer name will append to a single buffer, so that it ultimately contains the concatenated contents of all environments.  A |VerbatimBuffer| environment with |globalbuffer=false| will append to the buffer created by any previous |VerbatimBuffer| that had |globalbuffer=true| and shared the same buffer name.  Any |afterbuffer| macro will have access to a buffer containing the concatenated data.  At the very end of the environment with |globalbuffer=false|, after any |afterbuffer|, this appended content will be removed.  All buffer line macros (from |bufferlinename|) that were created by that environment are ``deleted'' (|\let| to an undefined macro), and the buffer length macro (from |bufferlengthname|) is reduced proportionally.
 % \end{optionlist}
 %
 %
@@ -933,7 +933,7 @@
 % \subsection{\cmd{\VerbatimClearBuffer}}
 % \DescribeMacro{\VerbatimClearBuffer\oarg{options}}
 %
-% Clear an existing buffer created with \cmd{VerbatimBuffer}.  |\global\let| all buffer line macros to an undefined macro and set the buffer length counter to zero.
+% Clear an existing buffer created with \cmd{VerbatimBuffer}.  |\global\let| all buffer line macros to an undefined macro and set the buffer length macro to zero.
 %
 %
 %
@@ -4043,7 +4043,7 @@
 % \end{macro}
 %
 % \begin{macro}{FancyVerbBufferIndex}
-% Current index in buffer during buffering.  This is given a |\FancyVerb*| macro name since it may be accessed by the user in defining custom |bufferer|.
+% Current index in buffer during buffering.  This is given a |FancyVerb*| macro name since it may be accessed by the user in defining custom |bufferer|.
 %    \begin{macrocode}
 \newcounter{FancyVerbBufferIndex}
 %    \end{macrocode}
@@ -4062,14 +4062,16 @@
 % \end{macro}
 %
 % \begin{macro}{bufferlengthname, \FV@bufferlengthname}
-% Name of counter storing the length of the buffer.
+% Name of macro storing the length of the buffer.
 %    \begin{macrocode}
 \define@key{FV}{bufferlengthname}{%
-  \ifcsname c@#1\endcsname
+  \ifcsname#1\endcsname
   \else
-    \newcounter{#1}%
+    \expandafter\xdef\csname#1\endcsname{0}%
   \fi
-  \def\FV@bufferlengthname{#1}}
+  \def\FV@bufferlengthname{#1}%
+  \expandafter\def\expandafter\FV@bufferlengthmacro\expandafter{%
+    \csname#1\endcsname}}
 \fvset{bufferlengthname=FancyVerbBufferLength}
 %    \end{macrocode}
 % \end{macro}
@@ -4092,7 +4094,7 @@
 % \end{macro}
 %
 % \begin{macro}{globalbuffer, FV@globalbuffer}
-% Whether buffer macros and the buffer length counter are defined globally.
+% Whether buffer line macros and the buffer length macro are defined globally.
 %    \begin{macrocode}
 \newbool{FV@globalbuffer}
 \define@booleankey{FV}{globalbuffer}%
@@ -4109,9 +4111,9 @@
 % A special buffer counter is used to track line numbers while avoiding incrementing the regular counter that is used for typeset code.  Some macros do nothing with the default |bufferer|, but are needed to enable \fancyvrb\ options when a custom |bufferer| is used in conjunction with optional environment arguments.  These include |\FancyVerbDefineActive| and |\FancyVerbFormatCom|.  Since counters are global, the exact location of the |\setcounter| commands at the end of the environment relative to |\begingroup...\endgroup| is not important.
 %    \begin{macrocode}
 \newcounter{FancyVerbBufferLine}
-\newcounter{FV@oldbufferlength}
 \newbool{FV@globalbuffer@tmp}
-\let\FV@bufferlengthname@tmp\relax
+\let\FV@oldbufferlength\relax
+\let\FV@bufferlengthmacro@tmp\relax
 \let\FancyVerbBufferLineName@tmp\relax
 \let\FV@afterbuffer@tmp\relax
 \def\VerbatimBuffer{%
@@ -4123,17 +4125,14 @@
   \@bsphack
   \begingroup
   \FV@UseKeyValues
-  \setcounter{FancyVerbBufferLine}%
-   {\expandafter\value\expandafter{\FV@bufferlengthname}}%
+  \setcounter{FancyVerbBufferLine}{\FV@bufferlengthmacro}%
   \let\c@FancyVerbLine\c@FancyVerbBufferLine
-  \setcounter{FancyVerbBufferIndex}%
-   {\expandafter\value\expandafter{\FV@bufferlengthname}}%
+  \setcounter{FancyVerbBufferIndex}{\FV@bufferlengthmacro}%
   \ifbool{FV@globalbuffer}%
    {\global\booltrue{FV@globalbuffer@tmp}}%
    {\global\boolfalse{FV@globalbuffer@tmp}%
-    \setcounter{FV@oldbufferlength}%
-     {\expandafter\value\expandafter{\FV@bufferlengthname}}%
-    \global\let\FV@bufferlengthname@tmp\FV@bufferlengthname
+    \expandafter\global\expandafter\let\expandafter\FV@oldbufferlength\FV@bufferlengthmacro
+    \global\let\FV@bufferlengthmacro@tmp\FV@bufferlengthmacro
     \global\let\FancyVerbBufferLineName@tmp\FancyVerbBufferLineName}%
   \global\let\FV@afterbuffer@tmp\FV@afterbuffer
   \FV@DefineWhiteSpace
@@ -4144,8 +4143,7 @@
   \FancyVerbFormatCom
   \FV@Scan}
 \def\FVE@VerbatimBuffer{%
-  \expandafter\setcounter\expandafter{\FV@bufferlengthname}%
-   {\value{FancyVerbBufferIndex}}%
+  \expandafter\xdef\FV@bufferlengthmacro{\theFancyVerbBufferIndex}%
   \setcounter{FancyVerbBufferIndex}{0}%
   \endgroup
   \@esphack
@@ -4155,16 +4153,16 @@
   \endgroup
   \ifbool{FV@globalbuffer@tmp}%
    {}%
-   {\loop\unless\ifnum\expandafter\value\expandafter{\FV@bufferlengthname@tmp}=
-        \value{FV@oldbufferlength}\relax
+   {\loop\unless\ifnum\FV@bufferlengthmacro@tmp=\FV@oldbufferlength\relax
       \expandafter\global\expandafter\let\csname
-        \FancyVerbBufferLineName@tmp
-        \expandafter\arabic\expandafter{\FV@bufferlengthname@tmp}%
+        \FancyVerbBufferLineName@tmp\FV@bufferlengthmacro@tmp
         \endcsname\FV@Undefined
-      \expandafter\addtocounter\expandafter{\FV@bufferlengthname@tmp}{-1}%
+      \expandafter\xdef\FV@bufferlengthmacro@tmp{%
+        \the\numexpr\FV@bufferlengthmacro@tmp-1\relax}%
     \repeat
-    \global\let\FV@bufferlengthname@tmp\relax
-    \global\let\FancyVerbBufferLineName@tmp\relax}}
+    \global\let\FV@bufferlengthmacro@tmp\relax
+    \global\let\FancyVerbBufferLineName@tmp\relax}%
+  \global\let\FV@oldbufferlength\relax}
 \def\endVerbatimBuffer{\FVE@VerbatimBuffer}
 %    \end{macrocode}
 % \end{macro}
@@ -4190,9 +4188,9 @@
 \def\FV@Scan@InsertBuffer{%
   \FV@CatCodes
   \xdef\FV@EnvironName{\FV@VerbatimInsertEnvName}%
-  \ifnum\expandafter\value\expandafter{\FV@bufferlengthname}=\z@\relax
+  \ifnum\FV@bufferlengthmacro=\z@\relax
     \PackageError{fvextra}%
-     {Buffer length counter \FV@bufferlengthname\space is invalid or zero}%
+     {Buffer length macro \expandafter\string\FV@bufferlengthmacro\space is invalid or zero}%
      {}%
     \let\FV@GetLine\relax
   \fi
@@ -4200,8 +4198,7 @@
 \def\VerbatimInsertBuffer@def@FV@Line#1{%
   \FVExtraRetokenizeVArg{\def\FV@Line}{}{#1}}
 \def\FancyVerbGetLine@VerbatimInsertBuffer{%
-  \ifnum\value{FancyVerbBufferIndex}>%
-      \expandafter\value\expandafter{\FV@bufferlengthname}\relax
+  \ifnum\value{FancyVerbBufferIndex}>\FV@bufferlengthmacro\relax
     \global\let\FV@EnvironName\relax
     \let\next\relax
   \else
@@ -4255,9 +4252,8 @@
   \begingroup
   \def\FV@KeyValues{#1}%
   \FV@UseKeyValues
-  \setcounter{FancyVerbBufferIndex}%
-   {\expandafter\value\expandafter{\FV@bufferlengthname}}%
-  \expandafter\setcounter\expandafter{\FV@bufferlengthname}{0}%
+  \setcounter{FancyVerbBufferIndex}{\FV@bufferlengthmacro}%
+  \expandafter\xdef\FV@bufferlengthmacro{0}%
   \loop\unless\ifnum\value{FancyVerbBufferIndex}<1\relax
     \expandafter\global\expandafter\let
       \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname

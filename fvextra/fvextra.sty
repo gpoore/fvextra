@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2024/09/14 v1.8.0 fvextra - extensions and patches for fancyvrb]
+    [2024/10/12 v1.9.0dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1280,11 +1280,13 @@
     \detokenize{#1}}}
 \fvset{bufferer=\FancyVerbDefaultBufferer}
 \define@key{FV}{bufferlengthname}{%
-  \ifcsname c@#1\endcsname
+  \ifcsname#1\endcsname
   \else
-    \newcounter{#1}%
+    \expandafter\xdef\csname#1\endcsname{0}%
   \fi
-  \def\FV@bufferlengthname{#1}}
+  \def\FV@bufferlengthname{#1}%
+  \expandafter\def\expandafter\FV@bufferlengthmacro\expandafter{%
+    \csname#1\endcsname}}
 \fvset{bufferlengthname=FancyVerbBufferLength}
 \define@key{FV}{bufferlinename}{%
   \def\FancyVerbBufferLineName{#1}}
@@ -1297,9 +1299,9 @@
  {\boolfalse{FV@globalbuffer}}
 \fvset{globalbuffer=false}
 \newcounter{FancyVerbBufferLine}
-\newcounter{FV@oldbufferlength}
 \newbool{FV@globalbuffer@tmp}
-\let\FV@bufferlengthname@tmp\relax
+\let\FV@oldbufferlength\relax
+\let\FV@bufferlengthmacro@tmp\relax
 \let\FancyVerbBufferLineName@tmp\relax
 \let\FV@afterbuffer@tmp\relax
 \def\VerbatimBuffer{%
@@ -1311,17 +1313,14 @@
   \@bsphack
   \begingroup
   \FV@UseKeyValues
-  \setcounter{FancyVerbBufferLine}%
-   {\expandafter\value\expandafter{\FV@bufferlengthname}}%
+  \setcounter{FancyVerbBufferLine}{\FV@bufferlengthmacro}%
   \let\c@FancyVerbLine\c@FancyVerbBufferLine
-  \setcounter{FancyVerbBufferIndex}%
-   {\expandafter\value\expandafter{\FV@bufferlengthname}}%
+  \setcounter{FancyVerbBufferIndex}{\FV@bufferlengthmacro}%
   \ifbool{FV@globalbuffer}%
    {\global\booltrue{FV@globalbuffer@tmp}}%
    {\global\boolfalse{FV@globalbuffer@tmp}%
-    \setcounter{FV@oldbufferlength}%
-     {\expandafter\value\expandafter{\FV@bufferlengthname}}%
-    \global\let\FV@bufferlengthname@tmp\FV@bufferlengthname
+    \expandafter\global\expandafter\let\expandafter\FV@oldbufferlength\FV@bufferlengthmacro
+    \global\let\FV@bufferlengthmacro@tmp\FV@bufferlengthmacro
     \global\let\FancyVerbBufferLineName@tmp\FancyVerbBufferLineName}%
   \global\let\FV@afterbuffer@tmp\FV@afterbuffer
   \FV@DefineWhiteSpace
@@ -1332,8 +1331,7 @@
   \FancyVerbFormatCom
   \FV@Scan}
 \def\FVE@VerbatimBuffer{%
-  \expandafter\setcounter\expandafter{\FV@bufferlengthname}%
-   {\value{FancyVerbBufferIndex}}%
+  \expandafter\xdef\FV@bufferlengthmacro{\theFancyVerbBufferIndex}%
   \setcounter{FancyVerbBufferIndex}{0}%
   \endgroup
   \@esphack
@@ -1343,16 +1341,16 @@
   \endgroup
   \ifbool{FV@globalbuffer@tmp}%
    {}%
-   {\loop\unless\ifnum\expandafter\value\expandafter{\FV@bufferlengthname@tmp}=
-        \value{FV@oldbufferlength}\relax
+   {\loop\unless\ifnum\FV@bufferlengthmacro@tmp=\FV@oldbufferlength\relax
       \expandafter\global\expandafter\let\csname
-        \FancyVerbBufferLineName@tmp
-        \expandafter\arabic\expandafter{\FV@bufferlengthname@tmp}%
+        \FancyVerbBufferLineName@tmp\FV@bufferlengthmacro@tmp
         \endcsname\FV@Undefined
-      \expandafter\addtocounter\expandafter{\FV@bufferlengthname@tmp}{-1}%
+      \expandafter\xdef\FV@bufferlengthmacro@tmp{%
+        \the\numexpr\FV@bufferlengthmacro@tmp-1\relax}%
     \repeat
-    \global\let\FV@bufferlengthname@tmp\relax
-    \global\let\FancyVerbBufferLineName@tmp\relax}}
+    \global\let\FV@bufferlengthmacro@tmp\relax
+    \global\let\FancyVerbBufferLineName@tmp\relax}%
+  \global\let\FV@oldbufferlength\relax}
 \def\endVerbatimBuffer{\FVE@VerbatimBuffer}
 \define@key{FV}{insertenvname}{%
   \def\FV@VerbatimInsertEnvName{#1}}
@@ -1363,9 +1361,9 @@
 \def\FV@Scan@InsertBuffer{%
   \FV@CatCodes
   \xdef\FV@EnvironName{\FV@VerbatimInsertEnvName}%
-  \ifnum\expandafter\value\expandafter{\FV@bufferlengthname}=\z@\relax
+  \ifnum\FV@bufferlengthmacro=\z@\relax
     \PackageError{fvextra}%
-     {Buffer length counter \FV@bufferlengthname\space is invalid or zero}%
+     {Buffer length macro \expandafter\string\FV@bufferlengthmacro\space is invalid or zero}%
      {}%
     \let\FV@GetLine\relax
   \fi
@@ -1373,8 +1371,7 @@
 \def\VerbatimInsertBuffer@def@FV@Line#1{%
   \FVExtraRetokenizeVArg{\def\FV@Line}{}{#1}}
 \def\FancyVerbGetLine@VerbatimInsertBuffer{%
-  \ifnum\value{FancyVerbBufferIndex}>%
-      \expandafter\value\expandafter{\FV@bufferlengthname}\relax
+  \ifnum\value{FancyVerbBufferIndex}>\FV@bufferlengthmacro\relax
     \global\let\FV@EnvironName\relax
     \let\next\relax
   \else
@@ -1420,9 +1417,8 @@
   \begingroup
   \def\FV@KeyValues{#1}%
   \FV@UseKeyValues
-  \setcounter{FancyVerbBufferIndex}%
-   {\expandafter\value\expandafter{\FV@bufferlengthname}}%
-  \expandafter\setcounter\expandafter{\FV@bufferlengthname}{0}%
+  \setcounter{FancyVerbBufferIndex}{\FV@bufferlengthmacro}%
+  \expandafter\xdef\FV@bufferlengthmacro{0}%
   \loop\unless\ifnum\value{FancyVerbBufferIndex}<1\relax
     \expandafter\global\expandafter\let
       \csname\FancyVerbBufferLineName\arabic{FancyVerbBufferIndex}\endcsname

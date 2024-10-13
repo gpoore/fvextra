@@ -1,6 +1,12 @@
 # Changelog
 
 
+## v1.9.0 (dev)
+
+*  Replaced buffer length counters with macros to prevent issues with
+   `\includeonly` resetting counters.
+
+
 ## v1.8.0 (2024/09/14)
 
 *  Added new option `backgroundcolor` (alias `bgcolor`).  This provides a
