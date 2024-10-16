@@ -1,10 +1,11 @@
 # Changelog
 
 
-## v1.9.0 (dev)
+## v1.9.0 (2024/10/16)
 
 *  Replaced buffer length counters with macros to prevent issues with
    `\includeonly` resetting counters.
+
 
 
 ## v1.8.0 (2024/09/14)
