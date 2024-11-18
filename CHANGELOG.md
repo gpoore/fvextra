@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v1.10.0 (dev)
+
+*  Replaced `FancyVerbBufferIndex` counter with `\FancyVerbBufferIndex` macro
+   to prevent issues with commands and environments such as `\text` from
+   `amsmath` that modify counter behavior.
+
+
+
 ## v1.9.0 (2024/10/16)
 
 *  Replaced buffer length counters with macros to prevent issues with
