@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v1.11.0 (dev)
+
+*  Renamed `\FV@bufferlengthname` to `\FancyVerbBufferLengthName`.  Added
+   documentation for `\FancyVerbBufferLengthName` and
+   `\FancyVerbBufferLineName`.
+
+
 ## v1.10.0 (2024/11/17)
 
 *  Replaced `FancyVerbBufferIndex` counter with `\FancyVerbBufferIndex` macro

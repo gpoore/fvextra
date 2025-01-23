@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2024/11/17 v1.10.0 fvextra - extensions and patches for fancyvrb]
+    [2025/01/23 v1.11.0dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -892,13 +892,17 @@
 % \item[bufferlengthname (string) (FancyVerbBufferLength)]
 % Name of the macro storing the length of the buffer.  This is the number of lines stored.
 %
+% Macros that operate within a |VerbatimBuffer| environment can access the current value of |bufferlengthname| via |\FancyVerbBufferLengthName|.
+%
 % \item[bufferlinename (string) (FancyVerbBufferLine)]
 % The base name of the buffer line macros.  The default is |FancyVerbBufferLine|, which will result in buffer macros |\FancyVerbBufferLine<n>| with integer |n| greater than or equal to one and less than or equal to the number of lines (one-based indexing).  Since buffer macro names contain a number, they must be accessed differently than typical macros:
 % \begin{Verbatim}[gobble=2]
 % \csname FancyVerbBufferLine<n>\endcsname
 % \@nameuse{FancyVerbBufferLine<n>}
 % \end{Verbatim}
-% Typically the buffer macros will be looped over with a counter that is incremented, in which case |<n>| should be the counter value |\arabic{<counter>}|.
+% If the buffer macros are looped over with a counter that is incremented, then |<n>| should be the counter value |\arabic{<counter>}|.
+%
+% Macros that operate within a |VerbatimBuffer| environment can access the current value of |bufferlinename| via |\FancyVerbBufferLineName|.
 %
 % \item[buffername (string) (\meta{none})]
 % Shortcut for setting |bufferlengthname| and |bufferlinename| simultaneously, using the same root name.  This sets |bufferlengthname| to |<buffername>length| and |bufferlinename| to |<buffername>line|.
@@ -4061,7 +4065,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{bufferlengthname, \FV@bufferlengthname}
+% \begin{macro}{bufferlengthname, \FancyVerbBufferLengthName}
 % Name of macro storing the length of the buffer.
 %    \begin{macrocode}
 \define@key{FV}{bufferlengthname}{%
@@ -4069,7 +4073,7 @@
   \else
     \expandafter\xdef\csname#1\endcsname{0}%
   \fi
-  \def\FV@bufferlengthname{#1}%
+  \def\FancyVerbBufferLengthName{#1}%
   \expandafter\def\expandafter\FV@bufferlengthmacro\expandafter{%
     \csname#1\endcsname}}
 \fvset{bufferlengthname=FancyVerbBufferLength}

@@ -10,7 +10,9 @@ reference/
 *.fdb_latexmk
 *.hd
 *.listing
+*.fls
 fvx*
+_*/
 
 # Windows image file caches
 Thumbs.db
