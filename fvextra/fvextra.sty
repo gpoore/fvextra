@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/01/23 v1.11.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/02/06 v1.11.0dev2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1299,11 +1299,7 @@
  {\boolfalse{FV@globalbuffer}}
 \fvset{globalbuffer=false}
 \newcounter{FancyVerbBufferLine}
-\newbool{FV@globalbuffer@tmp}
-\let\FV@oldbufferlength\relax
-\let\FV@bufferlengthmacro@tmp\relax
-\let\FancyVerbBufferLineName@tmp\relax
-\let\FV@afterbuffer@tmp\relax
+\def\FancyVerbBufferDepth{0}
 \def\VerbatimBuffer{%
   \FV@Environment
    {codes=,commandchars=none,commentchar=none,defineactive,%
@@ -1311,18 +1307,29 @@
    {VerbatimBuffer}}
 \def\FVB@VerbatimBuffer{%
   \@bsphack
+  \xdef\FancyVerbBufferDepth{\the\numexpr\FancyVerbBufferDepth+1\relax}%
   \begingroup
   \FV@UseKeyValues
   \setcounter{FancyVerbBufferLine}{\FV@bufferlengthmacro}%
   \let\c@FancyVerbLine\c@FancyVerbBufferLine
   \xdef\FancyVerbBufferIndex{\FV@bufferlengthmacro}%
   \ifbool{FV@globalbuffer}%
-   {\global\booltrue{FV@globalbuffer@tmp}}%
-   {\global\boolfalse{FV@globalbuffer@tmp}%
-    \expandafter\global\expandafter\let\expandafter\FV@oldbufferlength\FV@bufferlengthmacro
-    \global\let\FV@bufferlengthmacro@tmp\FV@bufferlengthmacro
-    \global\let\FancyVerbBufferLineName@tmp\FancyVerbBufferLineName}%
-  \global\let\FV@afterbuffer@tmp\FV@afterbuffer
+   {}%
+   {\expandafter\xdef\csname FV@setbufferlocalscopevars\FancyVerbBufferDepth\endcsname{%
+      \unexpanded{\def\FV@oldbufferlength}%
+       {\FV@bufferlengthmacro}%
+      \unexpanded{\def\FV@bufferlengthmacro}%
+       {\unexpanded\expandafter{\FV@bufferlengthmacro}}%
+      \unexpanded{\def\FancyVerbBufferLineName}%
+       {\unexpanded\expandafter{\FancyVerbBufferLineName}}}}%
+  \ifx\FV@afterbuffer\@empty
+  \else
+    \ifx\FV@afterbuffer\relax
+    \else
+      \expandafter\global\expandafter
+        \let\csname FV@afterbuffer\FancyVerbBufferDepth\endcsname\FV@afterbuffer
+    \fi
+  \fi
   \FV@DefineWhiteSpace
   \def\FV@ProcessLine{%
     \xdef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}%
@@ -1337,22 +1344,27 @@
   \gdef\FancyVerbBufferIndex{0}%
   \endgroup
   \@esphack
-  \begingroup
-  \FV@afterbuffer@tmp
-  \global\let\FV@afterbuffer@tmp\relax
-  \endgroup
-  \ifbool{FV@globalbuffer@tmp}%
-   {}%
-   {\loop\unless\ifnum\FV@bufferlengthmacro@tmp=\FV@oldbufferlength\relax
-      \expandafter\global\expandafter\let\csname
-        \FancyVerbBufferLineName@tmp\FV@bufferlengthmacro@tmp
-        \endcsname\FV@Undefined
-      \expandafter\xdef\FV@bufferlengthmacro@tmp{%
-        \the\numexpr\FV@bufferlengthmacro@tmp-1\relax}%
+  \ifcsname FV@afterbuffer\FancyVerbBufferDepth\endcsname
+    \begingroup
+    \csname FV@afterbuffer\FancyVerbBufferDepth\endcsname
+    \endgroup
+    \expandafter\global\expandafter
+      \let\csname FV@afterbuffer\FancyVerbBufferDepth\endcsname\FV@Undefined
+  \fi
+  \ifcsname FV@setbufferlocalscopevars\FancyVerbBufferDepth\endcsname
+    \begingroup
+    \csname FV@setbufferlocalscopevars\FancyVerbBufferDepth\endcsname
+    \loop\unless\ifnum\FV@bufferlengthmacro=\FV@oldbufferlength\relax
+      \expandafter\global\expandafter
+        \let\csname\FancyVerbBufferLineName\FV@bufferlengthmacro\endcsname\FV@Undefined
+      \expandafter\xdef\FV@bufferlengthmacro{%
+        \the\numexpr\FV@bufferlengthmacro-1\relax}%
     \repeat
-    \global\let\FV@bufferlengthmacro@tmp\relax
-    \global\let\FancyVerbBufferLineName@tmp\relax}%
-  \global\let\FV@oldbufferlength\relax}
+    \endgroup
+    \expandafter\global\expandafter
+      \let\csname FV@setbufferlocalscopevars\FancyVerbBufferDepth\endcsname\FV@Undefined
+  \fi
+  \xdef\FancyVerbBufferDepth{\the\numexpr\FancyVerbBufferDepth-1\relax}}
 \def\endVerbatimBuffer{\FVE@VerbatimBuffer}
 \define@key{FV}{insertenvname}{%
   \def\FV@VerbatimInsertEnvName{#1}}
@@ -1365,7 +1377,8 @@
   \xdef\FV@EnvironName{\FV@VerbatimInsertEnvName}%
   \ifnum\FV@bufferlengthmacro=\z@\relax
     \PackageError{fvextra}%
-     {Buffer length macro \expandafter\string\FV@bufferlengthmacro\space is invalid or zero}%
+     {Buffer length macro \expandafter\string\FV@bufferlengthmacro\space
+      is invalid or zero}%
      {}%
     \let\FV@GetLine\relax
   \fi
@@ -1429,6 +1442,39 @@
   \repeat
   \gdef\FancyVerbBufferIndex{0}%
   \endgroup}
+\newcommand{\InsertBuffer}[1][]{%
+  \begingroup
+  \def\FV@KeyValues{#1}%
+  \FV@UseKeyValues
+  \global\let\FV@tmpbufferlengthmacro\FV@bufferlengthmacro
+  \global\let\FV@tmpbufferlinename\FancyVerbBufferLineName
+  \endgroup
+  \ifnum\FV@tmpbufferlengthmacro<1
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  \InsertBuffer@i}
+\def\InsertBuffer@i{%
+  \InsertBuffer@expandbuffer
+  \expandafter\InsertBuffer@cleanup\expandafter\scantokens\expandafter{%
+    \FV@expandedbuffer\unskip\noexpand}\relax}
+\def\InsertBuffer@expandbuffer{%
+  \edef\FV@expandedbuffer{\InsertBuffer@expandbufferlines{1}}}
+\def\InsertBuffer@expandbufferlines#1{%
+  \unexpanded\expandafter\expandafter\expandafter{%
+    \csname\FV@tmpbufferlinename#1\endcsname^^J}%
+  \ifnum\FV@tmpbufferlengthmacro=#1
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\InsertBuffer@expandbufferlines\expandafter{\the\numexpr#1+1\relax}}}
+\def\InsertBuffer@cleanup{%
+  \global\let\FV@tmpbufferlengthmacro\FV@Undefined
+  \global\let\FV@tmpbufferlinename\FV@Undefined
+  \global\let\FV@expandedbuffer\FV@Undefined}
+\let\ClearBuffer\VerbatimClearBuffer
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces,showtabs}\FV@@Command{#2}}%

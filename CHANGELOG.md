@@ -3,9 +3,23 @@
 
 ## v1.11.0 (dev)
 
+*  Added command `\InsertBuffer`.  This inserts an existing buffer created
+   with `VerbatimBuffer` so that it is interpreted as LaTeX.
+
+*  Added `\ClearBuffer` as an alias for `\VerbatimClearBuffer`.
+
+*  When `afterbuffer` is used with `VerbatimBuffer` or derived environments to
+   typeset the buffer, the typeset buffer may now contain `VerbatimBuffer` or
+   environments based on it.  Previously, nested buffering overwrote temp
+   macros and produced incorrect results.  Typically, nested buffering should
+   be avoided for a given buffer; a different buffer should be used at each
+   level of nesting.  The current buffer depth is now available in
+   `\FancyVerbBufferDepth`.
+
 *  Renamed `\FV@bufferlengthname` to `\FancyVerbBufferLengthName`.  Added
    documentation for `\FancyVerbBufferLengthName` and
    `\FancyVerbBufferLineName`.
+
 
 
 ## v1.10.0 (2024/11/17)
