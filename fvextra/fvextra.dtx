@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/02/06 v1.11.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2025/02/09 v1.11.0dev3 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -371,9 +371,19 @@
 %
 % Background colors are implemented with |\colorbox|, which prevents line breaking for |\Verb|, |\UseVerb|, and |\EscVerb|.  Background colors are only compatible with \fvextra's reimplemented |\Verb| and |\UseVerb| (|extra=true|).
 %
+% When there is a background color in environments such as |Verbatim| that typeset blocks of text, some PDF readers and browsers can introduce rendering artifacts.  These appear in between lines of text as extremely thin horizontal rules that are the color of the page behind the background.  They tend to be more noticeable for dark background colors on a light page.  \fvextra\ attempts to prevent rendering artifacts by slightly oversizing the |\colorbox| behind each line and then slightly overlapping these boxes.  This overlap can be fine-tuned if necessary with |backgroundcolorboxoverlap|.  If rendering artifacts are an issue with your software in spite of a small overlap, consider \href{https://ctan.org/pkg/tcolorbox}{\pkg{tcolorbox}} or a similar package, or a custom background color implementation.
+%
 % See |backgroundcolorvphantom| to customize the height of the background for each line of text, especially for |\Verb|, |\EscVerb|, and |BVerbatim|.
 %
 % When |backgroundcolor| is used with |Verbatim| with a |frame|, it may be necessary to adjust |framesep| and |fillcolor| depending on the desired result.  |backgroundcolorpadding| provides a shortcut for this.
+%
+%
+% \item[backgroundcolorboxoverlap (length) (0.25pt)]
+% The amount by which |\colorbox|es that are used to provide |backgroundcolor| are oversized and then overlapped, to prevent rendering artifacts.
+%
+% When there is a background color in environments such as |Verbatim| that typeset blocks of text, some PDF readers and browsers can introduce rendering artifacts.  These appear in between lines of text as extremely thin horizontal rules that are the color of the page behind the background.  They tend to be more noticeable for dark background colors on a light page.  \fvextra\ attempts to prevent rendering artifacts by slightly oversizing the |\colorbox| behind each line by |backgroundcolorboxoverlap|, and then slightly overlapping these boxes by the same amount.
+%
+% Chrome and Adobe Acrobat Reader generally work correctly even with no overlap (|backgroundcolorboxoverlap=0pt|).  Many PDF previews in \TeX\ editing software and PDF readers need an overlap in the |0.1pt| to |0.15pt| range.  Whether Firefox needs overlap, and if so the amount needed, seems to depend on resolution and possibly operating system.  Safari and macOS Preview may show artifacts, particularly when zoomed out, even with overlaps of |0.25pt| or greater.
 %
 %
 % \item[backgroundcolorpadding (length) (none)]
@@ -402,6 +412,9 @@
 %
 % \item[bgcolor (string) (none)]
 % Alias for |backgroundcolor|.
+%
+% \item[bgcolorboxoverlap (length) (0.25pt)]
+% Alias for |backgroundcolorboxoverlap|.
 %
 % \item[bgcolorpadding (length) (none)]
 % Alias for |backgroundcolorpadding|.
@@ -5019,7 +5032,7 @@
             \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}\hss
       \FV@RightListFrame
       \FV@RightListNumber}%
-    \hss}}
+    \hss}\FV@bgcoloroverlap}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5264,6 +5277,8 @@
 % \label{sec:impl:extensions:bgcolor}
 %
 % Define an option |backgroundcolor| that provides a basic implementation of a background color behind commands and environments.  \pkg{tcolorbox} or a similar package should be used for more sophisticated background colors.
+%
+% The patch to |\FV@List| prevents narrow horizontal gaps in the background color between lines of text under some circumstances.
 % \begin{macro}{backgroundcolor,bgcolor,\FancyVerbBackgroundColor}
 %    \begin{macrocode}
 \define@key{FV}{backgroundcolor}{%
@@ -5276,6 +5291,49 @@
 \fvset{backgroundcolor=none}
 \define@key{FV}{bgcolor}{%
   \fvset{backgroundcolor=#1}}
+\patchcmd{\FV@List}%
+ {\FV@BeginListFrame}%
+ {\ifx\FancyVerbBackgroundColor\relax
+  \else
+    \lineskip\z@
+  \fi
+  \FV@BeginListFrame}%
+ {}%
+ {\PackageError{fvextra}%
+   {Failed to patch \string\FV@List\ for backgroundcolor}%
+   {Failed to patch \string\FV@List\ for backgroundcolor}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{backgroundcolorboxoverlap, bgcolorboxoverlap, \FV@backgroundcolorboxoverlap, \FV@bgcolorstrut, \FV@bgcoloroverlap}
+%    \begin{macrocode}
+\define@key{FV}{backgroundcolorboxoverlap}{%
+  \ifdim#1=0pt\relax
+    \let\FV@backgroundcolorboxoverlap\relax
+  \else
+    \def\FV@backgroundcolorboxoverlap{#1}%
+  \fi}
+\fvset{backgroundcolorboxoverlap=0.25pt}
+\define@key{FV}{bgcolorboxoverlap}{%
+  \fvset{backgroundcolorboxoverlap=#1}}
+\newsavebox{\FV@bgcolorstructbox}
+\def\FV@bgcolorstrut{%
+  \ifx\FancyVerbBackgroundColor\relax
+    \FancyVerbBackgroundColorVPhantom\strut
+  \else\ifx\FV@backgroundcolorboxoverlap\relax
+    \FancyVerbBackgroundColorVPhantom\strut
+  \else
+    \savebox{\FV@bgcolorstructbox}{\hbox{\FancyVerbBackgroundColorVPhantom\strut}}%
+    \vrule height \ht\FV@bgcolorstructbox 
+           depth \dimexpr\dp\FV@bgcolorstructbox+\FV@backgroundcolorboxoverlap\relax
+           width 0pt\relax
+  \fi\fi}
+\def\FV@bgcoloroverlap{%
+  \ifx\FV@backgroundcolorboxoverlap\relax
+  \else
+    \vspace{-\FV@backgroundcolorboxoverlap}%
+  \fi}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5356,7 +5414,7 @@
 %
 %
 % \begin{macro}{\FV@BGColor@List}
-% Background color for environments based on |Verbatim|.  Puts each line in a colorbox.  The |\FancyVerbBackgroundColorVPhantom| will not have any effect in this case, unless it is larger than |\strut|.
+% Background color for environments based on |Verbatim|.  Puts each line in a colorbox.
 %    \begin{macrocode}
 \def\FV@BGColor@List#1{%
   \ifx\FancyVerbBackgroundColor\relax
@@ -5369,7 +5427,7 @@
     \setlength{\fboxsep}{0pt}%
     \colorbox{\FancyVerbBackgroundColor}{%
       \setlength{\fboxsep}{\FV@TmpLength}%
-      \rlap{\FancyVerbBackgroundColorVPhantom\strut#1}%
+      \rlap{\FV@bgcolorstrut#1}%
       \hspace{\linewidth}%
       \ifx\FV@RightListFrame\relax\else
         \hspace{-\FV@FrameSep}%
@@ -7164,7 +7222,7 @@
     \FV@RightListFrame
     \FV@RightListNumber
   \fi}%
-  \hss}\baselineskip\z@\lineskip\z@}
+  \hss}\FV@bgcoloroverlap\baselineskip\z@\lineskip\z@}
 %    \end{macrocode}
 % \end{macro}
 %

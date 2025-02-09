@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/02/06 v1.11.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2025/02/09 v1.11.0dev3 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1775,7 +1775,7 @@
             \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}\hss
       \FV@RightListFrame
       \FV@RightListNumber}%
-    \hss}}
+    \hss}\FV@bgcoloroverlap}
 \def\FV@BProcessLine#1{%
   \hbox{\FancyVerbFormatLine{%
     \ifx\FancyVerbBackgroundColor\relax
@@ -1957,6 +1957,43 @@
 \fvset{backgroundcolor=none}
 \define@key{FV}{bgcolor}{%
   \fvset{backgroundcolor=#1}}
+\patchcmd{\FV@List}%
+ {\FV@BeginListFrame}%
+ {\ifx\FancyVerbBackgroundColor\relax
+  \else
+    \lineskip\z@
+  \fi
+  \FV@BeginListFrame}%
+ {}%
+ {\PackageError{fvextra}%
+   {Failed to patch \string\FV@List\ for backgroundcolor}%
+   {Failed to patch \string\FV@List\ for backgroundcolor}}
+\define@key{FV}{backgroundcolorboxoverlap}{%
+  \ifdim#1=0pt\relax
+    \let\FV@backgroundcolorboxoverlap\relax
+  \else
+    \def\FV@backgroundcolorboxoverlap{#1}%
+  \fi}
+\fvset{backgroundcolorboxoverlap=0.25pt}
+\define@key{FV}{bgcolorboxoverlap}{%
+  \fvset{backgroundcolorboxoverlap=#1}}
+\newsavebox{\FV@bgcolorstructbox}
+\def\FV@bgcolorstrut{%
+  \ifx\FancyVerbBackgroundColor\relax
+    \FancyVerbBackgroundColorVPhantom\strut
+  \else\ifx\FV@backgroundcolorboxoverlap\relax
+    \FancyVerbBackgroundColorVPhantom\strut
+  \else
+    \savebox{\FV@bgcolorstructbox}{\hbox{\FancyVerbBackgroundColorVPhantom\strut}}%
+    \vrule height \ht\FV@bgcolorstructbox
+           depth \dimexpr\dp\FV@bgcolorstructbox+\FV@backgroundcolorboxoverlap\relax
+           width 0pt\relax
+  \fi\fi}
+\def\FV@bgcoloroverlap{%
+  \ifx\FV@backgroundcolorboxoverlap\relax
+  \else
+    \vspace{-\FV@backgroundcolorboxoverlap}%
+  \fi}
 \define@key{FV}{backgroundcolorvphantom}{%
   \def\FancyVerbBackgroundColorVPhantom{#1}%
   \ifx\FancyVerbBackgroundColorVPhantom\FV@None
@@ -2031,7 +2068,7 @@
     \setlength{\fboxsep}{0pt}%
     \colorbox{\FancyVerbBackgroundColor}{%
       \setlength{\fboxsep}{\FV@TmpLength}%
-      \rlap{\FancyVerbBackgroundColorVPhantom\strut#1}%
+      \rlap{\FV@bgcolorstrut#1}%
       \hspace{\linewidth}%
       \ifx\FV@RightListFrame\relax\else
         \hspace{-\FV@FrameSep}%
@@ -3170,7 +3207,7 @@
     \FV@RightListFrame
     \FV@RightListNumber
   \fi}%
-  \hss}\baselineskip\z@\lineskip\z@}
+  \hss}\FV@bgcoloroverlap\baselineskip\z@\lineskip\z@}
 \def\FV@BreakBeforePrep@Pygments#1{%
   \ifcsname FV@BreakBefore@Token\@backslashchar\endcsname
     \@namedef{FV@BreakBefore@Token#1Zbs }{}%

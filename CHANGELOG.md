@@ -16,6 +16,16 @@
    level of nesting.  The current buffer depth is now available in
    `\FancyVerbBufferDepth`.
 
+*  Added option `backgroundcolorboxoverlap` and alias `bgcolorboxoverlap`.
+   When there is a background color for a block of text, this oversizes the
+   `\colorbox` behind each line by `backgroundcolorboxoverlap`, and then
+   slightly overlaps these boxes by the same amount.  Some PDF viewers and
+   browsers produce rendering artifacts with a background color.  These appear
+   in between lines of text as extremely thin horizontal rules that are the
+   color of the page behind the background.  `backgroundcolorboxoverlap`
+   eliminates rendering artifacts in most software that produces them, and
+   otherwise significantly reduces artifacts.
+
 *  Renamed `\FV@bufferlengthname` to `\FancyVerbBufferLengthName`.  Added
    documentation for `\FancyVerbBufferLengthName` and
    `\FancyVerbBufferLineName`.
