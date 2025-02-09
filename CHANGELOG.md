@@ -24,7 +24,13 @@
    in between lines of text as extremely thin horizontal rules that are the
    color of the page behind the background.  `backgroundcolorboxoverlap`
    eliminates rendering artifacts in most software that produces them, and
-   otherwise significantly reduces artifacts.
+   otherwise significantly reduces artifacts (gpoore/minted#429).
+
+*  Line breaking now works with very long lines (#28).  Previously, very long
+   lines could result in a "Dimension too large" error if they were longer
+   than `\maxdimen`, or no error and also no line breaking if they were so
+   long that the length overflowed and became negative.
+
 
 *  Renamed `\FV@bufferlengthname` to `\FancyVerbBufferLengthName`.  Added
    documentation for `\FancyVerbBufferLengthName` and

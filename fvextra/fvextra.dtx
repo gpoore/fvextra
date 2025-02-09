@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/02/09 v1.11.0dev3 fvextra - extensions and patches for fancyvrb]
+    [2025/02/09 v1.11.0dev4 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -7162,6 +7162,7 @@
 %
 % If a line is too wide, then it is passed to |\FV@SaveLineBox|.  If there is no right-hand break symbol, then the saved result in |\FV@LineBox| may be used immediately.  If there is a right-hand break symbol, then the line must be processed a second time, so that the right-hand break symbol may be removed from the final segment of the broken line (since it does not continue).  During the first use of |\FV@SaveLineBox|, the counter |FancyVerbLineBreakLast| is set to the internal line number of the last segment of the broken line.  During the second use of |\FV@SaveLineBox|, we disable this (|\let\FV@SetLineBreakLast\relax|) so that the value of |FancyVerbLineBreakLast| remains fixed and thus may be used to determine when a right-hand break symbol should be inserted.
 %    \begin{macrocode}
+\expandafter\let\expandafter\FV@iffp\csname fp_compare:nNnTF\endcsname
 \def\FV@ListProcessLine@Break#1{%
   \hbox to \hsize{%
   \kern\leftmargin
@@ -7188,7 +7189,11 @@
   \ifx\FV@Tab\FV@TrueTab
     \let\FV@TrueTabSaveWidth\relax
   \fi
-  \ifdim\wd\FV@LineBox>\FV@LineWidth
+  \ifnum
+    \FV@iffp{\the\wd\FV@LineBox}>{\FV@LineWidth}{1}{0}% width greater than line
+    \FV@iffp{\the\wd\FV@LineBox}<{0}{1}{0}% width overflows
+    >0
+  \relax
     \setcounter{FancyVerbLineBreakLast}{0}%
     \ifx\FV@Tab\FV@TrueTab
       \let\FV@Tab\FV@TrueTab@UseWidth
