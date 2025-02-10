@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.11.0 (dev)
+## v1.11.0 (2025/02/09)
 
 *  Added command `\InsertBuffer`.  This inserts an existing buffer created
    with `VerbatimBuffer` so that it is interpreted as LaTeX.
@@ -30,7 +30,6 @@
    lines could result in a "Dimension too large" error if they were longer
    than `\maxdimen`, or no error and also no line breaking if they were so
    long that the length overflowed and became negative.
-
 
 *  Renamed `\FV@bufferlengthname` to `\FancyVerbBufferLengthName`.  Added
    documentation for `\FancyVerbBufferLengthName` and
