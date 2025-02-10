@@ -1,6 +1,12 @@
 # Changelog
 
 
+## v1.11.1 (dev)
+
+*  Optimized line breaking for very long lines (#28).
+
+
+
 ## v1.11.0 (2025/02/09)
 
 *  Added command `\InsertBuffer`.  This inserts an existing buffer created
