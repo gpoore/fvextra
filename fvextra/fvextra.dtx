@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/02/09 v1.11.1dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/02/17 v1.12.0dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -823,7 +823,10 @@
 % \end{optionlist}
 %
 %
-% \subsection{\cmd{VerbatimBuffer}}
+%
+% \subsection{Buffers}
+%
+% \subsubsection{\cmd{VerbatimBuffer}}
 % \DescribeMacro{\begin\{VerbatimBuffer\}\oarg{opt}\\$\langle$\textit{lines}$\rangle$\\\cmd{\end{VerbatimBuffer}}}
 %
 % This environment stores its contents verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.  This is similar to  \fancyvrb's |SaveVerbatim|, which saves an environment for later use.  |VerbatimBuffer| offers additional flexibility by capturing truly verbatim environment contents using |\detokenize| and saving environment contents in a format designed for further processing.
@@ -889,7 +892,7 @@
 % \item[afterbuffer (macro) (\meta{none})]
 % Macro or macros invoked at the end of the environment, after all lines of the environment have been buffered.  This is outside the |\begingroup...\endgroup| that wraps verbatim processing, so \fancyvrb\ settings are no longer active.  However, the buffer line macros and the buffer length macro are still accessible even when |globalbuffer=false|.
 %
-% When |afterbuffer| is used to typeset the buffer, the typeset buffer may contain |VerbatimBuffer| or environments based on it.  Typically, nested buffering should be avoided for a given buffer; a different buffer should be used at each level of nesting.  Otherwise, for nested |VerbatimBuffer| environments, the buffer will contain the contents of the outermost |VerbatimBuffer| environment concatenated with the contents of nested environments.  
+% When |afterbuffer| is used to typeset the buffer, the typeset buffer may contain |VerbatimBuffer| or environments based on it.  Typically, nested buffering should be avoided for a given buffer; a different buffer should be used at each level of nesting.  Otherwise, for nested |VerbatimBuffer| environments, the buffer will contain the contents of the outermost |VerbatimBuffer| environment concatenated with the contents of nested environments.
 %
 % The current buffer depth is available in |\FancyVerbBufferDepth|.  This has a value of |0| outside of any |VerbatimBuffer| environments, a value of |1| within the outermost |VerbatimBuffer| environment, and so forth.  This can be used to automatically generate a unique |buffername| at a given nesting depth.
 %
@@ -933,7 +936,7 @@
 % \end{optionlist}
 %
 %
-% \subsection{\cmd{\VerbatimInsertBuffer}}
+% \subsubsection{\cmd{\VerbatimInsertBuffer}}
 % \DescribeMacro{\VerbatimInsertBuffer\oarg{options}}
 %
 % This inserts an existing buffer created by |VerbatimBuffer| as a verbatim environment.  The |Verbatim| environment is used by default, but this can be customized by setting |insertenvname|.  |\VerbatimInsertBuffer| modifies |Verbatim| and |BVerbatim| internals to function with a buffer in a command context.  See the |VerbatimBuffer| documentation for an example of usage.
@@ -951,17 +954,28 @@
 % \end{optionlist}
 %
 %
-% \subsection{\cmd{\VerbatimClearBuffer}}
+% \subsubsection{\cmd{\VerbatimClearBuffer}}
 % \DescribeMacro{\VerbatimClearBuffer\oarg{options}}
 %
 % Clear an existing buffer created with \cmd{VerbatimBuffer}.  |\global\let| all buffer line macros to an undefined macro and set the buffer length macro to zero.
 %
 %
-% \subsection{\cmd{\InsertBuffer}}
+% \subsubsection{\cmd{\InsertBuffer}}
 % \DescribeMacro{\InsertBuffer\oarg{options}}
-% This inserts an existing buffer created with |VerbatimBuffer| so that it is interpreted as \LaTeX.  The result is essentially the same as if the buffered text had been included literally at the insertion point.
+% This inserts an existing buffer created with |VerbatimBuffer| so that it is interpreted as \LaTeX.  The result is essentially the same as if the buffered text had been included literally at the insertion point.  The buffer is processed with |\scantokens|.
 %
-% Internally, this processes the buffer with |\scantokens|.  For typesetting verbatim text, |\VerbatimInsertBuffer| with the |insertenvname| option should typically be used instead of creating a buffer that begins/ends with a verbatim environment, and then using |\InsertBuffer| to typeset that buffer.  The implementation of |\VerbatimInsertBuffer| is significantly more efficient for purely verbatim content.
+% For typesetting verbatim text, |\InsertBuffer| with the |wrapperenv| option set to a verbatim environment can be used as an alternative to |\VerbatimInsertBuffer|.  Both typically have similar performance.
+%
+% \begin{optionlist}
+% \item[wrapperenvname (string) (\meta{none})]
+% Name of environment used to wrap the buffer.  This is inserted within the |\scantokens| that is used to process the buffer, so if |wrapperenvname| is set to a verbatim environment, then it will cause the buffer to be typeset verbatim.  This is useful for non-\pkg{fancyvrb} verbatim environments that are not supported by |\VerbatimInsertBuffer|.
+%
+% \item[wrapperenvopt (string) (\meta{none})]
+% Optional argument |[|\meta{opt}|]| passed to wrapper environment |wrapperenvname|.
+%
+% \item[wrapperenvarg (string) (\meta{none})]
+% Mandatory argument |{|\meta{arg}|}| passed to wrapper environment |wrapperenvname|.
+% \end{optionlist}
 %
 %\begin{tcblisting}{oversize=5em}
 %\begin{VerbatimBuffer}[buffername=ins, globalbuffer]
@@ -976,7 +990,7 @@
 %\end{tcblisting}
 %
 %
-% \subsection{\cmd{\ClearBuffer}}
+% \subsubsection{\cmd{\ClearBuffer}}
 % \DescribeMacro{\ClearBuffer\oarg{options}}
 % Alias for \cmd{\VerbatimClearBuffer}.
 %
@@ -4249,7 +4263,7 @@
   \xdef\FV@EnvironName{\FV@VerbatimInsertEnvName}%
   \ifnum\FV@bufferlengthmacro=\z@\relax
     \PackageError{fvextra}%
-     {Buffer length macro \expandafter\string\FV@bufferlengthmacro\space 
+     {Buffer length macro \expandafter\string\FV@bufferlengthmacro\space
       is invalid or zero}%
      {}%
     \let\FV@GetLine\relax
@@ -4327,41 +4341,73 @@
 %
 %
 % \subsubsection{\cmd{\InsertBuffer}}
-% \begin{macro}{\InsertBuffer}
+% \begin{macro}{\InsertBuffer, wrapperenvname, wrapperenvopt, wrapperenvarg}
 % This inserts an existing buffer created with |VerbatimBuffer| so that it is interpreted as \LaTeX.  The result is essentially the same as if the buffered text had been included literally at the insertion point.
 %    \begin{macrocode}
+\define@key{FV}{wrapperenvname}{%
+  \def\FV@WrapperEnvName{#1}%
+  \ifx\FV@WrapperEnvName\@empty
+    \let\FV@WrapperEnvName\relax
+  \fi}
+\fvset{wrapperenvname=}
+\define@key{FV}{wrapperenvopt}{%
+  \def\FV@WrapperEnvOpt{#1}%
+  \ifx\FV@WrapperEnvOpt\@empty
+    \let\FV@WrapperEnvOpt\relax
+  \fi}
+\fvset{wrapperenvopt=}
+\define@key{FV}{wrapperenvarg}{%
+  \def\FV@WrapperEnvArg{#1}%
+  \ifx\FV@WrapperEnvArg\@empty
+    \let\FV@WrapperEnvArg\relax
+  \fi}
+\fvset{wrapperenvarg=}
 \newcommand{\InsertBuffer}[1][]{%
   \begingroup
   \def\FV@KeyValues{#1}%
   \FV@UseKeyValues
-  \global\let\FV@tmpbufferlengthmacro\FV@bufferlengthmacro
-  \global\let\FV@tmpbufferlinename\FancyVerbBufferLineName
-  \endgroup
-  \ifnum\FV@tmpbufferlengthmacro<1
-    \expandafter\@gobble
+  \ifnum\FV@bufferlengthmacro<1
+    \expandafter\endgroup\expandafter\@gobble
   \else
     \expandafter\@firstofone
   \fi
   \InsertBuffer@i}
 \def\InsertBuffer@i{%
   \InsertBuffer@expandbuffer
-  \expandafter\InsertBuffer@cleanup\expandafter\scantokens\expandafter{%
-    \FV@expandedbuffer\unskip\noexpand}\relax}
+  \expandafter\endgroup\expandafter\scantokens\expandafter{%
+    \FV@expandedbuffer\noexpand}\relax}
 \def\InsertBuffer@expandbuffer{%
-  \edef\FV@expandedbuffer{\InsertBuffer@expandbufferlines{1}}}
+  \edef\FV@expandedbuffer{%
+    \ifx\FV@WrapperEnvName\relax
+    \else
+      \unexpanded\expandafter\expandafter\expandafter{%
+        \expandafter\string\expandafter\begin\expandafter{\FV@WrapperEnvName}}%
+      \ifx\FV@WrapperEnvOpt\relax
+      \else
+        \unexpanded\expandafter{\expandafter[\FV@WrapperEnvOpt]}%
+      \fi
+      \ifx\FV@WrapperEnvArg\relax
+      \else
+        \unexpanded\expandafter{\expandafter{\FV@WrapperEnvArg}}%
+      \fi
+      \unexpanded{^^J}%
+    \fi
+    \InsertBuffer@expandbufferlines{1}%
+    \ifx\FV@WrapperEnvName\relax
+      \unskip
+    \else
+      \unexpanded\expandafter\expandafter\expandafter{%
+        \expandafter\string\expandafter\end\expandafter{\FV@WrapperEnvName}^^J}%
+    \fi}}
 \def\InsertBuffer@expandbufferlines#1{%
   \unexpanded\expandafter\expandafter\expandafter{%
-    \csname\FV@tmpbufferlinename#1\endcsname^^J}%
-  \ifnum\FV@tmpbufferlengthmacro=#1
+    \csname\FancyVerbBufferLineName#1\endcsname^^J}%
+  \ifnum\FV@bufferlengthmacro=#1
     \expandafter\@gobble
   \else
     \expandafter\@firstofone
   \fi
   {\expandafter\InsertBuffer@expandbufferlines\expandafter{\the\numexpr#1+1\relax}}}
-\def\InsertBuffer@cleanup{%
-  \global\let\FV@tmpbufferlengthmacro\FV@Undefined
-  \global\let\FV@tmpbufferlinename\FV@Undefined
-  \global\let\FV@expandedbuffer\FV@Undefined}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4371,7 +4417,7 @@
 % Clear an existing buffer.  Alias for |\VerbatimClearBuffer|.
 %    \begin{macrocode}
 \let\ClearBuffer\VerbatimClearBuffer
-%    \end{macrocode} 
+%    \end{macrocode}
 % \end{macro}
 %
 %
@@ -5325,7 +5371,7 @@
     \FancyVerbBackgroundColorVPhantom\strut
   \else
     \savebox{\FV@bgcolorstructbox}{\hbox{\FancyVerbBackgroundColorVPhantom\strut}}%
-    \vrule height \ht\FV@bgcolorstructbox 
+    \vrule height \ht\FV@bgcolorstructbox
            depth \dimexpr\dp\FV@bgcolorstructbox+\FV@backgroundcolorboxoverlap\relax
            width 0pt\relax
   \fi\fi}

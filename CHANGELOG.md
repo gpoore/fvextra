@@ -1,7 +1,11 @@
 # Changelog
 
 
-## v1.11.1 (dev)
+## v1.12.0 (dev)
+
+*  Added new options for `\InsertBuffer`:  `wrapperenvname`, `wrapperenvopt`,
+   `wrapperenvarg`.  Improved implementation of `\InsertBuffer` to eliminate
+   temp macros.
 
 *  Optimized line breaking for very long lines (#28).
 

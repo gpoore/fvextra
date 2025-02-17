@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/02/09 v1.11.1dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/02/17 v1.12.0dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -1442,38 +1442,70 @@
   \repeat
   \gdef\FancyVerbBufferIndex{0}%
   \endgroup}
+\define@key{FV}{wrapperenvname}{%
+  \def\FV@WrapperEnvName{#1}%
+  \ifx\FV@WrapperEnvName\@empty
+    \let\FV@WrapperEnvName\relax
+  \fi}
+\fvset{wrapperenvname=}
+\define@key{FV}{wrapperenvopt}{%
+  \def\FV@WrapperEnvOpt{#1}%
+  \ifx\FV@WrapperEnvOpt\@empty
+    \let\FV@WrapperEnvOpt\relax
+  \fi}
+\fvset{wrapperenvopt=}
+\define@key{FV}{wrapperenvarg}{%
+  \def\FV@WrapperEnvArg{#1}%
+  \ifx\FV@WrapperEnvArg\@empty
+    \let\FV@WrapperEnvArg\relax
+  \fi}
+\fvset{wrapperenvarg=}
 \newcommand{\InsertBuffer}[1][]{%
   \begingroup
   \def\FV@KeyValues{#1}%
   \FV@UseKeyValues
-  \global\let\FV@tmpbufferlengthmacro\FV@bufferlengthmacro
-  \global\let\FV@tmpbufferlinename\FancyVerbBufferLineName
-  \endgroup
-  \ifnum\FV@tmpbufferlengthmacro<1
-    \expandafter\@gobble
+  \ifnum\FV@bufferlengthmacro<1
+    \expandafter\endgroup\expandafter\@gobble
   \else
     \expandafter\@firstofone
   \fi
   \InsertBuffer@i}
 \def\InsertBuffer@i{%
   \InsertBuffer@expandbuffer
-  \expandafter\InsertBuffer@cleanup\expandafter\scantokens\expandafter{%
-    \FV@expandedbuffer\unskip\noexpand}\relax}
+  \expandafter\endgroup\expandafter\scantokens\expandafter{%
+    \FV@expandedbuffer\noexpand}\relax}
 \def\InsertBuffer@expandbuffer{%
-  \edef\FV@expandedbuffer{\InsertBuffer@expandbufferlines{1}}}
+  \edef\FV@expandedbuffer{%
+    \ifx\FV@WrapperEnvName\relax
+    \else
+      \unexpanded\expandafter\expandafter\expandafter{%
+        \expandafter\string\expandafter\begin\expandafter{\FV@WrapperEnvName}}%
+      \ifx\FV@WrapperEnvOpt\relax
+      \else
+        \unexpanded\expandafter{\expandafter[\FV@WrapperEnvOpt]}%
+      \fi
+      \ifx\FV@WrapperEnvArg\relax
+      \else
+        \unexpanded\expandafter{\expandafter{\FV@WrapperEnvArg}}%
+      \fi
+      \unexpanded{^^J}%
+    \fi
+    \InsertBuffer@expandbufferlines{1}%
+    \ifx\FV@WrapperEnvName\relax
+      \unskip
+    \else
+      \unexpanded\expandafter\expandafter\expandafter{%
+        \expandafter\string\expandafter\end\expandafter{\FV@WrapperEnvName}^^J}%
+    \fi}}
 \def\InsertBuffer@expandbufferlines#1{%
   \unexpanded\expandafter\expandafter\expandafter{%
-    \csname\FV@tmpbufferlinename#1\endcsname^^J}%
-  \ifnum\FV@tmpbufferlengthmacro=#1
+    \csname\FancyVerbBufferLineName#1\endcsname^^J}%
+  \ifnum\FV@bufferlengthmacro=#1
     \expandafter\@gobble
   \else
     \expandafter\@firstofone
   \fi
   {\expandafter\InsertBuffer@expandbufferlines\expandafter{\the\numexpr#1+1\relax}}}
-\def\InsertBuffer@cleanup{%
-  \global\let\FV@tmpbufferlengthmacro\FV@Undefined
-  \global\let\FV@tmpbufferlinename\FV@Undefined
-  \global\let\FV@expandedbuffer\FV@Undefined}
 \let\ClearBuffer\VerbatimClearBuffer
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
