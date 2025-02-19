@@ -3,6 +3,9 @@
 
 ## v1.12.0 (dev)
 
+*  Added command `\BufferMdfivesum` that calculates the MD5 sum of the current
+   buffer.
+
 *  Added new options for `\InsertBuffer`:  `wrapperenvname`, `wrapperenvopt`,
    `wrapperenvarg`.  Improved implementation of `\InsertBuffer` to eliminate
    temp macros.

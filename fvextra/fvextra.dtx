@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/02/17 v1.12.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/02/18 v1.12.0dev2 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -995,6 +995,24 @@
 % Alias for \cmd{\VerbatimClearBuffer}.
 %
 %
+% \subsubsection{\cmd{\BufferMdfivesum}}
+% \DescribeMacro{\BufferMdfivesum}
+% Calculate the MD5 sum of the current buffer, using |\pdf@mdfivesum| from \pkg{pdftexcmds}.
+%
+% |\BufferMdfivesum| operates on the current buffer.  Because it is fully expandable, it cannot take an optional argument to switch buffers.  To switch buffers, use something like |\fvset{buffername=...}| before |\BufferMdfivesum|.
+%
+%\begin{tcblisting}{oversize=5em}
+%\begin{VerbatimBuffer}[afterbuffer=\xdef\bufferhash{\BufferMdfivesum}]
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+%eiusmod tempor incididunt ut labore et dolore magna aliqua.
+%\end{VerbatimBuffer}
+%
+%\texttt{\bufferhash}
+%\end{tcblisting}
+%
+%
+%
+%
 %
 %
 % \section{Line breaking}
@@ -1601,6 +1619,7 @@
 %    \begin{macrocode}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
+\RequirePackage{pdftexcmds}
 \RequirePackage{upquote}
 \AtEndPreamble{%
   \ifx\encodingdefault\upquote@OTone
@@ -4417,6 +4436,30 @@
 % Clear an existing buffer.  Alias for |\VerbatimClearBuffer|.
 %    \begin{macrocode}
 \let\ClearBuffer\VerbatimClearBuffer
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\cmd{\BufferMdfivesum}}
+% \begin{macro}{\BufferMdfivesum}
+% Calculate the MD5 sum of the current buffer.
+%    \begin{macrocode}
+\def\BufferMdfivesum{%
+  \pdf@mdfivesum{%
+    \ifnum\FV@bufferlengthmacro<1
+      \expandafter\@gobble
+    \else
+      \expandafter\@firstofone
+    \fi
+    {\BufferMdfivesum@i{1}}}}
+\def\BufferMdfivesum@i#1{%
+  \csname\FancyVerbBufferLineName#1\endcsname^^J%
+  \ifnum\FV@bufferlengthmacro=#1
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\BufferMdfivesum@i\expandafter{\the\numexpr#1+1\relax}}}
 %    \end{macrocode}
 % \end{macro}
 %

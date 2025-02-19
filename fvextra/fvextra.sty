@@ -20,9 +20,10 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/02/17 v1.12.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/02/18 v1.12.0dev2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
+\RequirePackage{pdftexcmds}
 \RequirePackage{upquote}
 \AtEndPreamble{%
   \ifx\encodingdefault\upquote@OTone
@@ -1507,6 +1508,22 @@
   \fi
   {\expandafter\InsertBuffer@expandbufferlines\expandafter{\the\numexpr#1+1\relax}}}
 \let\ClearBuffer\VerbatimClearBuffer
+\def\BufferMdfivesum{%
+  \pdf@mdfivesum{%
+    \ifnum\FV@bufferlengthmacro<1
+      \expandafter\@gobble
+    \else
+      \expandafter\@firstofone
+    \fi
+    {\BufferMdfivesum@i{1}}}}
+\def\BufferMdfivesum@i#1{%
+  \csname\FancyVerbBufferLineName#1\endcsname^^J%
+  \ifnum\FV@bufferlengthmacro=#1
+    \expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\expandafter\BufferMdfivesum@i\expandafter{\the\numexpr#1+1\relax}}}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces,showtabs}\FV@@Command{#2}}%
