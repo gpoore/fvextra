@@ -3,6 +3,9 @@
 
 ## v1.12.0 (dev)
 
+*  Added command `\IterateBuffer` for iterating over buffers and applying a
+   macro to each line.
+
 *  Added command `\BufferMdfivesum` that calculates the MD5 sum of the current
    buffer.
 

@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/02/18 v1.12.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2025/02/20 v1.12.0dev3 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{pdftexcmds}
@@ -1524,6 +1524,48 @@
     \expandafter\@firstofone
   \fi
   {\expandafter\BufferMdfivesum@i\expandafter{\the\numexpr#1+1\relax}}}
+\newcommand{\IterateBuffer}[2][]{%
+  \if\relax\detokenize{#1}\relax
+  \else
+    \let\FancyVerbBufferLengthName@beforeiter\FancyVerbBufferLengthName
+    \let\FV@bufferlengthmacro@beforeiter\FV@bufferlengthmacro
+    \let\FancyVerbBufferLineName@beforeiter\FancyVerbBufferLineName
+    \begingroup
+    \def\FV@KeyValues{#1}%
+    \FV@UseKeyValues
+    \global\let\FancyVerbBufferLengthName@iter\FancyVerbBufferLengthName
+    \global\let\FV@bufferlengthmacro@iter\FV@bufferlengthmacro
+    \global\let\FancyVerbBufferLineName@iter\FancyVerbBufferLineName
+    \endgroup
+    \let\FancyVerbBufferLengthName\FancyVerbBufferLengthName@iter
+    \let\FV@bufferlengthmacro\FV@bufferlengthmacro@iter
+    \let\FancyVerbBufferLineName\FancyVerbBufferLineName@iter
+    \global\let\FancyVerbBufferLengthName@iter\FV@Undefined
+    \global\let\FV@bufferlengthmacro@iter\FV@Undefined
+    \global\let\FancyVerbBufferLineName@iter\FV@Undefined
+  \fi
+  \gdef\FancyVerbBufferIndex{1}%
+  \def\FV@IterateBuffer@cmd{#2}%
+  \def\IterateBufferBreak{\xdef\FancyVerbBufferIndex{\FV@bufferlengthmacro}}%
+  \loop\unless\ifnum\FancyVerbBufferIndex>\FV@bufferlengthmacro\relax
+    \expandafter\let\expandafter\FV@IterateBuffer@line
+      \csname\FancyVerbBufferLineName\FancyVerbBufferIndex\endcsname
+    \expandafter\FV@IterateBuffer@cmd\expandafter{\FV@IterateBuffer@line}%
+    \xdef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}%
+  \repeat
+  \gdef\FancyVerbBufferIndex{0}%
+  \let\FV@IterateBuffer@cmd\FV@Undefined
+  \let\IterateBufferBreak\FV@Undefined
+  \let\FV@IterateBuffer@line\FV@Undefined
+  \if\relax\detokenize{#1}\relax
+  \else
+    \let\FancyVerbBufferLengthName\FancyVerbBufferLengthName@beforeiter
+    \let\FV@bufferlengthmacro\FV@bufferlengthmacro@beforeiter
+    \let\FancyVerbBufferLineName\FancyVerbBufferLineName@beforeiter
+    \let\FancyVerbBufferLengthName@beforeiter\FV@Undefined
+    \let\FV@bufferlengthmacro@beforeiter\FV@Undefined
+    \let\FancyVerbBufferLineName@beforeiter\FV@Undefined
+  \fi}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces,showtabs}\FV@@Command{#2}}%

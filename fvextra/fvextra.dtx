@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/02/18 v1.12.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2025/02/20 v1.12.0dev3 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -64,7 +64,7 @@
 
 \usepackage{environ}
 
-\usepackage{tcolorbox}
+\usepackage[many]{tcolorbox}
 \tcbuselibrary{listings}
 \tcbset{verbatim ignore percent}
 
@@ -251,6 +251,21 @@
    }\vspace{1ex}}
 
 \CustomVerbatimEnvironment{VerbatimVerbatim}{Verbatim}{}
+\CustomVerbatimEnvironment{VerbatimVerbatimBuffer}{VerbatimBuffer}{}
+
+\newenvironment{tcbexample}
+ {\VerbatimEnvironment
+  \begin{VerbatimVerbatimBuffer}[
+    gobble=1,
+    buffername=tcbexample,
+    afterbuffer={
+      \begin{tcolorbox}[oversize=5em]
+      \VerbatimInsertBuffer[buffername=tcbexample]
+      \tcbline
+      \InsertBuffer[buffername=tcbexample]
+      \end{tcolorbox}
+    }]}
+ {\end{VerbatimVerbatimBuffer}}
 
 
 \edef\hashchar{\string#}
@@ -829,26 +844,22 @@
 % \subsubsection{\cmd{VerbatimBuffer}}
 % \DescribeMacro{\begin\{VerbatimBuffer\}\oarg{opt}\\$\langle$\textit{lines}$\rangle$\\\cmd{\end{VerbatimBuffer}}}
 %
-% This environment stores its contents verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be looped over for further processing or later use.  This is similar to  \fancyvrb's |SaveVerbatim|, which saves an environment for later use.  |VerbatimBuffer| offers additional flexibility by capturing truly verbatim environment contents using |\detokenize| and saving environment contents in a format designed for further processing.
+% This environment stores its contents verbatim in a ``buffer,'' a sequence of numbered macros each of which contains one line of the environment.  The ``buffered'' lines can then be iterated  over for further processing or later use.  This is similar to  \fancyvrb's |SaveVerbatim|, which saves an environment for later use.  |VerbatimBuffer| offers additional flexibility by capturing truly verbatim environment contents using |\detokenize| and saving environment contents in a format designed for further processing.
 %
 % By default, all \fancyvrb\ options except for |VerbatimBuffer|-specific options are ignored.  This can be customized on a per-environment basis via environment optional arguments.
 %
-% Below is an extended example that demonstrates what is possible with |VerbatimBuffer| combined with |\VerbatimInsertBuffer|.  This uses |\ifdefstring| from the \pkg{etoolbox} package.
+% Below is an extended example that demonstrates what is possible with |VerbatimBuffer| combined with various buffer commands.  This uses |\ifstrequal| from the \pkg{etoolbox} package.
 % \begin{itemize}
-% \item |\setformatter| defines an empty |\formatter| macro.  Then it loops over the lines in a buffer looking for a line containing only the text ``red''.  If this is found, it redefines |\formatter| to |\color{red}|.  |\FancyVerbBufferIndex| is a macro that is always available for buffer looping.  |\FancyVerbBufferLength| is the default macro containing the buffer length (number of lines).  |\FancyVerbBufferLineName| contains the base name for buffer line macros (default |FancyVerbBufferLine|).
+% \item |\setformatter| defines an empty |\formatter| macro.  Then it defines a |\lineprocessor| macro that takes a buffer line as an argument.  If this line contains only the text ``red'', then |\lineprocessor| redefines |\formatter| to |\color{red}| and invokes |\IterateBufferBreak| to stop iteration over the buffer.  Finally, |\IterateBuffer| is used to apply |\lineprocessor| to each line in the buffer, until the final line is reached or |\IterateBufferBreak| is invoked.
 % \item |afterbuffer| involves two steps:  (1) |\setformatter| loops through the buffer and defines |\formatter| based on the buffer contents, and (2) |\VerbatimInsertBuffer| typesets the buffer, using |formatcom=\formatter| to format the text based on whether any line contains only the text ``red''.
 % \end{itemize}
 %
-%\begin{tcblisting}{oversize=5em}
+%\begin{tcbexample}
 %\def\setformatter{%
 %  \def\formatter{}%
-%  \def\FancyVerbBufferIndex{1}%
-%  \loop\unless\ifnum\FancyVerbBufferIndex>\FancyVerbBufferLength\relax
-%    \expandafter\let\expandafter\bufferline
-%      \csname\FancyVerbBufferLineName\FancyVerbBufferIndex\endcsname
-%    \ifdefstring{\bufferline}{red}{\def\formatter{\color{red}}}{}%
-%    \edef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}%
-%  \repeat}
+%  \def\lineprocessor##1{%
+%    \ifstrequal{##1}{red}{\def\formatter{\color{red}}\IterateBufferBreak}{}}%
+%  \IterateBuffer{\lineprocessor}}
 %
 %\begin{VerbatimBuffer}[
 %  afterbuffer={\setformatter\VerbatimInsertBuffer[formatcom=\formatter]}
@@ -857,32 +868,24 @@
 %second
 %red
 %\end{VerbatimBuffer}
-%\end{tcblisting}
+%\end{tcbexample}
 %
-% Here is the same example, but rewritten to use a global buffer with custom buffer names instead.
+% Here is the same example, but rewritten to use a global buffer with custom buffer name instead.
 %
-%\begin{tcblisting}{oversize=5em}
-%\begin{VerbatimBuffer}[globalbuffer, bufferlinename=exbuff, bufferlengthname=exbufflen]
+%\begin{tcbexample}
+%\begin{VerbatimBuffer}[globalbuffer, buffername=exbuff]
 %first
 %second
 %red
 %\end{VerbatimBuffer}
 %
 %\def\formatter{}
-%\def\FancyVerbBufferIndex{1}
-%\loop\unless\ifnum\FancyVerbBufferIndex>\exbufflen\relax
-%  \expandafter\let\expandafter\bufferline
-%    \csname exbuff\FancyVerbBufferIndex\endcsname
-%  \ifdefstring{\bufferline}{red}{\def\formatter{\color{red}}}{}
-%  \edef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}
-%\repeat
+%\def\lineprocessor#1{%
+%  \ifstrequal{#1}{red}{\def\formatter{\color{red}}\IterateBufferBreak}{}}
+%\IterateBuffer[buffername=exbuff]{\lineprocessor}
 %
-%\VerbatimInsertBuffer[
-%  formatcom=\formatter,
-%  bufferlinename=exbuff,
-%  bufferlengthname=exbufflen
-%]
-%\end{tcblisting}
+%\VerbatimInsertBuffer[buffername=exbuff, formatcom=\formatter]
+%\end{tcbexample}
 %
 % ~
 %
@@ -1011,6 +1014,10 @@
 %\end{tcblisting}
 %
 %
+% \subsubsection{\cmd{\IterateBuffer}}
+% \DescribeMacro{\IterateBuffer\oarg{options}\marg{macro}}
+%
+% \noindent Iterate over buffer from beginning to end, invoking \meta{macro} on each line.  \meta{macro} must be a macro or sequence of macros that consumes a single brace-delimited argument, which is the current line in the buffer.  |\IterateBufferBreak| is available to break iteration immediately after the current \meta{macro} invocation completes.  During iteration, |\FancyVerbBufferLengthName|, |\FancyVerbBufferLineName|, and |\FancyVerbBufferIndex| can be used to access the name of the current buffer and index within it.
 %
 %
 %
@@ -4460,6 +4467,56 @@
     \expandafter\@firstofone
   \fi
   {\expandafter\BufferMdfivesum@i\expandafter{\the\numexpr#1+1\relax}}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsubsection{\cmd{\IterateBuffer}, \cmd{\IterateBufferBreak}}
+% \begin{macro}{\IterateBuffer, \IterateBufferBreak}
+% Loop over buffer, applying a macro to each line.
+%    \begin{macrocode}
+\newcommand{\IterateBuffer}[2][]{%
+  \if\relax\detokenize{#1}\relax
+  \else
+    \let\FancyVerbBufferLengthName@beforeiter\FancyVerbBufferLengthName
+    \let\FV@bufferlengthmacro@beforeiter\FV@bufferlengthmacro
+    \let\FancyVerbBufferLineName@beforeiter\FancyVerbBufferLineName
+    \begingroup
+    \def\FV@KeyValues{#1}%
+    \FV@UseKeyValues
+    \global\let\FancyVerbBufferLengthName@iter\FancyVerbBufferLengthName
+    \global\let\FV@bufferlengthmacro@iter\FV@bufferlengthmacro
+    \global\let\FancyVerbBufferLineName@iter\FancyVerbBufferLineName
+    \endgroup
+    \let\FancyVerbBufferLengthName\FancyVerbBufferLengthName@iter
+    \let\FV@bufferlengthmacro\FV@bufferlengthmacro@iter
+    \let\FancyVerbBufferLineName\FancyVerbBufferLineName@iter
+    \global\let\FancyVerbBufferLengthName@iter\FV@Undefined
+    \global\let\FV@bufferlengthmacro@iter\FV@Undefined
+    \global\let\FancyVerbBufferLineName@iter\FV@Undefined
+  \fi
+  \gdef\FancyVerbBufferIndex{1}%
+  \def\FV@IterateBuffer@cmd{#2}%
+  \def\IterateBufferBreak{\xdef\FancyVerbBufferIndex{\FV@bufferlengthmacro}}%
+  \loop\unless\ifnum\FancyVerbBufferIndex>\FV@bufferlengthmacro\relax
+    \expandafter\let\expandafter\FV@IterateBuffer@line
+      \csname\FancyVerbBufferLineName\FancyVerbBufferIndex\endcsname
+    \expandafter\FV@IterateBuffer@cmd\expandafter{\FV@IterateBuffer@line}%
+    \xdef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}%
+  \repeat
+  \gdef\FancyVerbBufferIndex{0}%
+  \let\FV@IterateBuffer@cmd\FV@Undefined
+  \let\IterateBufferBreak\FV@Undefined
+  \let\FV@IterateBuffer@line\FV@Undefined
+  \if\relax\detokenize{#1}\relax
+  \else
+    \let\FancyVerbBufferLengthName\FancyVerbBufferLengthName@beforeiter
+    \let\FV@bufferlengthmacro\FV@bufferlengthmacro@beforeiter
+    \let\FancyVerbBufferLineName\FancyVerbBufferLineName@beforeiter
+    \let\FancyVerbBufferLengthName@beforeiter\FV@Undefined
+    \let\FV@bufferlengthmacro@beforeiter\FV@Undefined
+    \let\FancyVerbBufferLineName@beforeiter\FV@Undefined
+  \fi}
 %    \end{macrocode}
 % \end{macro}
 %
