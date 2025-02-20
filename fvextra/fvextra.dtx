@@ -217,41 +217,51 @@
  {\par}
 
 
+\CustomVerbatimEnvironment{VerbatimVerbatim}{Verbatim}{}
+\CustomVerbatimEnvironment{VerbatimVerbatimBuffer}{VerbatimBuffer}{}
+
 \newenvironment{example}
-  {\VerbatimEnvironment
-   \begin{VerbatimOut}[gobble=4]{example.out}}
-  {\end{VerbatimOut}%
-   \vspace{1ex}%
-   \setlength{\parindent}{0pt}%
-   \setlength{\fboxsep}{1em}%
-   \fcolorbox{DarkGreen}{white}{\begin{minipage}{0.5\linewidth}%
-     \VerbatimInput{example.out}%
-   \end{minipage}%
-   \hspace{0.025\linewidth}%
-   {\color{DarkGreen}\vrule}%
-   \hspace{0.025\linewidth}%
-   \begin{minipage}{0.4\linewidth}%
-     \input{example.out}%
-   \end{minipage}%
-   }\vspace{1ex}}
+ {\VerbatimEnvironment
+  \begin{VerbatimVerbatimBuffer}[
+    buffername=fvexample,
+    gobble=1,
+    afterbuffer={%
+      \vspace{1ex}%
+      \setlength{\parindent}{0pt}%
+      \setlength{\fboxsep}{1em}%
+      \fcolorbox{DarkGreen}{white}{%
+        \begin{minipage}{0.5\linewidth}%
+        \VerbatimInsertBuffer[buffername=fvexample]%
+        \end{minipage}%
+        \hspace{0.025\linewidth}%
+        {\color{DarkGreen}\vrule}%
+        \hspace{0.025\linewidth}%
+        \begin{minipage}{0.4\linewidth}%
+        \InsertBuffer[buffername=fvexample]%
+        \end{minipage}}%
+      \vspace{1ex}%
+    }]}
+  {\end{VerbatimVerbatimBuffer}}
 
 \newenvironment{longexample}
   {\VerbatimEnvironment
-   \begin{VerbatimOut}[gobble=4]{example.out}}
-  {\end{VerbatimOut}%
-   \vspace{1ex}%
-   \setlength{\parindent}{0pt}%
-   \setlength{\fboxsep}{1em}%
-   \fcolorbox{DarkGreen}{white}{\begin{minipage}{0.94\linewidth}%
-     \VerbatimInput{example.out}%
-     {\color{DarkGreen}\hrulefill}
-     \setlength{\fboxsep}{3pt}%
-     \input{example.out}%
-   \end{minipage}%
-   }\vspace{1ex}}
-
-\CustomVerbatimEnvironment{VerbatimVerbatim}{Verbatim}{}
-\CustomVerbatimEnvironment{VerbatimVerbatimBuffer}{VerbatimBuffer}{}
+   \begin{VerbatimVerbatimBuffer}[
+    buffername=fvexample,
+    gobble=1,
+    afterbuffer={%
+      \vspace{1ex}%
+      \setlength{\parindent}{0pt}%
+      \setlength{\fboxsep}{1em}%
+      \fcolorbox{DarkGreen}{white}{%
+        \begin{minipage}{0.94\linewidth}%
+        \VerbatimInsertBuffer[buffername=fvexample]%
+        {\color{DarkGreen}\hrulefill}%
+        \setlength{\fboxsep}{3pt}%
+        \InsertBuffer[buffername=fvexample]%
+        \end{minipage}}%
+      \vspace{1ex}%
+    }]}
+  {\end{VerbatimVerbatimBuffer}}
 
 \newenvironment{tcbexample}
  {\VerbatimEnvironment
@@ -447,17 +457,17 @@
 % \item[curlyquotes (boolean) (false)]
 % Unlike \fancyvrb, \pkg{fvextra} requires the \pkg{upquote} package, so the backtick (\texttt{\textasciigrave}) and typewriter single quotation mark (\texttt{\textquotesingle}) always appear literally by default, instead of becoming the left and right curly single quotation marks (\texttt{`'}).  This option allows these characters to be replaced by the curly quotation marks when that is desirable.
 %
-% \begin{example}
-%   \begin{Verbatim}
-%   `quoted text'
-%   \end{Verbatim}
-% \end{example}
+%\begin{example}
+%\begin{Verbatim}
+%`quoted text'
+%\end{Verbatim}
+%\end{example}
 %
-% \begin{example}
-%   \begin{Verbatim}[curlyquotes]
-%   `quoted text'
-%   \end{Verbatim}
-% \end{example}
+%\begin{example}
+%\begin{Verbatim}[curlyquotes]
+%`quoted text'
+%\end{Verbatim}
+%\end{example}
 %
 %
 % \item[extra (boolean) (true)]
@@ -479,15 +489,15 @@
 %
 % \begingroup
 % \fvset{xleftmargin=2em}
-% \begin{longexample}
-%   \begin{Verbatim}[numbers=left, highlightlines={1, 3-4}]
-%   First line
-%   Second line
-%   Third line
-%   Fourth line
-%   Fifth line
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[numbers=left, highlightlines={1, 3-4}]
+%First line
+%Second line
+%Third line
+%Fourth line
+%Fifth line
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 % The actual highlighting is performed by a set of commands.  These may be customized for additional fine-tuning of highlighting.  See the default definition of |\FancyVerbHighlightLineFirst| as a starting point.
@@ -526,15 +536,15 @@
 %
 % \begingroup
 % \fvset{xleftmargin=2em}
-% \begin{longexample}
-%   \begin{Verbatim}[numbers=left, stepnumber=2,
-%                    numberfirstline]
-%   First line
-%   Second line
-%   Third line
-%   Fourth line
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[numbers=left, stepnumber=2,
+%                 numberfirstline]
+%First line
+%Second line
+%Third line
+%Fourth line
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 %
@@ -543,14 +553,14 @@
 %
 % \begingroup
 % \fvset{xleftmargin=1.5em, xrightmargin=1.5em}
-% \begin{example}
-%   \begin{Verbatim}[numbers=both]
-%   First line
-%   Second line
-%   Third line
-%   Fourth line
-%   \end{Verbatim}
-% \end{example}
+%\begin{example}
+%\begin{Verbatim}[numbers=both]
+%First line
+%Second line
+%Third line
+%Fourth line
+%\end{Verbatim}
+%\end{example}
 % \endgroup
 %
 %
@@ -571,12 +581,12 @@
 % \item[spacecolor (string) (none)]
 % Set the color of visible spaces.  By default (|none|), they take the color of their surroundings.
 %
-% \begin{longexample}
-%   \color{gray}
-%   \begin{Verbatim}[showspaces, spacecolor=red]
-%   One  two  three
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\color{gray}
+%\begin{Verbatim}[showspaces, spacecolor=red]
+%One  two  three
+%\end{Verbatim}
+%\end{longexample}
 %
 %
 % \item[stepnumberfromfirst (boolean) (false)]
@@ -584,15 +594,15 @@
 %
 % \begingroup
 % \fvset{xleftmargin=2em}
-% \begin{longexample}
-%   \begin{Verbatim}[numbers=left, stepnumber=2,
-%                    stepnumberfromfirst]
-%   First line
-%   Second line
-%   Third line
-%   Fourth line
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[numbers=left, stepnumber=2,
+%                 stepnumberfromfirst]
+%First line
+%Second line
+%Third line
+%Fourth line
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 %
@@ -603,15 +613,15 @@
 %
 % \begingroup
 % \fvset{xleftmargin=2em}
-% \begin{longexample}
-%   \begin{Verbatim}[numbers=left, stepnumber=2,
-%                    firstnumber=4, stepnumberoffsetvalues]
-%   First line
-%   Second line
-%   Third line
-%   Fourth line
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[numbers=left, stepnumber=2,
+%                 firstnumber=4, stepnumberoffsetvalues]
+%First line
+%Second line
+%Third line
+%Fourth line
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 %
@@ -681,18 +691,17 @@
 % \fvextra\ introduces line breaking, which complicates line formatting.  We might want to apply formatting to the entire line, including line breaks, line continuation symbols, and all indentation, including any extra indentation provided by line breaking.  Or we might want to apply formatting only to the actual text of the line.  \fvextra\ leaves |\FancyVerbFormatLine| as applying to the entire line, and introduces a new command |\FancyVerbFormatText| that only applies to the text part of the line.\footnote{When |breaklines=true|, each line is wrapped in a |\parbox|.  |\FancyVerbFormatLine| is outside the |\parbox|, and |\FancyVerbFormatText| is inside.}   By default, |\FancyVerbFormatText| inserts the text unmodified.  When it is customized, it should not use boxes that do not allow line breaks to avoid conflicts with line breaking code.
 %
 % \begingroup
-% \let\originput\input
-% \renewcommand{\input}[1]{\fvset{xrightmargin=2em}\originput{#1}}
-% \begin{longexample}
-%   \renewcommand{\FancyVerbFormatLine}[1]{%
-%     \fcolorbox{DarkBlue}{LightGray}{#1}}
-%   \renewcommand{\FancyVerbFormatText}[1]{\textcolor{Green}{#1}}
+% \fvset{xrightmargin=2em}
+%\begin{longexample}
+%\renewcommand{\FancyVerbFormatLine}[1]{%
+%  \fcolorbox{DarkBlue}{LightGray}{#1}}
+%\renewcommand{\FancyVerbFormatText}[1]{\textcolor{Green}{#1}}
 %
-%   \begin{Verbatim}[breaklines]
-%   Some text that proceeds for a while and finally wraps onto another line
-%   Some more text
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{Verbatim}[breaklines]
+%Some text that proceeds for a while and finally wraps onto another line
+%Some more text
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 %
@@ -794,12 +803,12 @@
 %
 % While \cmd{VerbEnv} can be used by document authors, it is primarily intended for package creators.  For example, it is used in \pkg{minted} to implement \cmd{\mintinline}.  In that case, highlighted code is always generated within a \cmd{Verbatim} environment.  It is possible to process this as inline rather than block verbatim by \cmd{\let}ting \cmd{\Verbatim} to \cmd{\VerbEnv}.
 %
-% \begin{example}
-%   BEFORE\begin{VerbEnv}
-%   _inline_
-%   \end{VerbEnv}
-%   AFTER
-% \end{example}
+%\begin{example}
+%BEFORE\begin{VerbEnv}
+%_inline_
+%\end{VerbEnv}
+%AFTER
+%\end{example}
 %
 % \cmd{VerbEnv} is not implemented using the typical \fancyvrb\ environment implementation style, so it is not compatible with |\RecustomVerbatimEnvironment|.
 %
@@ -1043,11 +1052,11 @@
 %
 % Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details, and consider |breaknonspaceingroup| as a solution in simple cases.
 %
-% \begin{longexample}
-%   \begin{Verbatim}[breaklines, breakafter=d]
-%   some_string = 'SomeTextThatGoesOnAndOnForSoLongThatItCouldNeverFitOnOneLine'
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[breaklines, breakafter=d]
+%some_string = 'SomeTextThatGoesOnAndOnForSoLongThatItCouldNeverFitOnOneLine'
+%\end{Verbatim}
+%\end{longexample}
 %
 %
 % \item[breakafterinrun (boolean) (false)]
@@ -1067,11 +1076,11 @@
 %
 % Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details, and consider |breaknonspaceingroup| as a solution in simple cases.
 %
-% \begin{longexample}
-%   \begin{Verbatim}[breaklines, breakanywhere]
-%   some_string = 'SomeTextThatGoesOnAndOnForSoLongThatItCouldNeverFitOnOneLine'
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[breaklines, breakanywhere]
+%some_string = 'SomeTextThatGoesOnAndOnForSoLongThatItCouldNeverFitOnOneLine'
+%\end{Verbatim}
+%\end{longexample}
 %
 %
 % \item[breakanywheresymbolpre (string) (\string\,\string\footnotesize\string\ensuremath\{\_\string\rfloor\}, \,\footnotesize\ensuremath{_\rfloor})]
@@ -1104,11 +1113,11 @@
 %
 % Note that when |commandchars| or |codes| are used to include macros within verbatim content, breaks will not occur within mandatory macro arguments by default.  Depending on settings, macros that take optional arguments may not work unless the entire macro including arguments is wrapped in a group (curly braces |{}|, or other characters specified with |commandchars|).  See \cref{sec:breaklines:advanced} for details, and consider |breaknonspaceingroup| as a solution in simple cases.
 %
-% \begin{longexample}
-%   \begin{Verbatim}[breaklines, breakbefore=A]
-%   some_string = 'SomeTextThatGoesOnAndOnForSoLongThatItCouldNeverFitOnOneLine'
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[breaklines, breakbefore=A]
+%some_string = 'SomeTextThatGoesOnAndOnForSoLongThatItCouldNeverFitOnOneLine'
+%\end{Verbatim}
+%\end{longexample}
 %
 %
 % \item[breakbeforeinrun (boolean) (false)]
@@ -1143,13 +1152,13 @@
 %
 % By default, automatic breaks occur at spaces (even when |showspaces=true|).  Use |breakanywhere| to enable breaking anywhere; use |breakbefore| and |breakafter| for more fine-tuned breaking.
 %
-% \begin{example}
-%   ...text.
-%   \begin{Verbatim}[breaklines]
-%   def f(x):
-%       return 'Some text ' + str(x)
-%   \end{Verbatim}
-% \end{example}
+%\begin{example}
+%...text.
+%\begin{Verbatim}[breaklines]
+%def f(x):
+%    return 'Some text ' + str(x)
+%\end{Verbatim}
+%\end{example}
 %
 % To customize the indentation of broken lines, see |breakindent| and |breakautoindent|.  To customize the line continuation symbols, use |breaksymbolleft| and |breaksymbolright|.  To customize the separation between the continuation symbols and the text, use |breaksymbolsepleft| and |breaksymbolsepright|.  To customize the extra indentation that is supplied to make room for the break symbols, use |breaksymbolindentleft| and |breaksymbolindentright|.  Since only the left-hand symbol is used by default, it may also be modified using the alias options |breaksymbol|, |breaksymbolsep|, and |breaksymbolindent|.
 %
@@ -1157,29 +1166,29 @@
 %
 % \begingroup
 % \fvset{breaklines, xleftmargin=1em, xrightmargin=1em}
-% \begin{longexample}
-%   \begin{Verbatim}[breaklines,
-%                    breakautoindent=false,
-%                    breaksymbolleft=\raisebox{0.8ex}{
-%                      \small\reflectbox{\carriagereturn}},
-%                    breaksymbolindentleft=0pt,
-%                    breaksymbolsepleft=0pt,
-%                    breaksymbolright=\small\carriagereturn,
-%                    breaksymbolindentright=0pt,
-%                    breaksymbolsepright=0pt]
-%   def f(x):
-%       return 'Some text ' + str(x) + ' some more text ' + str(x) + ' even more text that goes on for a while'
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[breaklines,
+%                 breakautoindent=false,
+%                 breaksymbolleft=\raisebox{0.8ex}{
+%                   \small\reflectbox{\carriagereturn}},
+%                 breaksymbolindentleft=0pt,
+%                 breaksymbolsepleft=0pt,
+%                 breaksymbolright=\small\carriagereturn,
+%                 breaksymbolindentright=0pt,
+%                 breaksymbolsepright=0pt]
+%def f(x):
+%    return 'Some text ' + str(x) + ' some more text ' + str(x) + ' even more text that goes on for a while'
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 % Beginning in version 1.6, automatic line breaks work with |showspaces=true| by default.  Defining |breakbefore| or |breakafter| for |\space| is no longer necessary.  For example,
 %
-% \begin{longexample}
-%   \begin{Verbatim}[breaklines, showspaces]
-%   some_string = 'Some Text That Goes On And On For So Long That It Could Never Fit'
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[breaklines, showspaces]
+%some_string = 'Some Text That Goes On And On For So Long That It Could Never Fit'
+%\end{Verbatim}
+%\end{longexample}
 %
 %
 % \item[breaknonspaceingroup (boolean) (false)]
@@ -1335,11 +1344,11 @@
 % Then you would discover that line breaking does not occur:
 %
 % \newcommand{\mycmd}[1]{\_before:#1:after\_}
-% \begin{longexample}
-%   \begin{Verbatim}[commandchars=\\\{\}, breaklines, breakafter=a]
-%   \mycmd{1}\mycmd{2}\mycmd{3}\mycmd{4}\mycmd{5}
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[commandchars=\\\{\}, breaklines, breakafter=a]
+%\mycmd{1}\mycmd{2}\mycmd{3}\mycmd{4}\mycmd{5}
+%\end{Verbatim}
+%\end{longexample}
 %
 % Now redefine the macro:
 %\begin{verbatim}
@@ -1349,11 +1358,11 @@
 % This is the result:
 %
 % \renewcommand{\mycmd}[1]{\FancyVerbBreakStart\_before:#1:after\_\FancyVerbBreakStop}
-% \begin{longexample}
-%   \begin{Verbatim}[commandchars=\\\{\}, breaklines, breakafter=a]
-%   \mycmd{1}\mycmd{2}\mycmd{3}\mycmd{4}\mycmd{5}
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[commandchars=\\\{\}, breaklines, breakafter=a]
+%\mycmd{1}\mycmd{2}\mycmd{3}\mycmd{4}\mycmd{5}
+%\end{Verbatim}
+%\end{longexample}
 %
 % Instead of completely redefining macros, it may be more convenient to use |\let|.  For example,
 %\begin{verbatim}
@@ -1496,11 +1505,11 @@
 % \let\FancyVerbMathSpace\FV@Space
 % \makeatother
 % \renewcommand*{\familydefault}{\ttdefault}
-% \begin{longexample}
-%   \begin{Verbatim}[commandchars=\\\{\}, mathescape]
-%   Verbatim $\displaystyle\frac{1}{  x^2    +    y^2  }$ verbatim
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[commandchars=\\\{\}, mathescape]
+%Verbatim $\displaystyle\frac{1}{  x^2    +    y^2  }$ verbatim
+%\end{Verbatim}
+%\end{longexample}
 % \endgroup
 %
 % \fvextra\ patches this by redefining \fancyvrb's space character within math mode so that it behaves as expected:
@@ -1519,11 +1528,11 @@
 %
 % The result of these modifications is a math mode that very closely mimics the behavior of normal math mode outside of verbatim material.
 %
-% \begin{longexample}
-%   \begin{Verbatim}[commandchars=\\\{\}, mathescape]
-%   Verbatim $\displaystyle f'''(x) = \text{``Some quoted text---''}$
-%   \end{Verbatim}
-% \end{longexample}
+%\begin{longexample}
+%\begin{Verbatim}[commandchars=\\\{\}, mathescape]
+%Verbatim $\displaystyle f'''(x) = \text{``Some quoted text---''}$
+%\end{Verbatim}
+%\end{longexample}
 %
 %
 %
