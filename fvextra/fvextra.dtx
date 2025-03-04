@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/02/20 v1.12.0dev3 fvextra - extensions and patches for fancyvrb]
+    [2025/03/04 v1.12.0dev4 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -1027,6 +1027,11 @@
 % \DescribeMacro{\IterateBuffer\oarg{options}\marg{macro}}
 %
 % \noindent Iterate over buffer from beginning to end, invoking \meta{macro} on each line.  \meta{macro} must be a macro or sequence of macros that consumes a single brace-delimited argument, which is the current line in the buffer.  |\IterateBufferBreak| is available to break iteration immediately after the current \meta{macro} invocation completes.  During iteration, |\FancyVerbBufferLengthName|, |\FancyVerbBufferLineName|, and |\FancyVerbBufferIndex| can be used to access the name of the current buffer and index within it.
+%
+%
+% \subsubsection{\cmd{\WriteBuffer}}
+% \DescribeMacro{\WriteBuffer\oarg{options}}
+% This writes the current buffer to an external file, using the |writefilehandle| and |writer| options from |VerbatimWrite|.  It is the buffer equivalent of |VerbatimWrite|.
 %
 %
 %
@@ -4526,6 +4531,35 @@
     \let\FV@bufferlengthmacro@beforeiter\FV@Undefined
     \let\FancyVerbBufferLineName@beforeiter\FV@Undefined
   \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\WriteBuffer}
+% Buffer equivalent of |VerbatimWrite|.
+%    \begin{macrocode}
+\def\WriteBuffer{%
+  \FV@Command{}{WriteBuffer}}
+\def\FVC@WriteBuffer{%
+  \@bsphack
+  \begingroup
+  \setcounter{FancyVerbWriteLine}{0}%
+  \let\c@FancyVerbLine\c@FancyVerbWriteLine
+  \FV@UseKeyValues
+  \FV@DefineWhiteSpace
+  \def\FV@Space{\space}%
+  \FV@DefineTabOut
+  \gdef\FancyVerbBufferIndex{1}%
+  \loop\unless\ifnum\FancyVerbBufferIndex>\FV@bufferlengthmacro\relax
+    \stepcounter{FancyVerbWriteLine}%
+    \expandafter\let\expandafter\FV@WriteBuffer@line
+      \csname\FancyVerbBufferLineName\FancyVerbBufferIndex\endcsname
+    \expandafter\FV@Writer\expandafter{\FV@WriteBuffer@line}%
+    \xdef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}%
+  \repeat
+  \gdef\FancyVerbBufferIndex{0}%
+  \endgroup
+  \@esphack} 
 %    \end{macrocode}
 % \end{macro}
 %

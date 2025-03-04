@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/02/20 v1.12.0dev3 fvextra - extensions and patches for fancyvrb]
+    [2025/03/04 v1.12.0dev4 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{pdftexcmds}
@@ -1566,6 +1566,28 @@
     \let\FV@bufferlengthmacro@beforeiter\FV@Undefined
     \let\FancyVerbBufferLineName@beforeiter\FV@Undefined
   \fi}
+\def\WriteBuffer{%
+  \FV@Command{}{WriteBuffer}}
+\def\FVC@WriteBuffer{%
+  \@bsphack
+  \begingroup
+  \setcounter{FancyVerbWriteLine}{0}%
+  \let\c@FancyVerbLine\c@FancyVerbWriteLine
+  \FV@UseKeyValues
+  \FV@DefineWhiteSpace
+  \def\FV@Space{\space}%
+  \FV@DefineTabOut
+  \gdef\FancyVerbBufferIndex{1}%
+  \loop\unless\ifnum\FancyVerbBufferIndex>\FV@bufferlengthmacro\relax
+    \stepcounter{FancyVerbWriteLine}%
+    \expandafter\let\expandafter\FV@WriteBuffer@line
+      \csname\FancyVerbBufferLineName\FancyVerbBufferIndex\endcsname
+    \expandafter\FV@Writer\expandafter{\FV@WriteBuffer@line}%
+    \xdef\FancyVerbBufferIndex{\the\numexpr\FancyVerbBufferIndex+1\relax}%
+  \repeat
+  \gdef\FancyVerbBufferIndex{0}%
+  \endgroup
+  \@esphack}
 \def\FV@Command#1#2{%
   \FVExtra@ifstarVArg
    {\def\FV@KeyValues{#1,showspaces,showtabs}\FV@@Command{#2}}%

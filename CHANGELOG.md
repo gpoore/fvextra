@@ -9,6 +9,9 @@
 *  Added command `\BufferMdfivesum` that calculates the MD5 sum of the current
    buffer.
 
+*  Added command `\WriteBuffer` that writes a buffer to file.  This is the
+   buffer equivalent of `VerbatimWrite`.
+
 *  Added new options for `\InsertBuffer`:  `wrapperenvname`, `wrapperenvopt`,
    `wrapperenvarg`.  Improved implementation of `\InsertBuffer` to eliminate
    temp macros.
