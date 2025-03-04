@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.12.0 (dev)
+## v1.12.0 (2025/03/04)
 
 *  Added command `\IterateBuffer` for iterating over buffers and applying a
    macro to each line.
