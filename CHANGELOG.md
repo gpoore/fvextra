@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v1.13.0 (dev)
+
+*  Fixed a bug that caused some Pygments output to vanish when using
+   `\VerbatimPygments` with `breaklines=false` but `breakanywhere=true`
+   (gpoore/minted#442).
+
+
+
 ## v1.12.0 (2025/03/04)
 
 *  Added command `\IterateBuffer` for iterating over buffers and applying a

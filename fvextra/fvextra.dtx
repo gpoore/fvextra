@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/03/04 v1.12.0 fvextra - extensions and patches for fancyvrb]
+    [2025/03/27 v1.13.0dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -1434,7 +1434,7 @@
 %
 % To enable full Pygments support, use this macro before \verb|\begin{Verbatim}|, etc.  This macro must be used within |\begingroup...\endgroup| to prevent settings from escaping into the rest of the document.  It may be used safely at the beginning of a |\newenvironment| definition.  When used with |\newcommand|, though, the |\begingroup...\endgroup| will need to be inserted explicitly.
 %
-% \meta{literal\_macro} is the Pygments macro that literally appears in Pygments output; it corresponds to the Pygments |commandprefix|.  For \pkg{minted} and \pkg{pythontex}, this is |\PYG|.  \meta{actual\_macro} is the Pygments macro that should actually be used.  For \pkg{minted} and \pkg{pythontex}, this is |\PYG|\meta{style}.  In the \pkg{minted} and \pkg{pythontex} approach, code is only highlighted once (|\PYG|), and then the style is changed by redefining the macro that literally appears (|\PYG|) to use the appropriate style macro (|\PYG|\meta{style}).
+% \meta{literal\_macro} is the Pygments macro that literally appears in Pygments output; it corresponds to the Pygments |commandprefix|.  For \pkg{minted} and \pkg{pythontex}, this is |\PYG|.  \meta{actual\_macro} is the Pygments macro that should actually be used.  For \pkg{minted} this is |\PYG|; for \pkg{pythontex} this is |\PYG|\meta{style}.  In the \pkg{minted} and \pkg{pythontex} approach, code is only highlighted once (|\PYG|), and then the style is changed by redefining the macro that literally appears to use the appropriate style macro.
 %
 % |\VerbatimPygments| takes the two Pygments macros and redefines \meta{literal\_macro} so that it will invoke \meta{actual\_macro} while fully supporting line breaks, |breakbytoken|, and |breakbytokenanywhere|.  No further modification of either \meta{literal\_macro} or \meta{actual\_macro} is possible after |\VerbatimPygments| is used.
 %
@@ -7584,7 +7584,7 @@
 %
 %
 % \begin{macro}{\VerbatimPygments}
-% This is the command that activates Pygments features.  It must be invoked before \verb|\begin{Verbatim}|, etc., but inside a |\begingroup...\endgroup| so that its effects do not escape into the rest of the document (for example, within the beginning of an environment.  It takes two arguments:  The Pygments macro that literally appears (|\PYG| for \pkg{minted} and \pkg{pythontex}), and the Pygments macro that should actually be used (|\PYG|\meta{style\_name} for \pkg{minted} and \pkg{pythontex}).  The two are distinguished because it can be convenient to highlight everything using the same literal macro name, and then |\let| it to appropriate values to change styles, rather than redoing all highlighting to change styles.  It modifies |\FV@PygmentsHook|, which is at the beginning of |\FV@FormattingPrep@PreHook|, to make the actual changes at the appropriate time.
+% This is the command that activates Pygments features.  It must be invoked before \verb|\begin{Verbatim}|, etc., but inside a |\begingroup...\endgroup| so that its effects do not escape into the rest of the document (for example, within the beginning of an environment).  It takes two arguments:  The Pygments macro that literally appears (|\PYG| for \pkg{minted} and \pkg{pythontex}), and the Pygments macro that should actually be used (|\PYG| for \pkg{minted}, |\PYG|\meta{style\_name} for \pkg{pythontex}).  The two are distinguished because it can be convenient to highlight everything using the same literal macro name, and then |\let| it to appropriate values to change styles, rather than redoing all highlighting to change styles.  It modifies |\FV@PygmentsHook|, which is at the beginning of |\FV@FormattingPrep@PreHook|, to make the actual changes at the appropriate time.
 %    \begin{macrocode}
 \def\VerbatimPygments#1#2{%
   \def\FV@PygmentsHook{\FV@VerbatimPygments{#1}{#2}}}
@@ -7606,6 +7606,9 @@
 % |\FV@PYG@Redefed| is |\let| to the Pygments macro that appears literally (after redefinition), so that it can be detected elsewhere to allow for special processing, such as in |breakautoindent|.
 %    \begin{macrocode}
 \def\FV@VerbatimPygments#1#2{%
+  \let\FV@PYG@Redefed=#1\relax
+  \ifbool{FV@breaklines}{\FV@VerbatimPygments@i{#1}{#2}}{}}
+\def\FV@VerbatimPygments@i#1#2{%
   \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
   \def\FV@BreakBeforePrep@PygmentsHook{%
     \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}%
@@ -7628,7 +7631,6 @@
         \leavevmode\hbox{\FV@PYG{##1}{##2}}}}}%
    {\def#1##1##2{%
      \FV@PYG{##1}{\FancyVerbBreakStart##2\FancyVerbBreakStop}}}%
-  \let\FV@PYG@Redefed=#1\relax
 }
 \let\FV@BreakByTokenAnywhereBreak\relax
 \def\FV@DetokMacro@StripSpace#1 {#1}
