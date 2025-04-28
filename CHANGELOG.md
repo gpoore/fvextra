@@ -7,6 +7,25 @@
    `\VerbatimPygments` with `breaklines=false` but `breakanywhere=true`
    (gpoore/minted#442).
 
+*  Added `\FVExtraSaveCodes` and `\FVExtraUseCodes`.  These save the catcodes
+   of all characters in `\FVExtraDoSpecials`, and then restore them.
+
+*  Replaced `\FV@SetupMathLigs` with `\FV@SetupMathActive`.  This makes all
+   characters in `\FVExtraDoSpecials` behave more normally within math,
+   instead of only patching `` ` ``, `<`, `>`, `,`, `'`, and `-`.
+
+   `\active` versions of characters are now defined in a way that avoids
+   infinite loops for characters with a `\mathcode` of `"8000`.  This fixes
+   compatibility with packages like `semantic` (gpoore/minted#422).
+
+   `\FV@SetupMathActive` makes `\FV@SetupMathSpace` and `\FancyVerbMathSpace`
+   redundant, so these were removed.
+
+*  Added `\FV@UseKeyValues@Hook`.  This is at the very end of
+   `\FV@UseKeyValues`.  It is useful for modifications like
+   `\FV@SetupMathActive` that need to occur very early within a command or
+   environment.
+
 
 
 ## v1.12.0 (2025/03/04)

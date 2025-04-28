@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/03/27 v1.13.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/04/28 v1.13.0dev2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{pdftexcmds}
@@ -49,9 +49,276 @@
 \begingroup
 \def\do#1{%
   \expandafter\global\expandafter
-  \let\csname FV@Special:\expandafter\@gobble\detokenize{#1}\endcsname\relax}
+  \let\csname FV@Char@Special:\expandafter\@gobble\detokenize{#1}\endcsname\relax}
 \FVExtraDoSpecials
 \endgroup
+\begingroup
+\catcode`\!=0
+\catcode`\<=1
+\catcode`\>=2
+\catcode`\&=14!relax&
+!catcode`!\=12!relax&
+!expandafter!gdef!csname!detokenize<FV@Char@CatTwelve:\>!endcsname<\>&
+!expandafter!xdef!csname!detokenize<FV@Char@CatDetok:\>!endcsname<!detokenize<\>>&
+!catcode`!\=!active&
+!expandafter!gdef!csname!detokenize<FV@Char@CatActive:\>!endcsname<\>&
+!catcode`!{=12!relax&
+!expandafter!gdef!csname!detokenize<FV@Char@CatTwelve:{>!endcsname<{>&
+!expandafter!xdef!csname!detokenize<FV@Char@CatDetok:{>!endcsname<!detokenize<{>>&
+!catcode`!{=!active&
+!expandafter!gdef!csname!detokenize<FV@Char@CatActive:{>!endcsname<{>&
+!catcode`!}=12!relax&
+!expandafter!gdef!csname!detokenize<FV@Char@CatTwelve:}>!endcsname<}>&
+!expandafter!xdef!csname!detokenize<FV@Char@CatDetok:}>!endcsname<!detokenize<}>>&
+!catcode`!}=!active&
+!expandafter!gdef!csname!detokenize<FV@Char@CatActive:}>!endcsname<}>&
+!catcode`! =12!relax&
+!expandafter!gdef!csname!detokenize<FV@Char@CatTwelve: >!endcsname< >&
+!expandafter!xdef!csname!detokenize<FV@Char@CatDetok: >!endcsname<!detokenize< >>&
+!catcode`! =!active&
+!expandafter!gdef!csname!detokenize<FV@Char@CatActive: >!endcsname< >&
+!catcode`!%=12!relax&
+!expandafter!gdef!csname!detokenize<FV@Char@CatTwelve:%>!endcsname<%>&
+!expandafter!xdef!csname!detokenize<FV@Char@CatDetok:%>!endcsname<!detokenize<%>>&
+!catcode`!%=!active&
+!expandafter!gdef!csname!detokenize<FV@Char@CatActive:%>!endcsname<%>&
+!endgroup
+\begingroup
+\catcode`\!=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:!}\endcsname{!}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:!}\endcsname{\detokenize{!}}
+\catcode`\!=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:!}\endcsname{!}
+\endgroup
+\begingroup
+\catcode`\"=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:"}\endcsname{"}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:"}\endcsname{\detokenize{"}}
+\catcode`\"=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:"}\endcsname{"}
+\endgroup
+\begingroup
+\catcode`\#=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:#}\endcsname{#}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:#}\endcsname{\detokenize{#}}
+\catcode`\#=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:#}\endcsname{#}
+\endgroup
+\begingroup
+\catcode`\$=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:$}\endcsname{$}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:$}\endcsname{\detokenize{$}}
+\catcode`\$=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:$}\endcsname{$}
+\endgroup
+\begingroup
+\catcode`\&=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:&}\endcsname{&}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:&}\endcsname{\detokenize{&}}
+\catcode`\&=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:&}\endcsname{&}
+\endgroup
+\begingroup
+\catcode`\'=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:'}\endcsname{'}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:'}\endcsname{\detokenize{'}}
+\catcode`\'=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:'}\endcsname{'}
+\endgroup
+\begingroup
+\catcode`\(=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:(}\endcsname{(}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:(}\endcsname{\detokenize{(}}
+\catcode`\(=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:(}\endcsname{(}
+\endgroup
+\begingroup
+\catcode`\)=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:)}\endcsname{)}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:)}\endcsname{\detokenize{)}}
+\catcode`\)=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:)}\endcsname{)}
+\endgroup
+\begingroup
+\catcode`\*=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:*}\endcsname{*}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:*}\endcsname{\detokenize{*}}
+\catcode`\*=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:*}\endcsname{*}
+\endgroup
+\begingroup
+\catcode`\+=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:+}\endcsname{+}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:+}\endcsname{\detokenize{+}}
+\catcode`\+=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:+}\endcsname{+}
+\endgroup
+\begingroup
+\catcode`\,=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:,}\endcsname{,}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:,}\endcsname{\detokenize{,}}
+\catcode`\,=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:,}\endcsname{,}
+\endgroup
+\begingroup
+\catcode`\-=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:-}\endcsname{-}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:-}\endcsname{\detokenize{-}}
+\catcode`\-=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:-}\endcsname{-}
+\endgroup
+\begingroup
+\catcode`\.=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:.}\endcsname{.}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:.}\endcsname{\detokenize{.}}
+\catcode`\.=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:.}\endcsname{.}
+\endgroup
+\begingroup
+\catcode`\/=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:/}\endcsname{/}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:/}\endcsname{\detokenize{/}}
+\catcode`\/=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:/}\endcsname{/}
+\endgroup
+\begingroup
+\catcode`\:=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve::}\endcsname{:}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok::}\endcsname{\detokenize{:}}
+\catcode`\:=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive::}\endcsname{:}
+\endgroup
+\begingroup
+\catcode`\;=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:;}\endcsname{;}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:;}\endcsname{\detokenize{;}}
+\catcode`\;=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:;}\endcsname{;}
+\endgroup
+\begingroup
+\catcode`\<=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:<}\endcsname{<}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:<}\endcsname{\detokenize{<}}
+\catcode`\<=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:<}\endcsname{<}
+\endgroup
+\begingroup
+\catcode`\==12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:=}\endcsname{=}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:=}\endcsname{\detokenize{=}}
+\catcode`\==\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:=}\endcsname{=}
+\endgroup
+\begingroup
+\catcode`\>=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:>}\endcsname{>}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:>}\endcsname{\detokenize{>}}
+\catcode`\>=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:>}\endcsname{>}
+\endgroup
+\begingroup
+\catcode`\?=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:?}\endcsname{?}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:?}\endcsname{\detokenize{?}}
+\catcode`\?=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:?}\endcsname{?}
+\endgroup
+\begingroup
+\catcode`\@=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:@}\endcsname{@}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:@}\endcsname{\detokenize{@}}
+\catcode`\@=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:@}\endcsname{@}
+\endgroup
+\begingroup
+\catcode`\[=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:[}\endcsname{[}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:[}\endcsname{\detokenize{[}}
+\catcode`\[=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:[}\endcsname{[}
+\endgroup
+\begingroup
+\catcode`\]=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:]}\endcsname{]}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:]}\endcsname{\detokenize{]}}
+\catcode`\]=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:]}\endcsname{]}
+\endgroup
+\begingroup
+\catcode`\^=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:^}\endcsname{^}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:^}\endcsname{\detokenize{^}}
+\catcode`\^=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:^}\endcsname{^}
+\endgroup
+\begingroup
+\catcode`\_=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:_}\endcsname{_}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:_}\endcsname{\detokenize{_}}
+\catcode`\_=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:_}\endcsname{_}
+\endgroup
+\begingroup
+\catcode`\`=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:`}\endcsname{`}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:`}\endcsname{\detokenize{`}}
+\catcode`\`=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:`}\endcsname{`}
+\endgroup
+\begingroup
+\catcode`\|=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:|}\endcsname{|}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:|}\endcsname{\detokenize{|}}
+\catcode`\|=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:|}\endcsname{|}
+\endgroup
+\begingroup
+\catcode`\~=12
+\expandafter\gdef\csname\detokenize{FV@Char@CatTwelve:~}\endcsname{~}
+\expandafter\xdef\csname\detokenize{FV@Char@CatDetok:~}\endcsname{\detokenize{~}}
+\catcode`\~=\active
+\expandafter\gdef\csname\detokenize{FV@Char@CatActive:~}\endcsname{~}
+\endgroup
+\def\FVExtraSaveCodes#1{%
+  \ifcsname do\endcsname
+    \let\FV@dotmp\do
+  \fi
+  \def\do##1{%
+    \expandafter
+    \chardef\csname FV@SVCode:\expandafter\@gobble\detokenize{##1}@#1\endcsname=%
+      \catcode`##1\relax}%
+  \FVExtraDoSpecials
+  \expandafter\let\csname FV@SVCodes@#1\endcsname\relax
+  \ifcsname FV@dotmp\endcsname
+    \let\do\FV@dotmp
+    \let\FV@dotmp\FV@Undefined
+  \else
+    \let\do\FV@Undefined
+  \fi}
+\def\FVExtraUseCodes#1{%
+  \ifcsname FV@SVCodes@#1\endcsname
+    \expandafter\FVExtraUseCodes@i
+  \else
+    \PackageError{fvextra}%
+     {Unknown name "#1" for saved catcodes}%
+     {Check name of saved catcodes}%
+    \expandafter\@gobble
+  \fi
+  {#1}}
+\def\FVExtraUseCodes@i#1{%
+  \ifcsname do\endcsname
+    \let\FV@dotmp\do
+  \fi
+  \def\do##1{%
+    \catcode`##1=%
+      \csname FV@SVCode:\expandafter\@gobble\detokenize{##1}@#1\endcsname\relax}%
+  \FVExtraDoSpecials
+  \ifcsname FV@dotmp\endcsname
+    \let\do\FV@dotmp
+    \let\FV@dotmp\FV@Undefined
+  \else
+    \let\do\FV@Undefined
+  \fi}
 \begingroup
 \catcode`\<=11
 \catcode`\>=11
@@ -732,7 +999,7 @@
     \expandafter\@secondoftwo
   \fi
   {#1\FV@EscVDetok@ScanToken}%
-  {\ifcsname FV@Special:\detokenize{#2}\endcsname#2\else\noexpand\FV@<InvalidEscape>\fi
+  {\ifcsname FV@Char@Special:\detokenize{#2}\endcsname#2\else\noexpand\FV@<InvalidEscape>\fi
    \FV@EscVDetok@ScanToken}}
 \gdef\FV@EscVDetok@ScanTokenWithSpace#1{%
   \if\relax\detokenize{#1}\relax
@@ -959,6 +1226,9 @@
 \gdef\FV@RetokenizeVArg@i#1#2{%
   #2{#1}}
 \endgroup
+\let\FV@UseKeyValues@Hook\@empty
+\expandafter\def\expandafter\FV@UseKeyValues\expandafter{%
+  \FV@UseKeyValues\FV@UseKeyValues@Hook}
 \let\FV@FormattingPrep@PreHook\@empty
 \let\FV@FormattingPrep@PostHook\@empty
 \expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
@@ -1707,10 +1977,6 @@
   \ifbool{FV@ObeyTabs@Whitespace@Tab}%
    {\setbox\FV@TabBox@Group=\hbox{#1}\box\FV@TabBox@Group}%
    {#1}}
-\def\FancyVerbMathSpace{ }
-\def\FV@SetupMathSpace{%
-  \everymath\expandafter{\the\everymath\let\FV@Space\FancyVerbMathSpace}}
-\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathSpace}
 \begingroup
 \catcode`\'=\active
 \catcode`\^=7
@@ -1728,20 +1994,47 @@
 \def\FV@SetupMathFont{%
   \everymath\expandafter{\the\everymath\fontfamily{\familydefault}\selectfont}}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathFont}
-\def\FV@SetupMathLigs{%
+\def\FV@SetupMathActive{%
+  \def\do##1{%
+    \ifnum\catcode`##1=\active
+      \expandafter\expandafter\expandafter\let\expandafter\expandafter\expandafter\FV@Tmp
+        \csname FV@Char@CatActive:\expandafter\@gobble\detokenize{##1}\endcsname
+      \expandafter\let
+        \csname FV@Char@Math:\expandafter\@gobble\detokenize{##1}\endcsname\FV@Tmp
+    \else
+      \ifnum\mathcode`##1="8000
+        \expandafter\expandafter\expandafter\let\expandafter\expandafter\expandafter\FV@Tmp
+          \csname FV@Char@CatActive:\expandafter\@gobble\detokenize{##1}\endcsname
+        \expandafter\let
+          \csname FV@Char@MathActive:\expandafter\@gobble\detokenize{##1}\endcsname\FV@Tmp
+        \expandafter
+        \def\csname FV@Char@Math:\expandafter\@gobble\detokenize{##1}\endcsname{%
+          \expandafter\ifmmode\expandafter\expandafter
+            \csname FV@Char@MathActive:\expandafter\@gobble\detokenize{##1}\endcsname
+          \else
+            \expandafter\expandafter
+            \csname FV@Char@CatDetok:\expandafter\@gobble\detokenize{##1}\endcsname
+          \fi}%
+      \else
+        \expandafter\let\expandafter\FV@Tmp
+          \csname FV@Char@CatDetok:\expandafter\@gobble\detokenize{##1}\endcsname
+        \expandafter\let
+          \csname FV@Char@Math:\expandafter\@gobble\detokenize{##1}\endcsname\FV@Tmp
+      \fi
+    \fi}%
+  \FVExtraDoSpecials
   \everymath\expandafter{%
     \the\everymath
-    \let\pr@m@s\FV@pr@m@s
-    \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{%
-      \ifmmode\expandafter\active@math@prime\else'\fi}%
-    \begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
-    \begingroup\lccode`\~=`\<\lowercase{\endgroup\def~}{<}%
-    \begingroup\lccode`\~=`\>\lowercase{\endgroup\def~}{>}%
-    \begingroup\lccode`\~=`\,\lowercase{\endgroup\def~}{,}%
-    \begingroup\lccode`\~=`\-\lowercase{\endgroup\def~}{-}%
-  }%
-}
-\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathLigs}
+    \FV@ApplyMathActive}}
+\def\FV@ApplyMathActive{%
+  \let\pr@m@s\FV@pr@m@s
+  \def\do##1{%
+    \expandafter\let\expandafter\FV@Tmp
+      \csname FV@Char@CatActive:\expandafter\@gobble\detokenize{##1}\endcsname
+    \expandafter\expandafter\expandafter\let\expandafter\FV@Tmp
+      \csname FV@Char@Math:\expandafter\@gobble\detokenize{##1}\endcsname}%
+  \FVExtraDoSpecials}
+\FV@AddToHook\FV@UseKeyValues@Hook{\FV@SetupMathActive}
 \def\FV@BeginListFrame@Lines{%
   \begingroup
   \lineskip\z@skip
