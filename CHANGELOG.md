@@ -26,6 +26,9 @@
    `\FV@SetupMathActive` that need to occur very early within a command or
    environment.
 
+*  Improved compatibility with the LaTeX Tagged PDF project by modifying
+   patch for `\FV@List` (#29).
+
 
 
 ## v1.12.0 (2025/03/04)

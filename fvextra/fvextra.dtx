@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/04/28 v1.13.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2025/04/29 v1.13.0dev3 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -5781,7 +5781,7 @@
 %
 % Define an option |backgroundcolor| that provides a basic implementation of a background color behind commands and environments.  \pkg{tcolorbox} or a similar package should be used for more sophisticated background colors.
 %
-% The patch to |\FV@List| prevents narrow horizontal gaps in the background color between lines of text under some circumstances.
+% The patch to |\FV@List| prevents narrow horizontal gaps in the background color between lines of text under some circumstances.  The |\ExplSyntax*| is for compatibility with patches from the \LaTeX\ Tagged PDF project.
 % \begin{macro}{backgroundcolor,bgcolor,\FancyVerbBackgroundColor}
 %    \begin{macrocode}
 \define@key{FV}{backgroundcolor}{%
@@ -5794,17 +5794,19 @@
 \fvset{backgroundcolor=none}
 \define@key{FV}{bgcolor}{%
   \fvset{backgroundcolor=#1}}
+\ExplSyntaxOn
 \patchcmd{\FV@List}%
- {\FV@BeginListFrame}%
- {\ifx\FancyVerbBackgroundColor\relax
+ {\FV@ObeyTabsInit}%
+ {\FV@ObeyTabsInit
+  \ifx\FancyVerbBackgroundColor\relax
   \else
     \lineskip\z@
-  \fi
-  \FV@BeginListFrame}%
+  \fi}%
  {}%
  {\PackageError{fvextra}%
-   {Failed to patch \string\FV@List\ for backgroundcolor}%
-   {Failed to patch \string\FV@List\ for backgroundcolor}}
+   {Failed~to~patch~\detokenize{\FV@List}for~backgroundcolor}%
+   {Failed~to~patch~\detokenize{\FV@List}for~backgroundcolor}}
+\ExplSyntaxOff
 %    \end{macrocode}
 % \end{macro}
 %

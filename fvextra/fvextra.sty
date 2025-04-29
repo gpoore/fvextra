@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/04/28 v1.13.0dev2 fvextra - extensions and patches for fancyvrb]
+    [2025/04/29 v1.13.0dev3 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{pdftexcmds}
@@ -2363,17 +2363,19 @@
 \fvset{backgroundcolor=none}
 \define@key{FV}{bgcolor}{%
   \fvset{backgroundcolor=#1}}
+\ExplSyntaxOn
 \patchcmd{\FV@List}%
- {\FV@BeginListFrame}%
- {\ifx\FancyVerbBackgroundColor\relax
+ {\FV@ObeyTabsInit}%
+ {\FV@ObeyTabsInit
+  \ifx\FancyVerbBackgroundColor\relax
   \else
     \lineskip\z@
-  \fi
-  \FV@BeginListFrame}%
+  \fi}%
  {}%
  {\PackageError{fvextra}%
-   {Failed to patch \string\FV@List\ for backgroundcolor}%
-   {Failed to patch \string\FV@List\ for backgroundcolor}}
+   {Failed~to~patch~\detokenize{\FV@List}for~backgroundcolor}%
+   {Failed~to~patch~\detokenize{\FV@List}for~backgroundcolor}}
+\ExplSyntaxOff
 \define@key{FV}{backgroundcolorboxoverlap}{%
   \ifdim#1=0pt\relax
     \let\FV@backgroundcolorboxoverlap\relax
