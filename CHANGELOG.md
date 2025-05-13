@@ -3,12 +3,25 @@
 
 ## v1.13.0 (dev)
 
+*  Enhanced `\VerbatimPygments` support for Pygments options `escapeinside`
+   and `texcomments`.  Pygments escape tokens are now always retokenized using
+   the catcodes in place before the verbatim context.  Pygments comment tokens
+   are also retokenized if the new option `texcomments=true`.  This makes
+   these tokens behave more like regular LaTeX; previously, `\active`
+   characters could produce unexpected or undesired results
+   (gpoore/minted#303, gpoore/minted#312, gpoore/minted#422).
+
 *  Fixed a bug that caused some Pygments output to vanish when using
    `\VerbatimPygments` with `breaklines=false` but `breakanywhere=true`
    (gpoore/minted#442).
 
+*  `\VerbatimPygments` now patches Pygments macros to work correctly when the
+   plus sign `+` is `\active` or otherwise has a modified catcode.
+
 *  Added `\FVExtraSaveCodes` and `\FVExtraUseCodes`.  These save the catcodes
-   of all characters in `\FVExtraDoSpecials`, and then restore them.
+   of all characters in `\FVExtraDoSpecials`, and then restore them.  All
+   commands and environments now automatically save the catcodes in place when
+   they begin.  These can be restored via `\FancyVerbRestoreCodes`.
 
 *  Replaced `\FV@SetupMathLigs` with `\FV@SetupMathActive`.  This makes all
    characters in `\FVExtraDoSpecials` behave more normally within math,
@@ -28,6 +41,9 @@
 
 *  Improved compatibility with the LaTeX Tagged PDF project by modifying
    patch for `\FV@List` (#29).
+
+*  All hooks now have a default value of empty, instead of some being `\let`
+   to `\relax`.  This fixes compatibility with `\FV@AddToHook`.
 
 
 
