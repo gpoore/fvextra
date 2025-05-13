@@ -33,11 +33,12 @@ print(textwrap.dedent(r'''
 for char in command_chars + special_handling_chars:
     print(textwrap.dedent(
         rf'''
+        !edef!FVCharNum<!number`!{char}>&
         !catcode`!{char}=12!relax&
-        !expandafter!gdef!csname!detokenize<FV@Char@CatTwelve:{char}>!endcsname<{char}>&
-        !expandafter!xdef!csname!detokenize<FV@Char@CatDetok:{char}>!endcsname<!detokenize<{char}>>&
+        !expandafter!gdef!csname!detokenize<FV@Char@CatTwelve:>!FVCharNum!endcsname<{char}>&
+        !expandafter!xdef!csname!detokenize<FV@Char@CatDetok:>!FVCharNum!endcsname<!detokenize<{char}>>&
         !catcode`!{char}=!active&
-        !expandafter!gdef!csname!detokenize<FV@Char@CatActive:{char}>!endcsname<{char}>&
+        !expandafter!gdef!csname!detokenize<FV@Char@CatActive:>!FVCharNum!endcsname<{char}>&
         '''.split('\n', 1)[1]), end='')
 
 print(r'!endgroup')
@@ -49,10 +50,11 @@ for n in range(ord(' '), ord('~') + 1):
     print(textwrap.dedent(
         rf'''
         \begingroup
+        \edef\FVCharNum{{\number`\{char}}}
         \catcode`\{char}=12
-        \expandafter\gdef\csname\detokenize{{FV@Char@CatTwelve:{char}}}\endcsname{{{char}}}
-        \expandafter\xdef\csname\detokenize{{FV@Char@CatDetok:{char}}}\endcsname{{\detokenize{{{char}}}}}
+        \expandafter\gdef\csname\detokenize{{FV@Char@CatTwelve:}}\FVCharNum\endcsname{{{char}}}
+        \expandafter\xdef\csname\detokenize{{FV@Char@CatDetok:}}\FVCharNum\endcsname{{\detokenize{{{char}}}}}
         \catcode`\{char}=\active
-        \expandafter\gdef\csname\detokenize{{FV@Char@CatActive:{char}}}\endcsname{{{char}}}
+        \expandafter\gdef\csname\detokenize{{FV@Char@CatActive:}}\FVCharNum\endcsname{{{char}}}
         \endgroup
         '''.split('\n', 1)[1]), end='')
