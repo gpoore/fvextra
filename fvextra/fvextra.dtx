@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/05/13 v1.13.0dev4 fvextra - extensions and patches for fancyvrb]
+    [2025/05/14 v1.13.0 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -1439,6 +1439,8 @@
 % |\VerbatimPygments| takes the two Pygments macros and redefines \meta{literal\_macro} so that it will invoke \meta{actual\_macro} while fully supporting line breaks, |breakbytoken|, and |breakbytokenanywhere|.  No further modification of either \meta{literal\_macro} or \meta{actual\_macro} is possible after |\VerbatimPygments| is used.
 %
 % In packages that do not make a distinction between \meta{literal\_macro} and \meta{actual\_macro}, simply use |\VerbatimPygments| with two identical arguments; |\VerbatimPygments| is defined to handle this case.
+%
+% |\VerbatimPygments| also improves other features of Pygments token macros, including improving support for Pygments options |escapeinside| and |texcomments|.  See the implementation for details.
 %
 %
 %

@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.13.0 (dev)
+## v1.13.0 (2025/05/14)
 
 *  Enhanced `\VerbatimPygments` support for Pygments options `escapeinside`
    and `texcomments`.  Pygments escape tokens are now always retokenized using
