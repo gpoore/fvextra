@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/05/14 v1.13.0 fvextra - extensions and patches for fancyvrb]
+    [2025/05/24 v1.13.1dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -5248,6 +5248,13 @@
 %
 % Also switch to |\FV@pr@m@s| so that math prime |'| behaves as expected.
 %    \begin{macrocode}
+\begingroup
+\ifx\XeTeXrevision\relax
+  \global\let\FV@mathcode\mathcode
+\else
+  \global\let\FV@mathcode\Umathcodenum
+\fi
+\endgroup
 \def\FV@SetupMathActive{%
   \def\do##1{%
     \ifnum\catcode`##1=\active
@@ -5256,7 +5263,7 @@
       \expandafter\let
         \csname FV@Char@Math:\number`##1\endcsname\FV@Tmp
     \else
-      \ifnum\mathcode`##1="8000
+      \ifnum\FV@mathcode`##1="8000
         \expandafter\expandafter\expandafter\let\expandafter\expandafter\expandafter\FV@Tmp
           \csname FV@Char@CatActive:\number`##1\endcsname    
         \expandafter\let

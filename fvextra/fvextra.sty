@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/05/14 v1.13.0 fvextra - extensions and patches for fancyvrb]
+    [2025/05/24 v1.13.1dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{pdftexcmds}
@@ -2059,6 +2059,13 @@
 \def\FV@SetupMathFont{%
   \everymath\expandafter{\the\everymath\fontfamily{\familydefault}\selectfont}}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathFont}
+\begingroup
+\ifx\XeTeXrevision\relax
+  \global\let\FV@mathcode\mathcode
+\else
+  \global\let\FV@mathcode\Umathcodenum
+\fi
+\endgroup
 \def\FV@SetupMathActive{%
   \def\do##1{%
     \ifnum\catcode`##1=\active
@@ -2067,7 +2074,7 @@
       \expandafter\let
         \csname FV@Char@Math:\number`##1\endcsname\FV@Tmp
     \else
-      \ifnum\mathcode`##1="8000
+      \ifnum\FV@mathcode`##1="8000
         \expandafter\expandafter\expandafter\let\expandafter\expandafter\expandafter\FV@Tmp
           \csname FV@Char@CatActive:\number`##1\endcsname
         \expandafter\let

@@ -1,6 +1,12 @@
 # Changelog
 
 
+## v1.13.1 (dev)
+
+*  Replaced `\mathcode` with `\Umathcodenum` under XeTeX (#31).
+
+
+
 ## v1.13.0 (2025/05/14)
 
 *  Enhanced `\VerbatimPygments` support for Pygments options `escapeinside`
