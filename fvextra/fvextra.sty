@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/05/24 v1.13.1dev1 fvextra - extensions and patches for fancyvrb]
+    [2025/05/25 v1.13.1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{pdftexcmds}
@@ -2060,7 +2060,7 @@
   \everymath\expandafter{\the\everymath\fontfamily{\familydefault}\selectfont}}
 \g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathFont}
 \begingroup
-\ifx\XeTeXrevision\relax
+\expandafter\ifx\csname XeTeXrevision\endcsname\relax
   \global\let\FV@mathcode\mathcode
 \else
   \global\let\FV@mathcode\Umathcodenum

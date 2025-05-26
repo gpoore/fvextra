@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.13.1 (dev)
+## v1.13.1 (2025/05/25)
 
 *  Replaced `\mathcode` with `\Umathcodenum` under XeTeX (#31).
 
