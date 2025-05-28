@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2025/05/25 v1.13.1 fvextra - extensions and patches for fancyvrb]
+    [2025/05/28 v1.13.2dev1 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -5243,16 +5243,24 @@
 % \item For a character in |\FVExtraDoSpecials| that is active before the verbatim context begins, save its definition.  Then restore this within math via |\everymath|.
 % \item For a character in |\FVExtraDoSpecials| that is not active, but does have a |\mathcode| of |"8000|, save the active definition.  Then via |\everymath| define the active version of this character to give the saved active definition within math mode and a detokenized character otherwise.
 % \item For a character in |\FVExtraDoSpecials| that is not active and does not have |a \mathcode| of |"8000|, use |\everymath| to define the active version of the character to give a detokenized character.
-%
 % \end{itemize}
+%
+% Detecting a |\mathcode| of |"8000| must be done in an engine-dependent manner.  Partial reference:  \url{https://tex.stackexchange.com/a/520122/10742}.
 %
 % Also switch to |\FV@pr@m@s| so that math prime |'| behaves as expected.
 %    \begin{macrocode}
 \begingroup
-\expandafter\ifx\csname XeTeXrevision\endcsname\relax
-  \global\let\FV@mathcode\mathcode
+\expandafter\ifx\csname directlua\endcsname\relax
+  \expandafter\ifx\csname XeTeXrevision\endcsname\relax
+    \global\let\FV@mathcodenum\mathcode
+    \gdef\FV@mathcodenumactive{32768}%
+  \else
+    \global\let\FV@mathcodenum\Umathcodenum
+    \gdef\FV@mathcodenumactive{2097151}%
+  \fi
 \else
-  \global\let\FV@mathcode\Umathcodenum
+  \global\let\FV@mathcodenum\Umathcodenum
+  \gdef\FV@mathcodenumactive{16777216}%
 \fi
 \endgroup
 \def\FV@SetupMathActive{%
@@ -5263,7 +5271,7 @@
       \expandafter\let
         \csname FV@Char@Math:\number`##1\endcsname\FV@Tmp
     \else
-      \ifnum\FV@mathcode`##1="8000
+      \ifnum\FV@mathcodenum`##1=\FV@mathcodenumactive\relax
         \expandafter\expandafter\expandafter\let\expandafter\expandafter\expandafter\FV@Tmp
           \csname FV@Char@CatActive:\number`##1\endcsname    
         \expandafter\let
