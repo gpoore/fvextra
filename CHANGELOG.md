@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.13.2 (dev)
+## v1.13.2 (2025/05/29)
 
 *  Fixed a bug that prevented detecting characters with a `\mathcode` of
    `"8000` under XeTeX and LuaTeX (gpoore/minted#451).
