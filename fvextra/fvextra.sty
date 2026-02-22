@@ -20,10 +20,9 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2025/05/29 v1.13.2 fvextra - extensions and patches for fancyvrb]
+    [2026/02/22 v1.14.0dev1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
-\RequirePackage{pdftexcmds}
 \RequirePackage{upquote}
 \AtEndPreamble{%
   \ifx\encodingdefault\upquote@OTone
@@ -1844,7 +1843,7 @@
   {\expandafter\InsertBuffer@expandbufferlines\expandafter{\the\numexpr#1+1\relax}}}
 \let\ClearBuffer\VerbatimClearBuffer
 \def\BufferMdfivesum{%
-  \pdf@mdfivesum{%
+  \csname str_mdfive_hash:e\endcsname{%
     \ifnum\FV@bufferlengthmacro<1
       \expandafter\@gobble
     \else

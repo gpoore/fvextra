@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v1.14.0 (dev)
+
+*  Switched to `\str_mdfive_hash:e` for MD5 hashing.  This replaces
+   `\pdf@mdfivesum` from the `pdftexcmds` package.  Under LuaTeX,
+   `\pdf@mdfivesum` ignores most multi-byte code points (code points >= 256
+   for UTF-8), which can cause hash collisions (#35, gpoore/minted#467).
+
+   `\pdf@mdfivesumnative` provides the desired functionality, but switching to
+   `\str_mdfive_hash:e` is simpler and allows dropping the `pdftexcmds`
+   package as a dependency.
+
+
+
 ## v1.13.2 (2025/05/29)
 
 *  Fixed a bug that prevented detecting characters with a `\mathcode` of
