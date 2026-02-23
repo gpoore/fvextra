@@ -26,7 +26,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{fvextra}
 %<*package>
-    [2026/02/22 v1.14.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2026/02/23 v1.14.0dev2 fvextra - extensions and patches for fancyvrb]
 %</package>
 %
 %<*driver>
@@ -6022,7 +6022,7 @@
 % \begin{macro}{\FV@BVerbatimBegin,\FV@BVerbatimEnd}
 % Reimplementation of |BVerbatim| macros to support |bgcolor|.  Much of this follows the implementation of |SaveVerbatim| and |\BUseVerbatim|.
 %
-% Key values, formatting, and tabs must be configured immediately in the |bgcolor| case, so that the background color and other settings are available.  |\FV@UseKeyValues| can be invoked multiple times, but that doesn't cause any issues since |\FV@UseKeyValues| applies keys and then redefines |\FV@KeyValues| to empty.
+% Key values must be configured immediately for the |bgcolor| case, so that the background color and other settings are available.  |\FV@UseKeyValues| will be invoked again within the original \fancyvrb\ implementation (now |\FV@BVerbatimBegin@NoBGColor|), but that doesn't cause any issues since |\FV@UseKeyValues| applies keys and then redefines |\FV@KeyValues| to empty.  |\FV@FormattingPrep| doesn't appear explicitly, because it is in |\FV@BVerbatimBegin@NoBGColor|.  The |\FV@BVerbatim@*@NoBGColor| macros are used regardless of whether there is a background color; they are wrapped in additional macros in the background color case.
 %
 % The definition of |\FV@BProcessLine| already accounts for |\FancyVerbBackgroundColorVPhantom|.
 %    \begin{macrocode}
@@ -6031,10 +6031,6 @@
 \def\FV@BVerbatimBegin{%
   \begingroup
   \FV@UseKeyValues
-  \FV@FormattingPrep
-  \let\FV@FormattingPrep\relax
-  \FV@ObeyTabsInit
-  \let\FV@ObeyTabsInit\relax
   \ifx\FancyVerbBackgroundColor\relax
     \expandafter\FV@BVerbatimBegin@NoBGColor
   \else

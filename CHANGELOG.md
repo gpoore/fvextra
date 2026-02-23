@@ -12,6 +12,8 @@
    `\str_mdfive_hash:e` is simpler and allows dropping the `pdftexcmds`
    package as a dependency.
 
+*  Fixed bug that could cause incorrect font in `BVerbatim` environment (#36).
+
 
 
 ## v1.13.2 (2025/05/29)

@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2026/02/22 v1.14.0dev1 fvextra - extensions and patches for fancyvrb]
+    [2026/02/23 v1.14.0dev2 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -2570,10 +2570,6 @@
 \def\FV@BVerbatimBegin{%
   \begingroup
   \FV@UseKeyValues
-  \FV@FormattingPrep
-  \let\FV@FormattingPrep\relax
-  \FV@ObeyTabsInit
-  \let\FV@ObeyTabsInit\relax
   \ifx\FancyVerbBackgroundColor\relax
     \expandafter\FV@BVerbatimBegin@NoBGColor
   \else
