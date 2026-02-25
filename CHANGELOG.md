@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v1.14.0 (dev)
+## v1.14.0 (2026/02/25)
 
 *  Switched to `\str_mdfive_hash:e` for MD5 hashing.  This replaces
    `\pdf@mdfivesum` from the `pdftexcmds` package.  Under LuaTeX,
