@@ -20,7 +20,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{fvextra}
-    [2026/02/25 v1.14.0 fvextra - extensions and patches for fancyvrb]
+    [2026/03/18 v1.14.1 fvextra - extensions and patches for fancyvrb]
 \RequirePackage{etoolbox}
 \RequirePackage{fancyvrb}
 \RequirePackage{upquote}
@@ -3877,6 +3877,16 @@
      \FVExtraRetokenizeVArg{\FV@PYG@retoked{#1}}{\FancyVerbRestoreCodes}}{#2}}%
    {\FV@PYG@retoked{#1}{#2}}%
   \endgroup}%
+\IfPackageAtLeastTF{lineno}{2026-03-08}{%
+  \def\FV@bgcoloroverlap{%
+    \ifx\FV@backgroundcolorboxoverlap\relax
+    \else
+      \nopagebreak  % <<< added
+      \vspace{-\FV@backgroundcolorboxoverlap}%
+  \fi}
+}{\PackageWarning{fvextra}{samepage is disabled with lineno < v5.9, %
+    to avoid potential infinite loop}
+}
 %% \Finale
 \endinput
 %%
