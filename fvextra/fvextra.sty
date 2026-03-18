@@ -3877,6 +3877,14 @@
      \FVExtraRetokenizeVArg{\FV@PYG@retoked{#1}}{\FancyVerbRestoreCodes}}{#2}}%
    {\FV@PYG@retoked{#1}{#2}}%
   \endgroup}%
+\IfPackageAtLeastTF{lineno}{2026-03-08}{%
+  \def\FV@bgcoloroverlap{%
+    \ifx\FV@backgroundcolorboxoverlap\relax
+    \else
+      \nopagebreak  % <<< added
+      \vspace{-\FV@backgroundcolorboxoverlap}%
+  \fi}
+}{}
 %% \Finale
 \endinput
 %%

@@ -8056,6 +8056,15 @@
      \FVExtraRetokenizeVArg{\FV@PYG@retoked{#1}}{\FancyVerbRestoreCodes}}{#2}}%
    {\FV@PYG@retoked{#1}{#2}}%
   \endgroup}%
+% Tentative fix of samepage behavior with lineno >= v5.9 (2026-03-08)
+\IfPackageAtLeastTF{lineno}{2026-03-08}{%
+  \def\FV@bgcoloroverlap{%
+    \ifx\FV@backgroundcolorboxoverlap\relax
+    \else
+      \nopagebreak  % <<< added
+      \vspace{-\FV@backgroundcolorboxoverlap}%
+  \fi}
+}{}
 %    \end{macrocode}
 % \end{macro}
 %
